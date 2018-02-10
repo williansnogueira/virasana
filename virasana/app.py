@@ -63,6 +63,7 @@ def raspa_dir(self):
                             'status': 'Iniciando'})
     print('Upload Folder ', UPLOAD_FOLDER)
     for file in os.listdir(UPLOAD_FOLDER):
+        print('**********Procesando arquivo ******', file)
         self.update_state(state=states.STARTED,
                           meta={'current': file,
                                 'status': 'Processando arquivos...'})

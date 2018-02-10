@@ -159,7 +159,13 @@ def list_files():
     """Lista arquivos no banco MongoDB
     """
     MONGODB_URI = os.environ.get('MONGODB_URI')
-    db = MongoClient(host=MONGODB_URI).test
+    if MONGODB_URI:
+        database = MONGODB_URI.rsplit('/')[0]
+        print(database)
+    else:
+        database = 'test'
+    db = MongoClient(host=MONGODB_URI)[database]
+
     fs = gridfs.GridFS(db)
 
     lista_arquivos = []

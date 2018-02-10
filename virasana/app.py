@@ -61,6 +61,7 @@ def raspa_dir(self):
     self.update_state(state=states.STARTED,
                       meta={'current': '',
                             'status': 'Iniciando'})
+    print('Upload Folder ', UPLOAD_FOLDER)
     for file in os.listdir(UPLOAD_FOLDER):
         self.update_state(state=states.STARTED,
                           meta={'current': file,
@@ -107,6 +108,7 @@ def upload_bson():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
+            print('Arquivo salvo em ', os.path.join(UPLOAD_FOLDER, filename))
             raspa_dir.delay()
             return redirect(url_for('list_files'))
     return render_template('importa_bson.html')

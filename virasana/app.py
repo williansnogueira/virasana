@@ -33,7 +33,10 @@ nav = Nav()
 # logo = img(src='/static/css/images/logo.png')
 
 # TODO: put in separate file
-BACKEND = BROKER = 'redis://localhost:6379'
+REDIS_URL = os.environ.get('REDIS_URL')
+if not REDIS_URL:
+    REDIS_URL = 'redis://localhost:6379'
+BACKEND = BROKER = REDIS_URL
 
 celery = Celery(app.name, broker=BROKER,
                 backend=BACKEND)

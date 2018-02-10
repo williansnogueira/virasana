@@ -1,2 +1,2 @@
 web: gunicorn wsgi:app
-worker: celery worker --app=virasana.app
+worker: celery -A virasana.app.celery worker

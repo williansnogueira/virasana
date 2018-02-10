@@ -7,7 +7,7 @@ import gridfs
 from ajna_img_functions.models.bsonimage import BsonImageList
 from pymongo import MongoClient
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static')
+UPLOAD_FOLDER = '/tmp' # os.path.join(os.path.dirname(__file__), '..', 'static')
 
 
 def trata_bson(bson_file, mongodb_uri, database):

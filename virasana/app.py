@@ -39,7 +39,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
+UPLOAD_FOLDER = '/tmp' # os.path.join(os.path.dirname(__file__), 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # CORS(app)
 csrf = CSRFProtect(app)

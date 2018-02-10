@@ -10,8 +10,8 @@ from pymongo import MongoClient
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static')
 
 
-def trata_bson(bson_file):
-    db = MongoClient().test
+def trata_bson(bson_file, mongodb_uri, database):
+    db = MongoClient(host=mongodb_uri)[database]
     fs = gridfs.GridFS(db)
     filename = os.path.join(UPLOAD_FOLDER, bson_file)
     bsonimagelist = BsonImageList.fromfile(filename)

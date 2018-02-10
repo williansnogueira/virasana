@@ -17,6 +17,21 @@ from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from virasana.workers.raspadir import trata_bson
 
+
+REDIS_URL = os.environ.get('REDIS_URL')
+if not REDIS_URL:
+    REDIS_URL = 'redis://localhost:6379'
+BACKEND = BROKER = REDIS_URL
+
+MONGODB_URI = os.environ.get('MONGODB_URI')
+print('MONGODB_URI', MONGODB_URI)
+if MONGODB_URI:
+    DATABASE = ''.join(MONGODB_URI.rsplit('/')[-1:])
+    print(DATABASE)
+else:
+    DATABASE = 'test'
+
+
 # initialize constants used for server queuing
 TIMEOUT = 10
 BATCH_SIZE = 1000
@@ -33,10 +48,6 @@ nav = Nav()
 # logo = img(src='/static/css/images/logo.png')
 
 # TODO: put in separate file
-REDIS_URL = os.environ.get('REDIS_URL')
-if not REDIS_URL:
-    REDIS_URL = 'redis://localhost:6379'
-BACKEND = BROKER = REDIS_URL
 
 celery = Celery(app.name, broker=BROKER,
                 backend=BACKEND)
@@ -55,7 +66,7 @@ def raspa_dir(self):
                           meta={'current': file,
                                 'status': 'Processando arquivos...'})
         if 'bson' in file:
-            trata_bson(file)
+            trata_bson(file, MONGODB_URI, DATABASE)
             os.remove(os.path.join(UPLOAD_FOLDER, file))
     return {'current': '',
             'status': 'Todos os arquivos processados'}
@@ -158,17 +169,8 @@ def raspadir_progress():
 def list_files():
     """Lista arquivos no banco MongoDB
     """
-    MONGODB_URI = os.environ.get('MONGODB_URI')
-    print('MONGODB_URI', MONGODB_URI)
-    if MONGODB_URI:
-        database = ''.join(MONGODB_URI.rsplit('/')[-1:])
-        print(database)
-    else:
-        database = 'test'
-    db = MongoClient(host=MONGODB_URI)[database]
-
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
     fs = gridfs.GridFS(db)
-
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
         lista_arquivos.append(grid_data.filename)

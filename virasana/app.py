@@ -158,8 +158,8 @@ def raspadir_progress():
 def list_files():
     """Lista arquivos no banco MongoDB
     """
-    MONGO_URI = os.environ.get('MONGO_URI')
-    db = MongoClient(MONGO_URI).test
+    MONGODB_URI = os.environ.get('MONGODB_URI')
+    db = MongoClient(host=MONGODB_URI).test
     fs = gridfs.GridFS(db)
 
     lista_arquivos = []

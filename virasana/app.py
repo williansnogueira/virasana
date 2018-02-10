@@ -161,7 +161,7 @@ def list_files():
     MONGODB_URI = os.environ.get('MONGODB_URI')
     print('MONGODB_URI', MONGODB_URI)
     if MONGODB_URI:
-        database = MONGODB_URI.rsplit('/')[-1:]
+        database = ''.join(MONGODB_URI.rsplit('/')[-1:])
         print(database)
     else:
         database = 'test'

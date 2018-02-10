@@ -11,7 +11,8 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static')
 
 
 def trata_bson(bson_file, mongodb_uri, database):
-    db = MongoClient(host=mongodb_uri).get_default_database()
+    db = MongoClient(host=mongodb_uri)[database]
+    # .get_default_database()
     print('Conectou com sucesso!!! ', db.collection_names())
     fs = gridfs.GridFS(db)
     filename = os.path.join(UPLOAD_FOLDER, bson_file)

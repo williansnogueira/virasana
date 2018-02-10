@@ -76,8 +76,8 @@ def raspa_dir(self):
 
 def allowed_file(filename):
     """Check allowed extensions"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ['bson', 'bson.zip']
+    return True #'.' in filename and \
+           # filename.rsplit('.', 1)[-1:].lower() in ['bson', 'bson.zip']
 
 
 @app.route('/')

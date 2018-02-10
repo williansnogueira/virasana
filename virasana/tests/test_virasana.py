@@ -1,8 +1,6 @@
-# Tescases for padma.py
-import datetime
-import json
-import os
+# Tescases for virasana.app.py
 import unittest
+
 from virasana.app import app
 
 

@@ -1,18 +1,20 @@
 import os
 import time
 
+import gridfs
 from celery import Celery, states
-from flask import (Flask, flash, jsonify, request, redirect,
-                   render_template, url_for)
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   url_for)
 from flask_bootstrap import Bootstrap
+# from flask_session import Session
+# from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
+from pymongo import MongoClient
+from werkzeug.utils import secure_filename
+
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
-from flask_session import Session
-# from flask_wtf import FlaskForm
-from flask_wtf.csrf import CSRFProtect
-from werkzeug.utils import secure_filename
-
 from virasana.workers.raspadir import trata_bson
 
 # initialize constants used for server queuing
@@ -72,7 +74,7 @@ def index():
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
-# @csrf.exempt # TODO: put CRSF on tests 
+# @csrf.exempt # TODO: put CRSF on tests
 # @login_required
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração
@@ -82,7 +84,7 @@ def upload_bson():
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
-        file = request.files['file']
+        file = request.files.get('file')
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
@@ -91,13 +93,13 @@ def upload_bson():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
-            task = raspa_dir.delay()
-            # return redirect(url_for('list_files'))
+            raspa_dir.delay()
+            return redirect(url_for('list_files'))
     return render_template('importa_bson.html')
 
 
 @app.route('/api/uploadbson', methods=['POST'])
-@csrf.exempt # TODO: put CRSF on tests ??? Or just use JWT???
+@csrf.exempt  # TODO: put CRSF on tests ??? Or just use JWT???
 def api_upload():
     # initialize the data dictionary that will be returned from the
     # view
@@ -153,7 +155,13 @@ def raspadir_progress():
 def list_files():
     """Lista arquivos no banco MongoDB
     """
+    db = MongoClient().test
+    fs = gridfs.GridFS(db)
+
     lista_arquivos = []
+    for grid_data in fs.find().sort('uploadDate', -1).limit(10):
+        lista_arquivos.append(grid_data.filename)
+    print(lista_arquivos)
     return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
 
 
@@ -163,6 +171,7 @@ def mynavbar():
              View('Importar Bson', 'upload_bson'),
              ]
     return Navbar(*items)
+
 
 SECRET = 'secret'
 app.secret_key = SECRET

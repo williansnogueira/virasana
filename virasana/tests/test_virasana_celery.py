@@ -3,16 +3,15 @@ import datetime
 import json
 import os
 import unittest
-import pytest
 from io import BytesIO
 
-from celery import states
 import gridfs
+import pytest
+from ajna_img_functions.models.bsonimage import BsonImage, BsonImageList
+from celery import states
 from pymongo import MongoClient
 
-from ajna_img_functions.models.bsonimage import BsonImage, BsonImageList
-from virasana.app import app, BROKER, BACKEND, celery
-
+from virasana.app import BACKEND, BROKER, app, celery
 
 TEST_BSON = os.path.join(os.path.dirname(
     __file__), 'test.bson')
@@ -66,13 +65,14 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         self._fs = gridfs.GridFS(self._db)
 
     def tearDown(self):
-        os.remove(TEST_BSON)
+        # os.remove(TEST_BSON)
         files = self._fs.find({'metadata.chave': 'virasana1'})
         for file in files:
             self._fs.delete(file._id)
         files = self._fs.find({'metadata.chave': 'virasana2'})
         for file in files:
             self._fs.delete(file._id)
+
 
 class FlaskCeleryBsonTestCase1(FlaskCeleryBsonTestCase):
     def test_apiupload(self):
@@ -89,6 +89,7 @@ class FlaskCeleryBsonTestCase1(FlaskCeleryBsonTestCase):
         assert self._fs.find_one({'metadata.chave': 'virasana1'}) is not None
         assert self._fs.find_one({'metadata.chave': 'virasana2'}) is not None
 
+
 """
 # TODO: more than one Celery test not working... See whats going on.
 class FlaskCeleryBsonTestCase2(FlaskCeleryBsonTestCase):
@@ -98,6 +99,7 @@ class FlaskCeleryBsonTestCase2(FlaskCeleryBsonTestCase):
         data['file'] = (BytesIO(bson), 'test.bson')
         rv = self.app.post(
             '/uploadbson', content_type='multipart/form-data', data=data)
-        # TODO: when raspadir_progress is Done, wait for response and test here!
+        # TODO: when raspadir_progress is Done,
+        #  wait for response and test here!
         assert rv.data is not None
 """

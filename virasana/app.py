@@ -2,7 +2,15 @@ import os
 import time
 
 from celery import Celery, states
-from flask import Flask, jsonify, request
+from flask import (Flask, flash, jsonify, request, redirect,
+                   render_template, url_for)
+from flask_bootstrap import Bootstrap
+# from flask_cors import CORS
+from flask_nav import Nav
+from flask_nav.elements import Navbar, View
+from flask_session import Session
+# from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
 
 from virasana.workers.raspadir import trata_bson
@@ -12,11 +20,15 @@ TIMEOUT = 10
 BATCH_SIZE = 1000
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
-# initialize our Flask application, Redis server, and Keras model
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# CORS(app)
+csrf = CSRFProtect(app)
+Bootstrap(app)
+nav = Nav()
+# logo = img(src='/static/css/images/logo.png')
 
 # TODO: put in separate file
 BACKEND = BROKER = 'redis://localhost:6379'
@@ -39,7 +51,7 @@ def raspa_dir(self):
                                 'status': 'Processando arquivos...'})
         if 'bson' in file:
             trata_bson(file)
-        os.remove(os.path.join(UPLOAD_FOLDER, file))
+            os.remove(os.path.join(UPLOAD_FOLDER, file))
     return {'current': '',
             'status': 'Todos os arquivos processados'}
 ######################
@@ -51,8 +63,42 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ['bson', 'bson.zip']
 
 
-@app.route('/uploadbson', methods=['POST'])
-def predict():
+@app.route('/')
+def index():
+    if True:  # current_user.is_authenticated:
+        return render_template('index.html')
+    else:
+        return redirect(url_for('login'))
+
+
+@app.route('/uploadbson', methods=['GET', 'POST'])
+# @csrf.exempt # TODO: put CRSF on tests 
+# @login_required
+def upload_bson():
+    """Função simplificada para upload do arquivo de uma extração
+    """
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            task = raspa_dir.delay()
+            # return redirect(url_for('list_files'))
+    return render_template('importa_bson.html')
+
+
+@app.route('/api/uploadbson', methods=['POST'])
+@csrf.exempt # TODO: put CRSF on tests ??? Or just use JWT???
+def api_upload():
     # initialize the data dictionary that will be returned from the
     # view
     data = {'progress': 'Function predict called'}
@@ -92,6 +138,38 @@ def predict():
         data['state'] = task.state
         data = {**data, **task.info}
     return jsonify(data)
+
+
+@app.route('/raspadir_progress')
+# @login_required
+def raspadir_progress():
+    """Returns a json of raspadir celery task progress"""
+    # See where to put task_id (Session???)
+    pass
+
+
+@app.route('/list_files')
+# @login_required
+def list_files():
+    """Lista arquivos no banco MongoDB
+    """
+    lista_arquivos = []
+    return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
+
+
+@nav.navigation()
+def mynavbar():
+    items = [View('Home', 'index'),
+             View('Importar Bson', 'upload_bson'),
+             ]
+    return Navbar(*items)
+
+SECRET = 'secret'
+app.secret_key = SECRET
+app.config['SECRET_KEY'] = SECRET
+
+
+nav.init_app(app)
 
 
 if __name__ == '__main__':

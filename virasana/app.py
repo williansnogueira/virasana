@@ -108,6 +108,8 @@ def upload_bson():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            if not file.exists(UPLOAD_FOLDER):
+                os.mkdir(UPLOAD_FOLDER)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             print('Arquivo salvo em ', os.path.join(UPLOAD_FOLDER, filename))
             raspa_dir.delay()

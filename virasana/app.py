@@ -12,9 +12,8 @@ from flask_bootstrap import Bootstrap
 # from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from base64 import b64encode, decodebytes
-from io import BytesIO
 from pymongo import MongoClient
-from werkzeug.utils import secure_filename
+# from werkzeug.utils import secure_filename
 
 # from flask_cors import CORS
 from flask_nav import Nav
@@ -46,7 +45,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
-UPLOAD_FOLDER = '/tmp'  # os.path.join(os.path.dirname(__file__), 'static')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # CORS(app)
 csrf = CSRFProtect(app)
@@ -81,25 +80,8 @@ def raspa_dir(self):
     q = db.lpop(BSON_REDIS)
     q = json.loads(q.decode('utf-8'))
     file = bytes(q['bson'], encoding='utf-8')
-    print('q ', q)
-    print('file ', file)
     file = decodebytes(file)
-    print('file ', file)
     trata_bson(file, MONGODB_URI, DATABASE)
-    """
-    with open(os.path.join(UPLOAD_FOLDER, 'list.bson'), 'wb') as f:
-        f.write(file)
-
-    print('Upload Folder ', UPLOAD_FOLDER)
-    for file in os.listdir(UPLOAD_FOLDER):
-        if 'bson' in file:
-            print('**********Procesando arquivo ******', file)
-            self.update_state(state=states.STARTED,
-                          meta={'current': file,
-                                'status': 'Processando arquivos...'})
-            trata_bson(file, MONGODB_URI, DATABASE)
-            os.remove(os.path.join(UPLOAD_FOLDER, file))
-    """
     return {'current': '',
             'status': 'Todos os arquivos processados'}
 ######################
@@ -107,8 +89,8 @@ def raspa_dir(self):
 
 def allowed_file(filename):
     """Check allowed extensions"""
-    return True  # '.' in filename and \
-    # filename.rsplit('.', 1)[-1:].lower() in ['bson', 'bson.zip']
+    return '.' in filename and \
+        filename.rsplit('.', 1)[-1].lower() in ['bson']
 
 
 @app.route('/')
@@ -137,21 +119,9 @@ def upload_bson():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            # filename = os.path.join(UPLOAD_FOLDER, filename)
-            # os.makedirs(os.path.dirname(filename), exist_ok=True)
-            # file.save(filename)
-            # print('Arquivo salvo em ', filename)
-            # files = os.listdir(UPLOAD_FOLDER)
-            # print('Files: ', files)
             content = file.read()
-            print('file ', content)
-            print('file encode ', b64encode(content))
-            print('file encode decode', b64encode(content).decode('utf-8'))
             d = {'bson': b64encode(content).decode('utf-8')}
-            print('json ', json.dumps(d))
             db.rpush(BSON_REDIS, json.dumps(d))
-
             raspa_dir.delay()
             return redirect(url_for('list_files'))
     return render_template('importa_bson.html')
@@ -172,8 +142,9 @@ def api_upload():
             data['progress'] = 'File checked'
             s0 = time.time()
             print('Enter Sandman - sending request to celery queue')
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            content = file.read()
+            d = {'bson': b64encode(content).decode('utf-8')}
+            db.rpush(BSON_REDIS, json.dumps(d))
             data['progress'] = 'File uploaded'
             task = raspa_dir.delay()
             data['progress'] = 'Task initiated'

@@ -69,7 +69,7 @@ def raspa_dir(self):
                                 'status': 'Processando arquivos...'})
         if 'bson' in file:
             trata_bson(file, MONGODB_URI, DATABASE)
-            os.remove(os.path.join(UPLOAD_FOLDER, file))
+            # os.remove(os.path.join(UPLOAD_FOLDER, file))
     return {'current': '',
             'status': 'Todos os arquivos processados'}
 ######################

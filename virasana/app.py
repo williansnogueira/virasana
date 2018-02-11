@@ -108,10 +108,12 @@ def upload_bson():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            if not file.exists(UPLOAD_FOLDER):
-                os.mkdir(UPLOAD_FOLDER)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
-            print('Arquivo salvo em ', os.path.join(UPLOAD_FOLDER, filename))
+            filename = os.path.join(UPLOAD_FOLDER, filename)
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            file.save(filename)
+            print('Arquivo salvo em ', filename)
+            files = os.listdir(UPLOAD_FOLDER)
+            print('Files: ', files)
             raspa_dir.delay()
             return redirect(url_for('list_files'))
     return render_template('importa_bson.html')

@@ -1,7 +1,9 @@
 import os
+import json
 import time
 
 import gridfs
+import redis
 from celery import Celery, states
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    url_for)
@@ -9,19 +11,24 @@ from flask_bootstrap import Bootstrap
 # from flask_session import Session
 # from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
+from base64 import b64encode, decodebytes
+from io import BytesIO
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
-from virasana.workers.raspadir import trata_bson
+from ajna_img_functions.models.bsonimage import BsonImageList
+# from virasana.workers.raspadir import trata_bson
 
-
+BSON_REDIS = 'bson'
 REDIS_URL = os.environ.get('REDIS_URL')
 if not REDIS_URL:
     REDIS_URL = 'redis://localhost:6379'
 BACKEND = BROKER = REDIS_URL
+db = redis.StrictRedis.from_url(REDIS_URL)
+
 
 MONGODB_URI = os.environ.get('MONGODB_URI')
 print('MONGODB_URI', MONGODB_URI)
@@ -39,7 +46,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
-UPLOAD_FOLDER = '/tmp' # os.path.join(os.path.dirname(__file__), 'static')
+UPLOAD_FOLDER = '/tmp'  # os.path.join(os.path.dirname(__file__), 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # CORS(app)
 csrf = CSRFProtect(app)
@@ -53,6 +60,16 @@ celery = Celery(app.name, broker=BROKER,
                 backend=BACKEND)
 
 
+def trata_bson(bson_file, mongodb_uri, database):
+    db = MongoClient(host=mongodb_uri)[database]
+    # .get_default_database()
+    print('Conectou com sucesso!! ', db.collection_names())
+    fs = gridfs.GridFS(db)
+    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
+    files_ids = bsonimagelist.tomongo(fs)
+    return files_ids
+
+
 @celery.task(bind=True)
 def raspa_dir(self):
     """Background task that go to directory of incoming files
@@ -61,15 +78,28 @@ def raspa_dir(self):
     self.update_state(state=states.STARTED,
                       meta={'current': '',
                             'status': 'Iniciando'})
+    q = db.lpop(BSON_REDIS)
+    q = json.loads(q.decode('utf-8'))
+    file = bytes(q['bson'], encoding='utf-8')
+    print('q ', q)
+    print('file ', file)
+    file = decodebytes(file)
+    print('file ', file)
+    trata_bson(file, MONGODB_URI, DATABASE)
+    """
+    with open(os.path.join(UPLOAD_FOLDER, 'list.bson'), 'wb') as f:
+        f.write(file)
+
     print('Upload Folder ', UPLOAD_FOLDER)
     for file in os.listdir(UPLOAD_FOLDER):
-        print('**********Procesando arquivo ******', file)
-        self.update_state(state=states.STARTED,
+        if 'bson' in file:
+            print('**********Procesando arquivo ******', file)
+            self.update_state(state=states.STARTED,
                           meta={'current': file,
                                 'status': 'Processando arquivos...'})
-        if 'bson' in file:
             trata_bson(file, MONGODB_URI, DATABASE)
-            # os.remove(os.path.join(UPLOAD_FOLDER, file))
+            os.remove(os.path.join(UPLOAD_FOLDER, file))
+    """
     return {'current': '',
             'status': 'Todos os arquivos processados'}
 ######################
@@ -77,8 +107,8 @@ def raspa_dir(self):
 
 def allowed_file(filename):
     """Check allowed extensions"""
-    return True #'.' in filename and \
-           # filename.rsplit('.', 1)[-1:].lower() in ['bson', 'bson.zip']
+    return True  # '.' in filename and \
+    # filename.rsplit('.', 1)[-1:].lower() in ['bson', 'bson.zip']
 
 
 @app.route('/')
@@ -108,12 +138,20 @@ def upload_bson():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            filename = os.path.join(UPLOAD_FOLDER, filename)
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-            file.save(filename)
-            print('Arquivo salvo em ', filename)
-            files = os.listdir(UPLOAD_FOLDER)
-            print('Files: ', files)
+            # filename = os.path.join(UPLOAD_FOLDER, filename)
+            # os.makedirs(os.path.dirname(filename), exist_ok=True)
+            # file.save(filename)
+            # print('Arquivo salvo em ', filename)
+            # files = os.listdir(UPLOAD_FOLDER)
+            # print('Files: ', files)
+            content = file.read()
+            print('file ', content)
+            print('file encode ', b64encode(content))
+            print('file encode decode', b64encode(content).decode('utf-8'))
+            d = {'bson': b64encode(content).decode('utf-8')}
+            print('json ', json.dumps(d))
+            db.rpush(BSON_REDIS, json.dumps(d))
+
             raspa_dir.delay()
             return redirect(url_for('list_files'))
     return render_template('importa_bson.html')

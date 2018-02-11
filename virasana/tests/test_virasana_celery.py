@@ -80,8 +80,9 @@ class FlaskCeleryBsonTestCase1(FlaskCeleryBsonTestCase):
         data = {}
         data['file'] = (BytesIO(bson), 'test.bson')
         rv = self.app.post(
-            '/api/uploadbson', content_type='multipart/form-data', data=data)
+            '/uploadbson', content_type='multipart/form-data', data=data)
         print(rv.data)
+"""
         test_dict = json.loads(rv.data.decode())
         print(test_dict)
         assert test_dict.get('state') is not None
@@ -90,7 +91,6 @@ class FlaskCeleryBsonTestCase1(FlaskCeleryBsonTestCase):
         assert self._fs.find_one({'metadata.chave': 'virasana2'}) is not None
 
 
-"""
 # TODO: more than one Celery test not working... See whats going on.
 class FlaskCeleryBsonTestCase2(FlaskCeleryBsonTestCase):
     def test_upload(self):
@@ -98,7 +98,7 @@ class FlaskCeleryBsonTestCase2(FlaskCeleryBsonTestCase):
         data = {}
         data['file'] = (BytesIO(bson), 'test.bson')
         rv = self.app.post(
-            '/uploadbson', content_type='multipart/form-data', data=data)
+            '/api/uploadbson', content_type='multipart/form-data', data=data)
         # TODO: when raspadir_progress is Done,
         #  wait for response and test here!
         assert rv.data is not None

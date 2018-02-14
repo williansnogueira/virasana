@@ -18,7 +18,7 @@ from pymongo import MongoClient
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
-from ajna_img_functions.models.bsonimage import BsonImageList
+from ajna_commons.models.bsonimage import BsonImageList
 # from virasana.workers.raspadir import trata_bson
 
 BSON_REDIS = 'bson'

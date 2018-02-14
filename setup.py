@@ -18,12 +18,9 @@ setup(
         'Flask-nav',
         'Flask-session',
         'Flask-wtf',
-        'imageio',
-        'lxml',
         'pymongo',
         'redis',
-        'sqlalchemy',
-        
+      
     ],
     dependency_links=[
         "git+https://github.com/IvanBrasilico/ajna_img_functions.git"
@@ -45,7 +42,6 @@ setup(
             'pytest',
             'pytest-cov',
             'pytest-mock',
-            'sphinx',
             'testfixtures',
             'tox'
         ],

@@ -53,4 +53,4 @@ virtualenv==15.1.0
 visitor==0.1.3
 Werkzeug==0.14.1
 WTForms==2.1
--e git+https://github.com/IvanBrasilico/ajna_img_functions.git#egg=ajna_img_functions
+-e git+https://github.com/IvanBrasilico/ajna_commons.git#egg=ajna_commons

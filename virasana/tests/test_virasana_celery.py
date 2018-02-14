@@ -7,7 +7,7 @@ from io import BytesIO
 
 import gridfs
 import pytest
-from ajna_img_functions.models.bsonimage import BsonImage, BsonImageList
+from ajna_commons.models.bsonimage import BsonImage, BsonImageList
 # from celery import states
 from pymongo import MongoClient
 

@@ -1,1 +1,1 @@
-celery -A virasana.views.celery worker --loglevel=info
+celery -A virasana.workers.raspadir.celery worker --loglevel=info

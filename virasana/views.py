@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 import time
@@ -20,7 +20,7 @@ from bson.objectid import ObjectId
 
 from ajna_commons.models.bsonimage import BsonImageList
 from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
-                           TIMEOUT, redisdb)
+                           SECRET, TIMEOUT, redisdb)
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -79,7 +79,7 @@ def index():
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
-# @csrf.exempt # TODO: put CRSF on tests
+# @csrf.exempt # TODO: put CSRF on tests
 @login_required
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração
@@ -104,7 +104,7 @@ def upload_bson():
 
 
 @app.route('/api/uploadbson', methods=['POST'])
-@csrf.exempt  # TODO: put CRSF on tests ??? Or just use JWT???
+@csrf.exempt  # TODO: put CSRF on tests ??? Or just use JWT???
 def api_upload():
     # initialize the data dictionary that will be returned from the
     # view
@@ -169,11 +169,15 @@ def list_files():
     return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
 
 
+@app.route('/file/<_id>')
 @app.route('/file')
 @login_required
-def file():
+def file(_id=None):
     fs = gridfs.GridFS(db)
-    grid_data = fs.find_one({'filename': request.args.get('filename')})
+    if request.args.get('filename'):
+        grid_data = fs.find_one({'filename': request.args.get('filename')})
+    else:
+        grid_data = fs.get(ObjectId(_id))
     return render_template('view_file.html', myfile=grid_data)
 
 
@@ -191,13 +195,24 @@ def files(page=1):
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     numero = request.form.get('numero', '')
-    start = datetime.strptime(request.form.get('start'),
-                              '%Y-%m-%d %H:%M:%S')
-
-    end = datetime.strptime(request.form.get('end'),
-                            '%Y-%m-%d %H:%M:%S')
-    start = datetime(2017, 1, 1, 0, 0)
-    end = datetime(2018, 2, 28, 23, 59)
+    start = request.form.get('start', '')
+    end = request.form.get('end', '')
+    try:
+        if start:
+            start = datetime.strptime(start,
+                                      '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        start = None
+    try:
+        if end:
+            end = datetime.strptime(end,
+                                    '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        end = None
+    if not start:
+        start = datetime.utcnow() - timedelta(days=90)
+    if not end:
+        end = datetime.utcnow()
     for grid_data in fs.find({'uploadDate':
                               {'$lt': end,
                                '$gt': start},
@@ -227,7 +242,6 @@ def mynavbar():
     return Navbar(*items)
 
 
-SECRET = 'secret'
 app.secret_key = SECRET
 app.config['SECRET_KEY'] = SECRET
 # app.config['SESSION_TYPE'] = 'filesystem'

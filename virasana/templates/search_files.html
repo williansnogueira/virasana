@@ -4,17 +4,23 @@
         <form method="POST" action="/files">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="text" name="numero" value="{{numero}}" />
+            <input type="start" name="start" value="{{start}}" />
+            <input type="end" name="end" value="{{end}}" />
             <input type="submit" />
         </form>
     </div>
     <div id="list" class="row">
         <div class="table-responsive col-md-12">
             {# Display a page of todos #}
-            <ul>
+            <table>
                 {% for myfile in paginated_files %}
-                <li>{{ myfile['filename'] }} - {{ myfile['upload_date'] }}</li>
+                <tr>
+                    <td>{{ myfile['filename'] }}</td>
+                    <td>{{ myfile['upload_date'] }}</td>
+                    <td><a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a></td>
+                </tr>
                 {% endfor %}
-            </ul>
+            </table>
         </div>
     </div>
     <div id="bottom" class="row">

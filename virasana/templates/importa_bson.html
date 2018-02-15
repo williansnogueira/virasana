@@ -52,9 +52,7 @@
 {% endblock %} {% block scripts %} {{super()}}
 <script>
     function importar(filename) {
-        window.location.assign('/importa?filename=' + filename +
-            '&base=' + $("#base").val() +
-            "&data=" + $("#data").val())
+        window.location.assign('/file?filename=' + filename )
     }
 
 </script> {% endblock %}

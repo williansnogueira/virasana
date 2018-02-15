@@ -6,7 +6,7 @@ from base64 import b64encode, decodebytes
 import gridfs
 from celery import Celery, states
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   url_for)
+                   Response, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -25,6 +25,7 @@ app.config['DEBUG'] = True
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # CORS(app)
+db = MongoClient(host=MONGODB_URI)[DATABASE]
 csrf = CSRFProtect(app)
 Bootstrap(app)
 nav = Nav()
@@ -47,15 +48,13 @@ def raspa_dir(self):
     q = json.loads(q.decode('utf-8'))
     file = bytes(q['bson'], encoding='utf-8')
     file = decodebytes(file)
-    trata_bson(file, MONGODB_URI, DATABASE)
+    trata_bson(file, db)
     return {'current': '',
             'status': 'Todos os arquivos processados'}
 
 
-def trata_bson(bson_file, mongodb_uri, database):
-    db = MongoClient(host=mongodb_uri)[database]
+def trata_bson(bson_file, db):
     # .get_default_database()
-    print('Conectou com sucesso!! ', db.collection_names())
     fs = gridfs.GridFS(db)
     bsonimagelist = BsonImageList.fromfile(abson=bson_file)
     files_ids = bsonimagelist.tomongo(fs)
@@ -160,13 +159,55 @@ def raspadir_progress():
 def list_files():
     """Lista arquivos no banco MongoDB
     """
-    db = MongoClient(host=MONGODB_URI)[DATABASE]
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
         lista_arquivos.append(grid_data.filename)
     print(lista_arquivos)
     return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
+
+
+@app.route('/file')
+@login_required
+def view_file():
+    fs = gridfs.GridFS(db)
+    lista_arquivos = []
+    grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
+    image = grid_data.read()
+    return render_template('view_file.html', myfile=grid_data, image=image)
+
+
+@app.route('/image/<_id>')
+def gridfs_img(_id):
+    fs = gridfs.GridFS(db)
+    grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
+    image = grid_data.read()
+    # image = fs.get(_id).read()
+    return Response(response=image, mimetype='image/jpeg')
+
+
+
+@app.route('/files')
+@login_required
+def view_files(page=1):
+    fs = gridfs.GridFS(db)
+    lista_arquivos = []
+    for grid_data in fs.find({'filename': '20170701002613003RS_stamp.jpg'}).sort('uploadDate', -1).limit(10):
+        linha = {}
+        linha['_id'] = grid_data._id
+        linha['filename'] = grid_data.filename
+        linha['upload_date'] = grid_data.upload_date
+        linha['metadata'] = grid_data.metadata
+        lista_arquivos.append(linha)
+    for grid_data in fs.find({'metadata.numeroinformado': 'APZU3890627'}).sort('uploadDate', -1).limit(10):
+        linha = {}
+        linha['_id'] = grid_data._id
+        linha['filename'] = grid_data.filename
+        linha['upload_date'] = grid_data.upload_date
+        linha['metadata'] = grid_data.metadata
+        lista_arquivos.append(linha)
+    print(lista_arquivos)
+    return render_template('search_files.html', paginated_files=lista_arquivos)
 
 
 @nav.navigation()

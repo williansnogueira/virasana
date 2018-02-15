@@ -217,6 +217,7 @@ def view_files(page=1):
 def mynavbar():
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
+             View('Pesquisar arquivos', 'files'),
              ]
     if current_user.is_authenticated:
         items.append(View('Sair', 'logout'))

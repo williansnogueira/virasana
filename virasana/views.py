@@ -192,10 +192,10 @@ def files(page=1):
     lista_arquivos = []
     numero = request.form.get('numero', '')
     start = datetime.strptime(request.form.get('start'),
-                                        '%Y-%m-%d %H:%M:%S')
-                                        
+                              '%Y-%m-%d %H:%M:%S')
+
     end = datetime.strptime(request.form.get('end'),
-                                        '%Y-%m-%d %H:%M:%S')
+                            '%Y-%m-%d %H:%M:%S')
     start = datetime(2017, 1, 1, 0, 0)
     end = datetime(2018, 2, 28, 23, 59)
     for grid_data in fs.find({'uploadDate':

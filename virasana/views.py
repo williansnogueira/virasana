@@ -16,6 +16,7 @@ from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from ajna_commons.models.bsonimage import BsonImageList
 from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
@@ -172,34 +173,36 @@ def list_files():
 @login_required
 def file():
     fs = gridfs.GridFS(db)
-    grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
+    grid_data = fs.find_one({'filename': request.args.get('filename')})
     return render_template('view_file.html', myfile=grid_data)
 
 
 @app.route('/image/<_id>')
 def image(_id):
     fs = gridfs.GridFS(db)
-    grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
+    grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
-    # image = fs.get(_id).read()
     return Response(response=image, mimetype='image/jpeg')
 
 
-@app.route('/files')
+@app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files(page=1):
     fs = gridfs.GridFS(db)
     lista_arquivos = []
-    for param, value in request.args.items():
-        print(param, value)
+    numero = request.form.get('numero', '')
+    start = datetime.strptime(request.form.get('start'),
+                                        '%Y-%m-%d %H:%M:%S')
+                                        
+    end = datetime.strptime(request.form.get('end'),
+                                        '%Y-%m-%d %H:%M:%S')
     start = datetime(2017, 1, 1, 0, 0)
     end = datetime(2018, 2, 28, 23, 59)
-    print(start, end)
     for grid_data in fs.find({'uploadDate':
                               {'$lt': end,
                                '$gt': start},
                               'metadata.numeroinformado':
-                              {'$regex': '^APZU3890'}}
+                              {'$regex': '^' + numero}}
                              ).sort('uploadDate', -1).limit(10):
         linha = {}
         linha['_id'] = grid_data._id
@@ -208,7 +211,9 @@ def files(page=1):
         linha['metadata'] = grid_data.metadata
         lista_arquivos.append(linha)
     print(lista_arquivos)
-    return render_template('search_files.html', paginated_files=lista_arquivos)
+    return render_template('search_files.html',
+                           paginated_files=lista_arquivos,
+                           numero=numero)
 
 
 @nav.navigation()

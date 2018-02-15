@@ -170,16 +170,14 @@ def list_files():
 
 @app.route('/file')
 @login_required
-def view_file():
+def file():
     fs = gridfs.GridFS(db)
-    lista_arquivos = []
     grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
-    image = grid_data.read()
-    return render_template('view_file.html', myfile=grid_data, image=image)
+    return render_template('view_file.html', myfile=grid_data)
 
 
 @app.route('/image/<_id>')
-def gridfs_img(_id):
+def image(_id):
     fs = gridfs.GridFS(db)
     grid_data = fs.find_one({'filename': '20170701002613003RS_stamp.jpg'})
     image = grid_data.read()
@@ -189,7 +187,7 @@ def gridfs_img(_id):
 
 @app.route('/files')
 @login_required
-def view_files(page=1):
+def files(page=1):
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     for param, value in request.args.items():

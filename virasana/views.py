@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 import time
@@ -186,20 +187,22 @@ def gridfs_img(_id):
     return Response(response=image, mimetype='image/jpeg')
 
 
-
 @app.route('/files')
 @login_required
 def view_files(page=1):
     fs = gridfs.GridFS(db)
     lista_arquivos = []
-    for grid_data in fs.find({'filename': '20170701002613003RS_stamp.jpg'}).sort('uploadDate', -1).limit(10):
-        linha = {}
-        linha['_id'] = grid_data._id
-        linha['filename'] = grid_data.filename
-        linha['upload_date'] = grid_data.upload_date
-        linha['metadata'] = grid_data.metadata
-        lista_arquivos.append(linha)
-    for grid_data in fs.find({'metadata.numeroinformado': 'APZU3890627'}).sort('uploadDate', -1).limit(10):
+    for param, value in request.args.items():
+        print(param, value)
+    start = datetime(2017, 1, 1, 0, 0)
+    end = datetime(2018, 2, 28, 23, 59)
+    print(start, end)
+    for grid_data in fs.find({'uploadDate':
+                              {'$lt': end,
+                               '$gt': start},
+                              'metadata.numeroinformado':
+                              {'$regex': '^APZU3890'}}
+                             ).sort('uploadDate', -1).limit(10):
         linha = {}
         linha['_id'] = grid_data._id
         linha['filename'] = grid_data.filename

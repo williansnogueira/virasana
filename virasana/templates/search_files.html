@@ -7,7 +7,7 @@
             {# Display a page of todos #}
             <ul>
                 {% for myfile in paginated_files %}
-                <li>{{ myfile['filename'] }}</li>
+                <li>{{ myfile['filename'] }} - {{ myfile['upload_date'] }}</li>
                 {% endfor %}
             </ul>
         </div>

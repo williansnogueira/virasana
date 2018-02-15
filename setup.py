@@ -39,6 +39,8 @@ setup(
             'flake8-quotes',
             'flask-webtest',
             'isort',
+            'autopep8',
+            'pylint',
             'pytest',
             'pytest-cov',
             'pytest-mock',

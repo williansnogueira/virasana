@@ -8,12 +8,13 @@ from io import BytesIO
 
 import gridfs
 import pytest
+from ajna_commons.models.bsonimage import BsonImage, BsonImageList
 # from celery import states
 from pymongo import MongoClient
 
-from ajna_commons.models.bsonimage import BsonImage, BsonImageList
 from virasana.conf import BACKEND, BROKER
-from virasana.views import app, celery
+from virasana.views import app
+from virasana.workers.raspadir import celery
 
 # from virasana.workers.raspadir import trata
 

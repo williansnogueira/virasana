@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta
 import json
 import os
 import time
-from base64 import b64encode, decodebytes
+from base64 import b64encode
+from datetime import datetime, timedelta
 
 import gridfs
-from celery import Celery, states
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   Response, url_for)
+from bson.objectid import ObjectId
+from celery import states
+from flask import (Flask, Response, flash, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -19,11 +20,10 @@ from wtforms import DateField, DateTimeField, SubmitField, StringField
 from wtforms.validators import DataRequired, optional
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 
-from ajna_commons.models.bsonimage import BsonImageList
-from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
-                           SECRET, TIMEOUT, redisdb)
+from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET, TIMEOUT,
+                           redisdb)
+from virasana.workers.raspadir import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -35,35 +35,6 @@ csrf = CSRFProtect(app)
 Bootstrap(app)
 nav = Nav()
 # logo = img(src='/static/css/images/logo.png')
-
-
-celery = Celery(app.name, broker=BROKER,
-                backend=BACKEND)
-
-
-@celery.task(bind=True)
-def raspa_dir(self):
-    """Background task that go to directory of incoming files
-    AND load then to mongodb
-    """
-    self.update_state(state=states.STARTED,
-                      meta={'current': '',
-                            'status': 'Iniciando'})
-    q = redisdb.lpop(BSON_REDIS)
-    q = json.loads(q.decode('utf-8'))
-    file = bytes(q['bson'], encoding='utf-8')
-    file = decodebytes(file)
-    trata_bson(file, db)
-    return {'current': '',
-            'status': 'Todos os arquivos processados'}
-
-
-def trata_bson(bson_file, db):
-    # .get_default_database()
-    fs = gridfs.GridFS(db)
-    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
-    files_ids = bsonimagelist.tomongo(fs)
-    return files_ids
 
 
 def allowed_file(filename):
@@ -111,7 +82,7 @@ def upload_bson():
 def api_upload():
     # initialize the data dictionary that will be returned from the
     # view
-    data = {'progress': 'Function predict called'}
+    data = {'progress': 'Function called'}
     s0 = None
     # ensure a bson was properly uploaded to our endpoint
     if request.method == 'POST':
@@ -239,6 +210,10 @@ def mynavbar():
     return Navbar(*items)
 
 
+app.config['DEBUG'] = os.environ.get('DEBUG', 'None') == '1'
+if app.config['DEBUG'] is True:
+    app.jinja_env.auto_reload = True
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.secret_key = SECRET
 app.config['SECRET_KEY'] = SECRET
 # app.config['SESSION_TYPE'] = 'filesystem'
@@ -251,4 +226,4 @@ nav.init_app(app)
 if __name__ == '__main__':
     # start the web server
     print('* Starting web service...')
-    app.run()
+    app.run(debug=app.config['DEBUG'])

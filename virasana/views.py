@@ -1,12 +1,14 @@
-from datetime import datetime, timedelta
 import json
 import os
 import time
 from base64 import b64encode
-from celery import states
+from datetime import datetime, timedelta
+
 import gridfs
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   Response, url_for)
+from bson.objectid import ObjectId
+from celery import states
+from flask import (Flask, Response, flash, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -15,10 +17,9 @@ from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 
-from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
-                           SECRET, TIMEOUT, redisdb)
+from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET, TIMEOUT,
+                           redisdb)
 from virasana.workers.raspadir import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')
@@ -78,7 +79,7 @@ def upload_bson():
 def api_upload():
     # initialize the data dictionary that will be returned from the
     # view
-    data = {'progress': 'Function predict called'}
+    data = {'progress': 'Function called'}
     s0 = None
     # ensure a bson was properly uploaded to our endpoint
     if request.method == 'POST':

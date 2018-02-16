@@ -1,14 +1,14 @@
 # Código do celery task
 import json
 from base64 import decodebytes
+
+import gridfs
+from ajna_commons.models.bsonimage import BsonImageList
 from celery import Celery, states
 from pymongo import MongoClient
-import gridfs
 
-
-from virasana.conf import (BACKEND, BSON_REDIS, BROKER, DATABASE, MONGODB_URI,
+from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
                            redisdb)
-from ajna_commons.models.bsonimage import BsonImageList
 
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)

@@ -1,7 +1,8 @@
 import os
 import pickle
-import redis
 import tempfile
+
+import redis
 
 BSON_REDIS = 'bson'
 REDIS_URL = os.environ.get('REDIS_URL')

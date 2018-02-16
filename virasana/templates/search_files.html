@@ -1,12 +1,21 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
+{% import "bootstrap/wtf.html" as wtf %}
 <div id="main" class="container-fluid">
     <div id="top" class="row">
         <form method="POST" action="/files">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="text" name="numero" value="{{numero}}" />
-            <input type="start" name="start" value="{{start}}" />
-            <input type="end" name="end" value="{{end}}" />
-            <input type="submit" />
+            <div class="form-group">
+                <div class="col-sm-3">
+                    <input class="form-control" type="text" name="numero" value="{{numero}}" />
+                </div>
+                <div class="col-sm-3">
+                    <input class="form-control" type="date" name="start" value="{{start}}" />
+                </div>
+                <div class="col-sm-3">
+                    <input class="form-control" type="date" name="end" value="{{end}}" />
+                </div>
+                <input class="btn btn-default" type="submit" />
+            </div>
         </form>
     </div>
     <div id="list" class="row">
@@ -17,7 +26,9 @@
                 <tr>
                     <td>{{ myfile['filename'] }}</td>
                     <td>{{ myfile['upload_date'] }}</td>
-                    <td><a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a></td>
+                    <td>
+                        <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </table>

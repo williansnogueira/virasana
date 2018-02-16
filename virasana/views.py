@@ -14,6 +14,9 @@ from flask_login import current_user, login_required
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
+from flask_wtf import FlaskForm
+from wtforms import DateField, DateTimeField, SubmitField, StringField
+from wtforms.validators import DataRequired, optional
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -189,46 +192,40 @@ def image(_id):
     return Response(response=image, mimetype='image/jpeg')
 
 
+class FilesForm(FlaskForm):
+    numero = StringField('Número', validators=[DataRequired()])
+    start = DateField('Start', validators=[optional()], default=datetime.utcnow() - timedelta(days=90))
+    end = DateField('End', validators=[optional()], default=datetime.utcnow())
+
+
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files(page=1):
     fs = gridfs.GridFS(db)
     lista_arquivos = []
-    numero = request.form.get('numero', '')
-    start = request.form.get('start', '')
-    end = request.form.get('end', '')
-    try:
-        if start:
-            start = datetime.strptime(start,
-                                      '%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        start = None
-    try:
-        if end:
-            end = datetime.strptime(end,
-                                    '%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        end = None
-    if not start:
-        start = datetime.utcnow() - timedelta(days=90)
-    if not end:
-        end = datetime.utcnow()
-    for grid_data in fs.find({'uploadDate':
-                              {'$lt': end,
-                               '$gt': start},
-                              'metadata.numeroinformado':
-                              {'$regex': '^' + numero}}
-                             ).sort('uploadDate', -1).limit(10):
-        linha = {}
-        linha['_id'] = grid_data._id
-        linha['filename'] = grid_data.filename
-        linha['upload_date'] = grid_data.upload_date
-        linha['metadata'] = grid_data.metadata
-        lista_arquivos.append(linha)
-    print(lista_arquivos)
-    return render_template('search_files.html',
-                           paginated_files=lista_arquivos,
-                           numero=numero)
+    form = FilesForm(**request.form)
+    numero = form.numero.data
+    start = form.start.data
+    end = form.end.data
+    print(numero, start, end)
+    if form.validate():
+        for grid_data in fs.find({'uploadDate':
+                                  {'$lt': end,
+                                   '$gt': start},
+                                  'metadata.numeroinformado':
+                                  {'$regex': '^' + numero}}
+                                 ).sort('uploadDate', -1).limit(10):
+            linha = {}
+            linha['_id'] = grid_data._id
+            linha['filename'] = grid_data.filename
+            linha['upload_date'] = grid_data.upload_date
+            linha['metadata'] = grid_data.metadata
+            lista_arquivos.append(linha)
+        print(lista_arquivos)
+        return render_template('search_files.html',
+                               paginated_files=lista_arquivos,
+                               numero=numero)
+    return render_template('search_files.html', numero=numero, start=start, end=end)
 
 
 @nav.navigation()

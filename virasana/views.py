@@ -213,6 +213,10 @@ def mynavbar():
     return Navbar(*items)
 
 
+app.config['DEBUG'] = os.environ.get('DEBUG', 'None') == '1'
+if app.config['DEBUG'] is True:
+    app.jinja_env.auto_reload = True
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.secret_key = SECRET
 app.config['SECRET_KEY'] = SECRET
 # app.config['SESSION_TYPE'] = 'filesystem'
@@ -225,4 +229,4 @@ nav.init_app(app)
 if __name__ == '__main__':
     # start the web server
     print('* Starting web service...')
-    app.run()
+    app.run(debug=app.config['DEBUG'])

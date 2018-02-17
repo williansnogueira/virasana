@@ -3,10 +3,10 @@ import json
 from base64 import decodebytes
 
 import gridfs
-from ajna_commons.models.bsonimage import BsonImageList
-from celery import Celery, states
 from pymongo import MongoClient
 
+from ajna_commons.models.bsonimage import BsonImageList
+from celery import Celery, states
 from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
                            redisdb)
 

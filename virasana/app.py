@@ -1,8 +1,8 @@
-from ajna_commons.flask.login import (DBUser, authenticate, is_safe_url,
-                                      login_manager)
 from flask import abort, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
 
+from ajna_commons.flask.login import (DBUser, authenticate, is_safe_url,
+                                      login_manager)
 from virasana.views import app, db
 
 login_manager.init_app(app)

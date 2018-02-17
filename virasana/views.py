@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 import gridfs
 from bson.objectid import ObjectId
-from celery import states
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
 from flask_bootstrap import Bootstrap
@@ -18,6 +17,7 @@ from flask_nav.elements import Navbar, View
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
 
+from celery import states
 from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET, TIMEOUT,
                            redisdb)
 from virasana.workers.raspadir import raspa_dir
@@ -222,9 +222,7 @@ app.config['SECRET_KEY'] = SECRET
 # app.config['SESSION_TYPE'] = 'filesystem'
 # Session(app)
 
-
 nav.init_app(app)
-
 
 if __name__ == '__main__':
     # start the web server

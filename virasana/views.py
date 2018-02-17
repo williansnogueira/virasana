@@ -15,13 +15,14 @@ from flask_login import current_user, login_required
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
-from wtforms import DateField, DateTimeField, SubmitField, StringField
+from wtforms import DateField, StringField
 from wtforms.validators import DataRequired, optional
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
 
 from celery import states
-from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET, TIMEOUT,
+from ajna_commons.flask.conf import SECRET
+from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, TIMEOUT,
                            redisdb)
 from virasana.workers.raspadir import raspa_dir
 
@@ -165,7 +166,8 @@ def image(_id):
 
 class FilesForm(FlaskForm):
     numero = StringField('Número', validators=[DataRequired()])
-    start = DateField('Start', validators=[optional()], default=datetime.utcnow() - timedelta(days=90))
+    start = DateField('Start', validators=[optional()],
+                      default=datetime.utcnow() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=datetime.utcnow())
 
 
@@ -196,7 +198,9 @@ def files(page=1):
         return render_template('search_files.html',
                                paginated_files=lista_arquivos,
                                numero=numero)
-    return render_template('search_files.html', numero=numero, start=start, end=end)
+    return render_template('search_files.html',
+                           numero=numero,
+                           start=start, end=end)
 
 
 @nav.navigation()

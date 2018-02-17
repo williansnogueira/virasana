@@ -1,9 +1,6 @@
 import os
-import pickle
-import tempfile
 
 import redis
-from ajna_commons.flask.conf import SECRET, tmpdir
 
 BSON_REDIS = 'bson'
 REDIS_URL = os.environ.get('REDIS_URL')

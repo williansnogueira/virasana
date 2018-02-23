@@ -7,8 +7,9 @@ from pymongo import MongoClient
 
 from ajna_commons.models.bsonimage import BsonImageList
 from celery import Celery, states
-from virasana.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE, MONGODB_URI,
-                           redisdb)
+from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
+                                     MONGODB_URI,
+                                     redisdb)
 
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)

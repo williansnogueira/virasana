@@ -7,7 +7,6 @@ from virasana.views import app, db
 
 login_manager.init_app(app)
 DBUser.dbsession = db
-print('session seted: ', DBUser.dbsession)
 
 
 @app.route('/login', methods=['GET', 'POST'])

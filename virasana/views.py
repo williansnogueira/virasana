@@ -21,9 +21,8 @@ from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
 
 from celery import states
-from ajna_commons.flask.conf import SECRET
-from virasana.conf import (BSON_REDIS, DATABASE, MONGODB_URI, TIMEOUT,
-                           redisdb)
+from ajna_commons.flask.conf import (SECRET, BSON_REDIS, DATABASE, MONGODB_URI,
+                                     TIMEOUT, redisdb)
 from virasana.workers.raspadir import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')

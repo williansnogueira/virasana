@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from virasana.app import app
+import virasana.app as app
 
 
 class FlaskTestCase(unittest.TestCase):
@@ -12,9 +12,10 @@ class FlaskTestCase(unittest.TestCase):
             from webtest import TestApp
             self.app = TestApp(self.http_server)
         else:
-            app.testing = True
-            app.config['WTF_CSRF_ENABLED'] = False
-            self.app = app.test_client()
+            app.app.testing = True
+            app.app.config['WTF_CSRF_ENABLED'] = False
+            self.app = app.app.test_client()
+            app.DBUser.dbsession = None  # Bypass authentication
         rv = self.login('ajna', 'ajna')
         assert rv is not None
 

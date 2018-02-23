@@ -12,7 +12,7 @@ import pytest
 from pymongo import MongoClient
 
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
-from virasana.conf import BACKEND, BROKER
+from ajna_commons.flask.conf import BACKEND, BROKER
 from virasana.views import app
 from virasana.workers.raspadir import celery
 

@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 
 import gridfs
 from bson.objectid import ObjectId
+from celery import states
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
 from flask_bootstrap import Bootstrap
@@ -15,13 +16,12 @@ from flask_login import current_user, login_required
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField
-from wtforms.validators import optional
 from flask_wtf.csrf import CSRFProtect
 from pymongo import MongoClient
+from wtforms import DateField, StringField
+from wtforms.validators import optional
 
-from celery import states
-from ajna_commons.flask.conf import (SECRET, BSON_REDIS, DATABASE, MONGODB_URI,
+from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
                                      TIMEOUT, redisdb)
 from virasana.workers.raspadir import raspa_dir
 

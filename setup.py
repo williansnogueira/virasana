@@ -35,17 +35,21 @@ setup(
     extras_require={
         'dev': [
             'alembic',
+            'autopep8',
             'bandit',
             'coverage',
             'flake8',
             'flake8-quotes',
+            'flake8-docstrings',
+            'flake8-todo',
             'flask-webtest',
             'isort',
-            'autopep8',
+            'mypy',
             'pylint',
             'pytest',
             'pytest-cov',
             'pytest-mock',
+            'radon',
             'testfixtures',
             'tox'
         ],

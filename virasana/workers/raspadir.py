@@ -34,7 +34,9 @@ def trata_bson(bson_file: str, db: MongoClient) -> list:
 
 @celery.task(bind=True)
 def raspa_dir(self):
-    """Background task that go to directory of incoming files
+    """De base em arquivos para mongoDB.
+
+    Background task that go to directory of incoming files
     AND load then to mongodb
     """
     self.update_state(state=states.STARTED,

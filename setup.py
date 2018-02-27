@@ -21,6 +21,7 @@ setup(
         'Flask-session',
         'Flask-wtf',
         'pymongo',
+        'pandas',
         'redis',
       
     ],

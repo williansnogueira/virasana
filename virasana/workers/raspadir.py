@@ -1,4 +1,13 @@
-# Código do celery task
+"""
+Definição dos códigos que serão rodados pelo Celery.
+
+Background tasks do sistema AJNA-virasana
+Gerenciados por celery.sh
+Aqui ficam as rotinas que serão chamadas periodicamente e
+aquelas que rodam tarefas custosas/demoradas em background.
+
+"""
+# Código dos celery tasks
 import json
 from base64 import decodebytes
 

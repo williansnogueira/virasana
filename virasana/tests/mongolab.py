@@ -47,7 +47,7 @@ def mongo_find_in(db, collection: str, field: str, in_set: set,
     return result, field_set
 
 
-def busca_atracacao_data(atracacoes: list,  scan_datetime: datetime,
+def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
                          threshold=None) -> int:
     """Pega da lista de atracacoes a atracção com a data mais próxima.
 
@@ -67,7 +67,7 @@ def busca_atracacao_data(atracacoes: list,  scan_datetime: datetime,
     for ind, atracacao in enumerate(atracacoes):
         data = atracacao['dataatracacao']
         hora = atracacao['horaatracacao']
-        datahora = datetime.strptime(data+' '+hora, '%d/%m/%Y %H:%M:%S')
+        datahora = datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
         datetimedelta = abs(datahora - scan_datetime)
         # print(datetimedelta, threshold)
         if datetimedelta < threshold:
@@ -104,7 +104,8 @@ def busca_info_container(numero: str, data_escaneamento: datetime) -> dict:
     containeres_vazios, manifestos_vazios_set = mongo_find_in(
         db, 'CARGA.ContainerVazio', 'container', set([numero]), 'manifesto')
     escalas_vazios, escalas_vazios_set = mongo_find_in(
-        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_vazios_set, 'escala')
+        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_vazios_set,
+        'escala')
     atracacoes_vazios, _ = mongo_find_in(
         db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
     index_atracacao = busca_atracacao_data(
@@ -122,7 +123,7 @@ def busca_info_container(numero: str, data_escaneamento: datetime) -> dict:
                                   if linha['manifesto'] == manifesto[0]]
         return json_dict
     # else:
-    # Não achou atracacao para o Contêiner no prazo. Verificar se Contêiner é cheio
+    # Não achou atracacao vazio do Contêiner. Verificar se Contêiner é cheio
     containeres, conhecimentos_set = mongo_find_in(
         db, 'CARGA.Container', 'container', set([container]), 'conhecimento')
     conhecimentos, _ = mongo_find_in(
@@ -162,21 +163,21 @@ container_vazio = 'apru5774515'
 data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
-"""reps = 10
+reps = 3
 tempo = timeit.timeit(
     stmt='busca_info_container(container_vazio, data_escaneamento_false)',
     number=reps, globals=globals())
 print('loops(TUDO - data falsa):', reps,
-      'total time:', tempo, 'per loop:', tempo/reps)
+      'total time:', tempo, 'per loop:', tempo / reps)
 tempo = timeit.timeit(
     stmt='busca_info_container(container, data_escaneamento_true)',
     number=reps, globals=globals())
-print('loops(cheio):', reps, 'total time:', tempo, 'per loop:', tempo/reps)
+print('loops(cheio):', reps, 'total time:', tempo, 'per loop:', tempo / reps)
 tempo = timeit.timeit(
     stmt='busca_info_container(container_vazio, data_escaneamento_true)',
     number=reps, globals=globals())
-print('loops(vazio):', reps, 'total time:', tempo, 'per loop:', tempo/reps)
-"""
+print('loops(vazio):', reps, 'total time:', tempo, 'per loop:', tempo / reps)
+
 # teste de função
 assert busca_info_container(container, data_escaneamento_false) == {}
 assert busca_info_container(container, data_escaneamento_true) != {}
@@ -185,10 +186,11 @@ assert busca_info_container(container_vazio, data_escaneamento_true) != {}
 
 
 print('Cheio')
-pprint.pprint(busca_info_container(container, data_escaneamento_true))
+# pprint.pprint(busca_info_container(container, data_escaneamento_true))
 
 print('Vazio')
-pprint.pprint(busca_info_container(container_vazio, data_escaneamento_true))
+# pprint.pprint(busca_info_container(container_vazio, data_escaneamento_true))
+pprint.pprint(container)
 
 file_cursor = db['fs.files'].find({'metadata.CARGA': None})
 count = file_cursor.count()
@@ -198,13 +200,31 @@ print('Files count with no CARGA metadata', count)
 acum = 0
 start = datetime.utcnow()
 end = start - timedelta(days=1000)
-for linha in file_cursor:
-    container = linha.get('metadata.numeroinformado')
-    data = linha.get('metadata.dataimportacao')
-    if data < start:
-        start = data
-    if data > end:
-        end = data
-    if busca_info_container(container, data) != {}:
-        acum +=1
+for linha in file_cursor.limit(10):
+    container = linha.get('metadata').get('numeroinformado')
+    data = linha.get('metadata').get('dataimportacao')
+    if data is not None:
+        if data < start:
+            start = data
+        if data > end:
+            end = data
+        if busca_info_container(container, data) != {}:
+            acum += 1
 print(acum, start, end)
+
+linha = db['CARGA.AtracDesatracEscala'].find().sort('dataatracacao').limit(1)
+linha = next(linha)
+print('Menor data de atracação (CARGA)', linha.get('dataatracacao'))
+linha = db['CARGA.AtracDesatracEscala'].find().sort(
+    'dataatracacao', -1).limit(1)
+linha = next(linha)
+print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
+
+linha = db['fs.files'].find().sort('metadata.dataimportacao').limit(1)
+linha = next(linha)
+print('Menor data de importação (IMAGENS)',
+      linha.get('metadata').get('dataimportacao'))
+linha = db['fs.files'].find().sort('metadata.dataimportacao', -1).limit(1)
+linha = next(linha)
+print('Maior data de importação (IMAGENS)',
+      linha.get('metadata').get('dataimportacao'))

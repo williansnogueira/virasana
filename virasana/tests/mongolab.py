@@ -7,7 +7,7 @@ Tests for sintax and operations before putting into main code
 import pprint
 import typing
 import timeit
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pymongo import MongoClient
 
 db = MongoClient()['test']
@@ -191,8 +191,9 @@ print('Cheio')
 print('Vazio')
 # pprint.pprint(busca_info_container(container_vazio, data_escaneamento_true))
 pprint.pprint(container)
-
-file_cursor = db['fs.files'].find({'metadata.CARGA': None})
+datetime(2018, 8, 1)
+file_cursor = db['fs.files'].find({'metadata.CARGA': None,
+                                   'metadata.dataescaneamento': {'$gt': datetime(2017, 8, 5)}})
 count = file_cursor.count()
 print('Files count with no CARGA metadata', count)
 
@@ -200,9 +201,10 @@ print('Files count with no CARGA metadata', count)
 acum = 0
 start = datetime.utcnow()
 end = start - timedelta(days=1000)
-for linha in file_cursor.limit(10):
-    container = linha.get('metadata').get('numeroinformado')
-    data = linha.get('metadata').get('dataimportacao')
+for linha in file_cursor.limit(100):
+    container = linha.get('metadata').get('numeroinformado').lower()
+    data = linha.get('metadata').get('dataescaneamento')
+    # print(container, data)
     if data is not None:
         if data < start:
             start = data
@@ -210,7 +212,7 @@ for linha in file_cursor.limit(10):
             end = data
         if busca_info_container(container, data) != {}:
             acum += 1
-print(acum, start, end)
+print('Encontrados', acum, 'menor data', start, 'maior data', end)
 
 linha = db['CARGA.AtracDesatracEscala'].find().sort('dataatracacao').limit(1)
 linha = next(linha)
@@ -220,11 +222,21 @@ linha = db['CARGA.AtracDesatracEscala'].find().sort(
 linha = next(linha)
 print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
 
-linha = db['fs.files'].find().sort('metadata.dataimportacao').limit(1)
+linha = db['fs.files'].find().sort('metadata.dataescaneamento', 1).limit(1)
 linha = next(linha)
 print('Menor data de importação (IMAGENS)',
-      linha.get('metadata').get('dataimportacao'))
-linha = db['fs.files'].find().sort('metadata.dataimportacao', -1).limit(1)
+      linha.get('metadata').get('dataescaneamento'))
+linha = db['fs.files'].find().sort('metadata.dataescaneamento', -1).limit(1)
 linha = next(linha)
 print('Maior data de importação (IMAGENS)',
-      linha.get('metadata').get('dataimportacao'))
+      linha.get('metadata').get('dataescaneamento'))
+
+
+cursor = db['fs.files'].find({'metadata.dataescaneamento': None})
+print(cursor.count())
+for linha in cursor:
+    data = linha.get('metadata').get('dataimportacao')
+    db['fs.files'].update(
+        {'_id': linha['_id']},
+        {'$set': {'metadata.dataescaneamento': data}}
+    )

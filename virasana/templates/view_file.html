@@ -2,24 +2,58 @@
 <div id="main" class="container-fluid">
     <div id="top" class="row">
     </div>
-    <div id="list" class="row">
-        <div class="table-responsive col-md-12">
-            {# Display a page of todos #}
-            <ul>
-                <li>{{ myfile['filename'] }}</li>
-                <li>{{ myfile['upload_date'] }}</li>
-                {% for key, value in myfile['metadata'].items() %}
-                <li> {{ key }}: {{ value }}</li>
-                {% endfor %}
-                <li><img src="/image/{{ myfile['_id'] }}" /></li>
-            </ul>
+    <div id="metadata" class="row">
+        <div id="accordion">
+            <h3>Dados do arquivo de Imagem</h3>
+            <div id="file">
+                <div class="col-md-6">
+                    <img src="/image/{{ myfile['_id'] }}" />
+                </div>
+                <div class="col-md-6">
+                    <ul>
+                        <li>{{ myfile['filename'] }}</li>
+                        <li>{{ myfile['upload_date'] }}</li>
+                        {% for key, value in myfile['metadata'].items() %}
+                        {% if value is not mapping %}
+                        <li> {{ key }}: {{ value }}</li>
+                        {% endif %}
+                        {% endfor %}
+                        </ul>
+                </div>
+            </div>
+            <h3>Dados do arquivo XML</h3>
+            <div id="xml">
+                <ul>
+                    {% for key, value in myfile['metadata']['xml'].items() %}
+                    <li> {{ key }}: {{ value }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <h3>Dados do sistema CARGA</h3>
+            <div id="carga">
+                <ul>
+                    {% for key, value in myfile['metadata']['carga'].items() %}
+                    <li> {{ key }}: {{ value }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
-    <div id="bottom" class="row">
-        AJNA - Receita Federal do Brasil 2017
-    </div>
+</div>
+<div id="bottom" class="row">
+    AJNA - Receita Federal do Brasil 2017
+</div>
 </div>
 <!-- /#main -->
 {% endblock %} {% block scripts %} {{super()}}
+<script src="/static/js/jquery-ui.min.js"></script>
 <script type="text/javascript">
+    $(document).ready(function () {
+        $(function () {
+            $("#accordion").accordion({
+                heightStyle: "fill",
+                active: 0
+            });
+        });
+    });
 </script> {% endblock %}

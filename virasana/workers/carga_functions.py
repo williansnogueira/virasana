@@ -121,7 +121,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     manifestos, manifestos_set = mongo_find_in(
         db, 'CARGA.ManifestoConhecimento', 'conhecimento',
         conhecimentos_set, 'manifesto')
-        # manifestos_set = set([manifesto['manifesto'] for manifesto in manifestos])
+    # manifestos_set= set([manifesto['manifesto'] for manifesto in manifestos])
     escalas, escalas_set = mongo_find_in(
         db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
     atracacoes, _ = mongo_find_in(

@@ -51,7 +51,6 @@ db['fs.files'].insert({'metadata.numeroinformado': 'cheio',
 db['fs.files'].insert({'metadata.numeroinformado': 'cheio', 'conhecimento': 1})
 
 
-
 db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
 db['CARGA.Container'].insert(
     {'container': 'semconhecimento', 'conhecimento': 9})
@@ -72,8 +71,8 @@ db['CARGA.ManifestoEscala'].insert({'manifesto': 1, 'escala': 1})
 db['CARGA.ManifestoEscala'].insert({'manifesto': 2, 'escala': 2})
 db['CARGA.ManifestoEscala'].insert({'manifesto': 3, 'escala': 3})
 db['CARGA.ManifestoEscala'].insert({'manifesto': 4, 'escala': 4})
-db['CARGA.AtracDesatracEscala'].insert({'escala': 4, 'dataatracacao': data_escala_4})
-
+db['CARGA.AtracDesatracEscala'].insert(
+    {'escala': 4, 'dataatracacao': data_escala_4})
 
 
 # Ver dados retornados do CARGA

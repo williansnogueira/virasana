@@ -10,10 +10,15 @@ from virasana.workers.xml_functions import dados_xml_grava_fsfiles
 db = MongoClient()['test']
 fs = GridFS(db)
 
-number = db['fs.files'].find({'metadata.xml': None}).count()
+number = db['fs.files'].find(
+    {'metadata.xml': None,
+     'metadata.contentType': 'image/jpeg'
+     }).count()
 print(number, 'registros sem metadata de xml')
 
 dados_xml_grava_fsfiles(db, 10000, datetime(1900, 1, 1), True)
+
+print(number, 'registros sem metadata de xml')
 
 """
 filename = '.*xml'

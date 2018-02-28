@@ -47,7 +47,7 @@ data_escaneamento = datetime(2017, 1, 1)
 data_escalas = data_escaneamento - timedelta(days=1)
 data_escala_4 = data_escaneamento - timedelta(days=4)
 db['fs.files'].insert({'metadata.numeroinformado': 'cheio',
-                       'metadata.dataescaneamento': })
+                       'metadata.dataescaneamento': data_escaneamento})
 db['fs.files'].insert({'metadata.numeroinformado': 'cheio', 'conhecimento': 1})
 
 

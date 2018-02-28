@@ -11,8 +11,8 @@
                 </div>
                 <div class="col-md-6">
                     <ul>
-                        <li>{{ myfile['filename'] }}</li>
-                        <li>{{ myfile['upload_date'] }}</li>
+                        <li>File Name: {{ myfile['filename'] }}</li>
+                        <li>Upload Date: {{ myfile['upload_date'] }}</li>
                         {% for key, value in myfile['metadata'].items() %}
                         {% if value is not mapping %}
                         <li> {{ key }}: {{ value }}</li>

@@ -45,7 +45,7 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    print(current_user)
+    # print(current_user)
     if current_user.is_authenticated:
         return render_template('index.html')
     else:
@@ -139,7 +139,7 @@ def list_files():
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
         lista_arquivos.append(grid_data.filename)
-    print(lista_arquivos)
+    # print(lista_arquivos)
     return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
 
 
@@ -152,6 +152,7 @@ def file(_id=None):
         grid_data = fs.find_one({'filename': request.args.get('filename')})
     else:
         grid_data = fs.get(ObjectId(_id))
+    # print(grid_data)
     return render_template('view_file.html', myfile=grid_data)
 
 
@@ -189,15 +190,15 @@ def files(page=1):
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
             filtro['metadata.numeroinformado'] = {'$regex': numero}
-        print(filtro)
+        # print(filtro)
         for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(10):
             linha = {}
             linha['_id'] = grid_data._id
             linha['filename'] = grid_data.filename
-            linha['upload_date'] = grid_data.metadata.get('dataimportacao')
+            linha['upload_date'] = grid_data.metadata.get('dataescaneamento')
             linha['numero'] = grid_data.metadata.get('numeroinformado')
             lista_arquivos.append(linha)
-        print(lista_arquivos)
+        # print(lista_arquivos)
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
                            oform=form)

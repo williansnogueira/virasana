@@ -8,7 +8,7 @@
                     <label for="numero">Número do contêiner</label>
                 </div>
                 <div class="col-sm-6">
-                    <label for="date">Período da importação da imagem</label>
+                    <label for="date">Período de escaneamento da imagem</label>
                 </div>
             </div>
             <div class="row">
@@ -30,14 +30,18 @@
         </form>
     </div>
     <div id="list" class="row">
-        <div class="table table-responsive col-sm-12">
+        &nbsp;
+        <div class="col-sm-1">
+            &nbsp;
+        </div>
+        <div class="table table-responsive col-sm-10">
             {# Display a page of todos #}
             <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
                 <thead>
                     <tr>
                         <td>Número informado do Contêiner</td>
                         <td>Nome do Arquivo</td>
-                        <td>Data de Upload</td>
+                        <td>Data de Escaneamento</td>
                     </tr>
                 </thead>
                 {% for myfile in paginated_files %}
@@ -51,6 +55,9 @@
                 </tr>
                 {% endfor %}
             </table>
+        </div>
+        <div class="col-sm-1">
+            &nbsp;
         </div>
     </div>
     <div id="bottom" class="row">

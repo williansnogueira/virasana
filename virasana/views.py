@@ -125,7 +125,7 @@ def api_upload():
 @app.route('/raspadir_progress')
 @login_required
 def raspadir_progress():
-    """Returns a json of raspadir celery task progress"""
+    """Returns a json of raspadir celery task progress."""
     # See where to put task_id (Session???)
     pass
 

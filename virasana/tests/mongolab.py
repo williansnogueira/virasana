@@ -47,22 +47,25 @@ assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
 print('Cheio')
 # pprint.pprint(busca_info_container(db, container, data_escaneamento_true))
 print('Vazio')
-# pprint.pprint(busca_info_container(db, container_vazio, data_escaneamento_true))
+# pprint.pprint(busca_info_container(db, container_vazio,
+#  data_escaneamento_true))
 pprint.pprint(container)
 
 
 # Teste com dados reais
 data_inicio = datetime(2017, 8, 5)
-file_cursor = db['fs.files'].find({'metadata.carga': None,
-                                   'metadata.dataescaneamento': {'$gt': data_inicio}})
+file_cursor = db['fs.files'].find(
+    {'metadata.carga': None,
+     'metadata.dataescaneamento': {'$gt': data_inicio}})
 count = file_cursor.count()
 print('Total de arquivos sem metadata.carga', count, 'desde', data_inicio)
 # A linha abaixo é apenas para linter não reclamar do import
 dados_carga_grava_fsfiles(db, 1, 0, False)
 batch_size = 100
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
-tempo = timeit.timeit(stmt='dados_carga_grava_fsfiles(db, batch_size, data_inicio, False)',
-                      number=1, globals=globals())
+tempo = timeit.timeit(
+    stmt='dados_carga_grava_fsfiles(db, batch_size, data_inicio, False)',
+    number=1, globals=globals())
 print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
       tempo / batch_size, 'por registro')
 

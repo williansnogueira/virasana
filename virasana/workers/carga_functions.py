@@ -1,8 +1,7 @@
-"""
-Functions to import CARGA data from Bhadrasana.
-"""
+"""Functions to import CARGA data from Bhadrasana."""
+
 import typing
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from ajna_commons.flask.log import logger
 
 
@@ -111,7 +110,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
         # print(atracacao)
         json_dict['container'] = [linha for linha in containeres_vazios
-                                     if linha['manifesto'] == manifesto[0]]
+                                  if linha['manifesto'] == manifesto[0]]
         return json_dict
     # else:
     # Não achou atracacao vazio do Contêiner. Verificar se Contêiner é cheio
@@ -144,7 +143,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
         json_dict['ncm'], _ = mongo_find_in(
             db, 'CARGA.NCM', 'conhecimento', conhecimentos)
         json_dict['container'] = [linha for linha in containeres
-                                     if linha['conhecimento'] in conhecimentos]
+                                  if linha['conhecimento'] in conhecimentos]
     return json_dict
 
 
@@ -152,7 +151,7 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
     """Busca por registros no GridFS sem info do CARGA.
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
-    importada do sistema CARGA. Itera estes registros, consultando a 
+    importada do sistema CARGA. Itera estes registros, consultando a
     busca_info_container para ver se retorna informações do CARGA. Encontrando
     estas informações, grava no campo metadata.carga do fs.files
 
@@ -174,7 +173,7 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
     end = start - timedelta(days=10000)
     for linha in file_cursor.limit(batch_size):
         container = linha.get('metadata').get('numeroinformado')
-        container = container.lower()  # Lembrar que está tudo minusculo no BD!!!
+        container = container.lower()  # Lembrar que está tudo minusculo no BD!
         data = linha.get('metadata').get('dataescaneamento')
         # print(container, data)
         if data is not None:

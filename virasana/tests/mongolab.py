@@ -202,7 +202,8 @@ acum = 0
 start = datetime.utcnow()
 end = start - timedelta(days=1000)
 for linha in file_cursor.limit(100):
-    container = linha.get('metadata').get('numeroinformado').lower()
+    container = linha.get('metadata').get('numeroinformado')
+    container = container.lower()  # Lembrar que está tudo minusculo no BD!!!
     data = linha.get('metadata').get('dataescaneamento')
     # print(container, data)
     if data is not None:

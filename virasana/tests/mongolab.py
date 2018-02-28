@@ -6,7 +6,7 @@ Tests for sintax and operations before putting into main code
 """
 import pprint
 import timeit
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 
 from virasana.workers.carga_functions import busca_info_container, \
@@ -42,6 +42,39 @@ assert busca_info_container(db, container, data_escaneamento_false) == {}
 assert busca_info_container(db, container, data_escaneamento_true) != {}
 assert busca_info_container(db, container_vazio, data_escaneamento_false) == {}
 assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
+
+data_escaneamento = datetime(2017, 1, 1)
+data_escalas = data_escaneamento - timedelta(days=1)
+data_escala_4 = data_escaneamento - timedelta(days=4)
+db['fs.files'].insert({'metadata.numeroinformado': 'cheio',
+                       'metadata.dataescaneamento': })
+db['fs.files'].insert({'metadata.numeroinformado': 'cheio', 'conhecimento': 1})
+
+
+
+db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
+db['CARGA.Container'].insert(
+    {'container': 'semconhecimento', 'conhecimento': 9})
+db['CARGA.Container'].insert({'container': 'semescala', 'conhecimento': 3})
+db['CARGA.Container'].insert(
+    {'container': 'escalaforadoprazo', 'conhecimento': 4})
+db['CARGA.ContainerVazio'].insert({'container': 'vazio'})
+db['CARGA.Conhecimento'].insert({'conhecimento': 1})
+db['CARGA.Conhecimento'].insert({'conhecimento': 2})
+db['CARGA.Conhecimento'].insert({'conhecimento': 3})
+db['CARGA.Conhecimento'].insert({'conhecimento': 3})
+db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 1, 'manifesto': 1})
+db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 2, 'manifesto': 2})
+db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 3, 'manifesto': 3})
+db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 4, 'manifesto': 4})
+db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 3, 'manifesto': 32})
+db['CARGA.ManifestoEscala'].insert({'manifesto': 1, 'escala': 1})
+db['CARGA.ManifestoEscala'].insert({'manifesto': 2, 'escala': 2})
+db['CARGA.ManifestoEscala'].insert({'manifesto': 3, 'escala': 3})
+db['CARGA.ManifestoEscala'].insert({'manifesto': 4, 'escala': 4})
+db['CARGA.AtracDesatracEscala'].insert({'escala': 4, 'dataatracacao': data_escala_4})
+
+
 
 # Ver dados retornados do CARGA
 print('Cheio')

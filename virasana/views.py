@@ -186,7 +186,7 @@ def files(page=1):
         if start and end:
             start = datetime.combine(start, datetime.min.time())
             end = datetime.combine(end, datetime.min.time())
-            filtro['metadata.dataimportacao'] = {'$lt': end, '$gt': start}
+            filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
             filtro['metadata.numeroinformado'] = {'$regex': numero}
         print(filtro)

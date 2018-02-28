@@ -53,7 +53,7 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
     """
     index = None
     if threshold is None:
-        threshold = timedelta(days=2)
+        threshold = timedelta(days=3)
     for ind, atracacao in enumerate(atracacoes):
         data = atracacao['dataatracacao']
         hora = atracacao['horaatracacao']
@@ -121,6 +121,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     manifestos, manifestos_set = mongo_find_in(
         db, 'CARGA.ManifestoConhecimento', 'conhecimento',
         conhecimentos_set, 'manifesto')
+        # manifestos_set = set([manifesto['manifesto'] for manifesto in manifestos])
     escalas, escalas_set = mongo_find_in(
         db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
     atracacoes, _ = mongo_find_in(

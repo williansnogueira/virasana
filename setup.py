@@ -22,6 +22,7 @@ setup(
         'Flask-wtf',
         'pymongo',
         'pandas',
+        'raven',
         'redis',
       
     ],

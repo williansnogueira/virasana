@@ -8,19 +8,24 @@ from ajna_commons.flask.log import logger
 
 
 def xml_todict(xml) -> dict:
-    """Recebe um XML de um stream, retorna um dict com campos do XML.
+    """Recebe um XML string stream, retorna um dict com campos do XML.
 
     Lê o XML que acompanha as imagens no formato do Escâner da ALFSTS,
     retorna dict(s) com os dados considerados mais importantes e resumos
     (ex.: número do(s) cc(s), datas, etc) - configurar na var. fields
     Args:
-        xml: stream de texto na memória com o conteúdo do arquivo XML
+        xml: string de texto na memória com o conteúdo do arquivo XML
     Returns:
         dicionário com as tags selecionadas. A tag container é uma lista
         (imagens de cc de 20' podem conter dois contêineres escaneados)
     """
     result = {}
-    root = ET.fromstring(xml)
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError as err:
+        logger.error(err, exc_info=True)
+        logger.error(xml)
+        return result
     fields = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
               'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
               'UpdateCount', 'LastStateDateTime')

@@ -4,7 +4,8 @@ Testes interativos em arquivos XML gerados pelos equipamentos.
 from datetime import datetime
 from pymongo import MongoClient
 from gridfs import GridFS
-from virasana.workers.xml_functions import dados_xml_grava_fsfiles, xml_todict
+from virasana.workers.xml_functions import dados_xml_grava_fsfiles
+# , xml_todict
 
 db = MongoClient()['test']
 fs = GridFS(db)
@@ -13,7 +14,6 @@ number = db['fs.files'].find({'metadata.xml': None}).count()
 print(number, 'registros sem metadata de xml')
 
 dados_xml_grava_fsfiles(db, 10000, datetime(1900, 1, 1), True)
-
 
 """
 filename = '.*xml'

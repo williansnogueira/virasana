@@ -11,8 +11,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'ajna_commons==0.0.1',
-        
         'Celery',
+        'defusedxml',
         'Flask',
         'Flask-BootStrap',
         'Flask-Login',

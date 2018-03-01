@@ -1,7 +1,7 @@
 """
 Funções para leitura e tratamento de arquivos XML gerados pelos equipamentos.
 """
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
 from ajna_commons.flask.log import logger

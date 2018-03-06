@@ -24,7 +24,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
 
 from ajna_commons.flask.log import logger
 
-from virasana.workers.raspadir import raspa_dir
+from virasana.workers.tasks import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -119,7 +119,7 @@ def api_upload():
 
 
 @app.route('/api/task/<taskid>')
-@login_required
+# @login_required
 def task_progress(taskid):
     """Returns a json of celery task progress."""
     task = raspa_dir.AsyncResult(taskid)

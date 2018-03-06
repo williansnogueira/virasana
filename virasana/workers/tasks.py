@@ -9,6 +9,8 @@ aquelas que rodam tarefas custosas/demoradas em background.
 """
 # Código dos celery tasks
 import json
+import requests
+import time
 from base64 import decodebytes
 
 import gridfs
@@ -53,3 +55,5 @@ def raspa_dir(self):
         trata_bson(file, db)
     return {'current': '',
             'status': 'Todos os arquivos processados'}
+
+

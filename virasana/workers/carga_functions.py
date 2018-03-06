@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from ajna_commons.flask.log import logger
 
 
-
 FALTANTES = {'metadata.carga': None}
 
 
@@ -170,7 +169,8 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     return json_dict
 
 
-def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
+def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
+                              force_update=False):
     """Busca por registros no GridFS sem info do CARGA.
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
@@ -212,6 +212,12 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
                         {'$set': {'metadata.carga': dados_carga}}
                     )
                 acum += 1
+            else:
+                if force_update:
+                    db['fs.files'].update(
+                        {'_id': linha['_id']},
+                        {'$set': {'metadata.carga': 'NA'}}
+                    )
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
         ' Pesquisados', str(batch_size),

@@ -6,6 +6,7 @@ Tests for sintax and operations before putting into main code
 """
 import pprint
 import timeit
+import time
 from datetime import datetime, timedelta
 
 from pymongo import MongoClient
@@ -28,6 +29,7 @@ container_vazio = 'apru5774515'
 data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
+"""
 reps = 3
 print('Início do teste de desempenho')
 tempo = timeit.timeit(
@@ -51,7 +53,7 @@ assert busca_info_container(db, container_vazio, data_escaneamento_false) == {}
 assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
 
 
-
+"""
 data_escaneamento = datetime(2017, 1, 1)
 
 """"
@@ -104,11 +106,15 @@ file_cursor = db['fs.files'].find(
     {'metadata.carga': None,
      'metadata.dataescaneamento': {'$gt': data_inicio}})
 count = file_cursor.count()
-print('Total de arquivos sem metadata.carga', count, 'desde', data_inicio)
-batch_size = 10000
+print(count, 'Total de arquivos sem metadata.carga', 'desde', data_inicio)
+file_cursor = db['fs.files'].find(
+    {'metadata.carga': 'NA'})
+count = file_cursor.count()
+print(count, 'Total de arquivos com metadata.carga = "NA"', 'desde', data_inicio)
+batch_size = 60000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
 tempo = time.time()
-dados_carga_grava_fsfiles(db, batch_size, data_inicio)
+dados_carga_grava_fsfiles(db, batch_size, data_inicio, force_update=True)
 tempo = time.time() - tempo
 print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
       tempo / batch_size, 'por registro')

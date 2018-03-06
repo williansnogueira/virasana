@@ -78,15 +78,15 @@ def api_upload():
     """Função para upload via API de um arquivo BSON.
 
     Coloca o arquivo numa queue do Banco de Dados Redis
-    e inicia uma task Celery. O resultado do processamento efetivo do 
-    arquivo pode ser acompanhado na view 
+    e inicia uma task Celery. O resultado do processamento efetivo do
+    arquivo pode ser acompanhado na view
     py:func:`task_progress`
 
     Args:
         file: arquivo BSON gerado pelo AJNA e enviado via HTTP POST
     Returns:
         json['success']: True or False
-        json['taskid']: ID da task do celery iniciada para 
+        json['taskid']: ID da task do celery a ser monitorada
 
     """
     # ensure a bson was properly uploaded to our endpoint
@@ -101,7 +101,8 @@ def api_upload():
             elif not file.filename:
                 data['mensagem'] = 'Nome do arquivo vazio'
             else:
-                data['mensagem'] = 'Nome de arquivo não permitido: ' + file.filename
+                data['mensagem'] = 'Nome de arquivo não permitido: ' + \
+                    file.filename
             print(file)
         else:
             content = file.read()

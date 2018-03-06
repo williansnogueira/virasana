@@ -13,7 +13,6 @@ import time
 import requests
 import os
 from celery import states
-from io import BytesIO
 from threading import Thread
 
 from ajna_commons.flask.conf import VIRASANA_URL
@@ -93,16 +92,15 @@ def espera_resposta(api_url, bson_file, sleep_time=1, timeout=30):
         sleep_time: tempo entre requisições ao Servidor em segundos
         timeout: tempo total para aguardar resposta, em segundos
     """
-    cont = 0
     enter_time = time.time()
     rv = None
-    print('Thread')
     try:
         while True:
             time.sleep(sleep_time)
             if time.time() - enter_time >= timeout:
                 logger.error('Timeout ao esperar resultado de processamento ' +
-                             'Funcao: espera_resposta' + ' Arquivo: ' + bson_file)
+                             'Funcao: espera_resposta' +
+                             ' Arquivo: ' + bson_file)
                 return False
             rv = requests.get(api_url)
             if rv and rv.status_code == 200:

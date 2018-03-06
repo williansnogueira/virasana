@@ -24,6 +24,7 @@ setup(
         'pandas',
         'raven',
         'redis',
+        'requests'
       
     ],
     dependency_links=[

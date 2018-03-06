@@ -36,7 +36,7 @@ def trata_bson(bson_file: str, db: MongoClient) -> list:
 def raspa_dir(self):
     """De base em arquivos para mongoDB.
 
-    Background task that go to directory of incoming files
+    Background task that go to redis DB of incoming files
     AND load then to mongodb
     """
     self.update_state(state=states.STARTED,
@@ -44,6 +44,8 @@ def raspa_dir(self):
                             'status': 'Iniciando'})
     q = redisdb.lpop(BSON_REDIS)
     q = json.loads(q.decode('utf-8'))
+    self.update_state(meta={'current': q.get('filename'),
+                            'status': 'Processando arquivo'})
     file = bytes(q['bson'], encoding='utf-8')
     file = decodebytes(file)
     with MongoClient(host=MONGODB_URI) as conn:

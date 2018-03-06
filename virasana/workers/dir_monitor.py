@@ -13,9 +13,14 @@ import requests
 import os
 from io import BytesIO
 
-VIRASANA_URL = "http://localhost:5001"
-API_URL = VIRASANA_URL + "/api/uploadbson"
+from ajna_commons.flask.conf import VIRASANA_URL
+from ajna_commons.flask.log import logger
+
+# VIRASANA_URL = "http://localhost:5001"
+API_URL = VIRASANA_URL + '/api/uploadbson'
 BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
+BSON_DIR = os.path.join(os.path.dirname(__file__),
+                        '..', '..', '..', '..', 'files', 'BSON')
 
 
 def despacha(filename, target=API_URL):
@@ -29,16 +34,14 @@ def despacha(filename, target=API_URL):
         (True, None) se tudo correr bem
         (False, response) se ocorrer erro
     """
-    bson = open(filename, 'rb').read()
-    data = {}
-    data['file'] = (BytesIO(bson), 'test.bson')
-    rv = requests.post(API_URL, data=data)
-    print(rv)
+    bson = open(filename, 'rb')
+    files = {'file': bson}
+    rv = requests.post(API_URL, files=files)
     if rv is None:
         return False, None
-    print(rv.text)
-    # print(rv.json())
-    return True, rv
+    response_json = rv.json()
+    erro = response_json.get('success', False) and (rv.status_code == requests.codes.ok)
+    return erro, rv
 
 
 def despacha_dir(dir=BSON_DIR, target=API_URL):
@@ -50,15 +53,24 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     Returns:
         list of errors
     """
-    lista = []
+    erros = []
+    sucessos = []
+    exceptions = []
     for filename in os.listdir(dir):
-        success, response = despacha(os.path.join(dir, filename), target)
-        if not success:
-            lista.append(response)
+        try:
+            success, response = despacha(os.path.join(dir, filename), target)
+            if success:
+                # TODO: save on database list of tasks
+                response_json = response.json()
+                sucessos.append(response_json.get('taskid'))
+            else:
+                erros.append(response)
+                logger.error(response.text)
+        except Exception as err:
+            exceptions.append(err)
+            logger.error(err, exc_info=True)
+    return erros, exceptions
 
 
-        
 if __name__ == '__main__':
     print(despacha_dir())
-
-

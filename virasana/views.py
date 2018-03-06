@@ -1,12 +1,10 @@
 import json
 import os
-import time
 from base64 import b64encode
 from datetime import date, datetime, timedelta
 
 import gridfs
 from bson.objectid import ObjectId
-from celery import states
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
 from flask_bootstrap import Bootstrap
@@ -22,7 +20,10 @@ from wtforms import DateField, StringField
 from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
-                                     TIMEOUT, redisdb)
+                                     redisdb)
+
+from ajna_commons.flask.log import logger
+
 from virasana.workers.raspadir import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')
@@ -60,74 +61,74 @@ def upload_bson():
     """
     if request.method == 'POST':
         # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
         file = request.files.get('file')
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
+        if not file or file.filename == '' or not allowed_file(file.filename):
+            flash('Arquivo não informado ou inválido!')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
-            content = file.read()
-            d = {'bson': b64encode(content).decode('utf-8')}
-            redisdb.rpush(BSON_REDIS, json.dumps(d))
-            raspa_dir.delay()
-    return redirect(url_for('list_files'))
+        content = file.read()
+        d = {'bson': b64encode(content).decode('utf-8')}
+        redisdb.rpush(BSON_REDIS, json.dumps(d))
+        result = raspa_dir.delay()
+    return redirect(url_for('list_files', taskid=result.id))
 
 
 @app.route('/api/uploadbson', methods=['POST'])
 @csrf.exempt  # TODO: put CSRF on tests ??? Or just use JWT???
 def api_upload():
-    # initialize the data dictionary that will be returned from the
-    # view
-    data = {'progress': 'Function called'}
-    s0 = None
-    # ensure a bson was properly uploaded to our endpoint
-    if request.method == 'POST':
-        data['progress'] = 'Post checked'
-        file = request.files.get('file')
-        if file and file.filename != '' and allowed_file(file.filename):
-            data['progress'] = 'File checked'
-            s0 = time.time()
-            print('Enter Sandman - sending request to celery queue')
-            content = file.read()
-            d = {'bson': b64encode(content).decode('utf-8')}
-            redisdb.rpush(BSON_REDIS, json.dumps(d))
-            data['progress'] = 'File uploaded'
-            task = raspa_dir.delay()
-            data['progress'] = 'Task initiated'
-            # Wait 10s for celery to return success or failure
-            for r in range(1, 50):
-                time.sleep(TIMEOUT / 50)
-                if task.state in states.READY_STATES:
-                    data['progress'] = 'Task ended'
-                    break
-            if task.state not in states.READY_STATES:
-                data['progress'] = (
-                    'Timeout! Checar se serviço Celery está '
-                    'rodando e se não está travado. A tarefa pode '
-                    ' estar também demorando muito tempo para executar. \n '
-                    'task celery raspa_dir \n '
-                    'Timeout configurado para ' + str(TIMEOUT) + 's')
+    """Função para upload via API de um arquivo BSON.
 
-    # return the data dictionary as a JSON response
-    if s0 is not None:
-        s1 = time.time()
-        print(s1, 'Results read from queue and returned in ', s1 - s0)
-    if task and task.info:
-        data['state'] = task.state
-        data = {**data, **task.info}
+    Coloca o arquivo numa queue do Banco de Dados Redis
+    e inicia uma task Celery. O resultado do processamento efetivo do 
+    arquivo pode ser acompanhado na view 
+    py:func:`task_progress`
+
+    Args:
+        file: arquivo BSON gerado pelo AJNA e enviado via HTTP POST
+    Returns:
+        json['success']: True or False
+        json['taskid']: ID da task do celery iniciada para 
+
+    """
+    # ensure a bson was properly uploaded to our endpoint
+    file = request.files.get('file')
+    data = {'success': False,
+            'mensagem': 'Task iniciada',
+            'taskid': 0}
+    try:
+        if not file or file.filename == '' or not allowed_file(file.filename):
+            if not file:
+                data['mensagem'] = 'Arquivo nao informado'
+            elif not file.filename:
+                data['mensagem'] = 'Nome do arquivo vazio'
+            else:
+                data['mensagem'] = 'Nome de arquivo não permitido: ' + file.filename
+            print(file)
+        else:
+            content = file.read()
+            d = {'bson': b64encode(content).decode('utf-8'),
+                 'filename': file.filename}
+            redisdb.rpush(BSON_REDIS, json.dumps(d))
+            result = raspa_dir.delay()
+            data['taskid'] = result.id
+            data['success'] = True
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['mensagem'] = 'Excecao ' + str(err)
+
     return jsonify(data)
 
 
-@app.route('/raspadir_progress')
+@app.route('/api/task/<taskid>')
 @login_required
-def raspadir_progress():
-    """Returns a json of raspadir celery task progress."""
-    # See where to put task_id (Session???)
-    pass
+def task_progress(taskid):
+    """Returns a json of celery task progress."""
+    task = raspa_dir.AsyncResult(taskid)
+    response = {
+        'state': task.state,
+        'current': task.info.get('current', ''),
+        'status': task.info.get('status', '')
+    }
+    return jsonify(response)
 
 
 @app.route('/list_files')

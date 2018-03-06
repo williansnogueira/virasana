@@ -2,9 +2,12 @@
 Testes interativos em arquivos XML gerados pelos equipamentos.
 """
 from datetime import datetime
-from pymongo import MongoClient
+
 from gridfs import GridFS
+from pymongo import MongoClient
+
 from virasana.workers.xml_functions import dados_xml_grava_fsfiles
+
 # , xml_todict
 
 db = MongoClient()['test']

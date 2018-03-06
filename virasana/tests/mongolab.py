@@ -7,10 +7,11 @@ Tests for sintax and operations before putting into main code
 import pprint
 import timeit
 from datetime import datetime, timedelta
+
 from pymongo import MongoClient
 
-from virasana.workers.carga_functions import busca_info_container, \
-    dados_carga_grava_fsfiles
+from virasana.workers.carga_functions import (busca_info_container,
+                                              dados_carga_grava_fsfiles)
 
 db = MongoClient()['test']
 

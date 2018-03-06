@@ -9,11 +9,12 @@ Se houverem arquivos, envia via POST para o endereco VIRASANA_URL
 Pode ser importado e rodado em uma tarefa periódica (celery, cron, etc)
 
 """
-import time
-import requests
 import os
-from celery import states
+import time
 from threading import Thread
+
+import requests
+from celery import states
 
 from ajna_commons.flask.conf import VIRASANA_URL
 from ajna_commons.flask.log import logger

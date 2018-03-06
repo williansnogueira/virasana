@@ -21,9 +21,7 @@ from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
                                      redisdb)
-
 from ajna_commons.flask.log import logger
-
 from virasana.workers.tasks import raspa_dir
 
 app = Flask(__name__, static_url_path='/static')

@@ -11,9 +11,14 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 
 from virasana.workers.carga_functions import (busca_info_container,
+                                              create_indexes,
                                               dados_carga_grava_fsfiles)
 
 db = MongoClient()['test']
+#################
+# Criar índices
+create_indexes(db)
+
 
 #############################################
 # CARGA - testes para checar como pegar Info do Contêiner na Base CARGA
@@ -24,6 +29,7 @@ data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
 reps = 3
+print('Início do teste de desempenho')
 tempo = timeit.timeit(
     stmt='busca_info_container(db, container_vazio, data_escaneamento_false)',
     number=reps, globals=globals())
@@ -44,7 +50,14 @@ assert busca_info_container(db, container, data_escaneamento_true) != {}
 assert busca_info_container(db, container_vazio, data_escaneamento_false) == {}
 assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
 
+
+
 data_escaneamento = datetime(2017, 1, 1)
+
+""""
+Exemplo de como criar dados para teste:
+
+
 data_escalas = data_escaneamento - timedelta(days=1)
 data_escala_4 = data_escaneamento - timedelta(days=4)
 db['fs.files'].insert({'metadata.numeroinformado': 'cheio',
@@ -74,31 +87,29 @@ db['CARGA.ManifestoEscala'].insert({'manifesto': 3, 'escala': 3})
 db['CARGA.ManifestoEscala'].insert({'manifesto': 4, 'escala': 4})
 db['CARGA.AtracDesatracEscala'].insert(
     {'escala': 4, 'dataatracacao': data_escala_4})
-
+"""
 
 # Ver dados retornados do CARGA
-print('Cheio')
+# print('Cheio')
 # pprint.pprint(busca_info_container(db, container, data_escaneamento_true))
-print('Vazio')
+# print('Vazio')
 # pprint.pprint(busca_info_container(db, container_vazio,
 #  data_escaneamento_true))
-pprint.pprint(container)
+# pprint.pprint(container)
 
 
 # Teste com dados reais
-data_inicio = datetime(2017, 8, 5)
+data_inicio = datetime(2017, 7, 1)
 file_cursor = db['fs.files'].find(
     {'metadata.carga': None,
      'metadata.dataescaneamento': {'$gt': data_inicio}})
 count = file_cursor.count()
 print('Total de arquivos sem metadata.carga', count, 'desde', data_inicio)
-# A linha abaixo é apenas para linter não reclamar do import
-dados_carga_grava_fsfiles(db, 1, 0, False)
-batch_size = 100
+batch_size = 10000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
-tempo = timeit.timeit(
-    stmt='dados_carga_grava_fsfiles(db, batch_size, data_inicio, False)',
-    number=1, globals=globals())
+tempo = time.time()
+dados_carga_grava_fsfiles(db, batch_size, data_inicio)
+tempo = time.time() - tempo
 print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
       tempo / batch_size, 'por registro')
 
@@ -122,7 +133,7 @@ print('Maior data de importação (IMAGENS)',
 
 # Exemplo de script para atualizar um campo com base em outro
 #  caso dados mudem de configuração, campos mudem de nome, etc
-cursor = db['fs.files'].find({'metadata.dataescaneamento': None})
+"""cursor = db['fs.files'].find({'metadata.dataescaneamento': None})
 print(cursor.count())
 for linha in cursor:
     data = linha.get('metadata').get('dataimportacao')
@@ -130,3 +141,4 @@ for linha in cursor:
         {'_id': linha['_id']},
         {'$set': {'metadata.dataescaneamento': data}}
     )
+"""

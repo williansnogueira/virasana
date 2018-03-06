@@ -6,6 +6,27 @@ from datetime import datetime, timedelta
 from ajna_commons.flask.log import logger
 
 
+
+FALTANTES = {'metadata.carga': None}
+
+
+def create_indexes(db):
+    db['CARGA.ContainerVazio'].create_index('container')
+    db['CARGA.ContainerVazio'].create_index('manifesto')
+    db['CARGA.EscalaManifesto'].create_index('manifesto')
+    db['CARGA.EscalaManifesto'].create_index('escala')
+    db['CARGA.Escala'].create_index('escala')
+    db['CARGA.Container'].create_index('container')
+    db['CARGA.Container'].create_index('conhecimento')
+    db['CARGA.Conhecimento'].create_index('conhecimento')
+    db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
+    db['CARGA.ManifestoConhecimento'].create_index('manifesto')
+    db['CARGA.AtracDesatracEscala'].create_index('escala')
+    db['CARGA.AtracDesatracEscala'].create_index('manifesto')
+    db['CARGA.Manifesto'].create_index('manifesto')
+    db['CARGA.NCM'].create_index('conhecimento')
+
+
 def mongo_find_in(db, collection: str, field: str, in_set,
                   set_field: str=None) -> typing.Tuple[list, set]:
     """Perform a find $in in_set on db.collection.

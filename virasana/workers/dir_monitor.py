@@ -81,9 +81,10 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
 
 
 def espera_resposta(api_url, bson_file, sleep_time=1, timeout=30):
-    """Espera resposta da task que efetivamente carregará o arquivo no
-    Banco de Dados do Servidor.
+    """Espera resposta da task.
 
+    Espera resposta da task que efetivamente carregará o arquivo no
+    Banco de Dados do Servidor.
     Recebendo uma resposta positiva, exclui arquivo enviado do disco.
     Recebendo uma resposta negativa, grava no logger.
 

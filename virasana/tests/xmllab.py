@@ -6,17 +6,16 @@ from datetime import datetime
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.workers.xml_functions import dados_xml_grava_fsfiles
+from virasana.workers.xml_functions import dados_xml_grava_fsfiles, FALTANTES
+from virasana.workers.gridfs_functions import gridfs_count
 
 # , xml_todict
 
 db = MongoClient()['test']
 fs = GridFS(db)
 
-number = db['fs.files'].find(
-    {'metadata.xml': None,
-     'metadata.contentType': 'image/jpeg'
-     }).count()
+number = gridfs_count(db, FALTANTES)
+
 print(number, 'registros sem metadata de xml')
 
 dados_xml_grava_fsfiles(db, 10000, datetime(1900, 1, 1), True)

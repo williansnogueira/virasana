@@ -1,10 +1,14 @@
-"""
-Funções para leitura e tratamento de arquivos XML gerados pelos equipamentos.
+"""Funções para leitura e tratamento arquivos XML gerados pelos equipamentos.
 """
 import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
 from ajna_commons.flask.log import logger
+
+
+FALTANTES = {'metadata.xml': None,
+             'metadata.contentType': 'image/jpeg'
+             }
 
 
 def xml_todict(xml) -> dict:

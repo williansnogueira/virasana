@@ -103,15 +103,32 @@ db['CARGA.AtracDesatracEscala'].insert(
 # Teste com dados reais
 data_inicio = datetime(2017, 7, 1)
 file_cursor = db['fs.files'].find(
+    {'metadata.dataescaneamento': {'$gt': data_inicio},
+     'metadata.contentType': 'image/jpeg'})
+count = file_cursor.count()
+print(count, 'Total de imagens em fs.files', 'desde', data_inicio)
+
+file_cursor = db['fs.files'].find(
     {'metadata.carga': None,
-     'metadata.dataescaneamento': {'$gt': data_inicio}})
+     'metadata.dataescaneamento': {'$gt': data_inicio},
+     'metadata.contentType': 'image/jpeg'})
+
 count = file_cursor.count()
 print(count, 'Total de arquivos sem metadata.carga', 'desde', data_inicio)
 file_cursor = db['fs.files'].find(
-    {'metadata.carga': 'NA'})
+    {'metadata.carga': 'NA',
+     'metadata.contentType': 'image/jpeg'})
 count = file_cursor.count()
 print(count, 'Total de arquivos com metadata.carga = "NA"', 'desde', data_inicio)
-batch_size = 60000
+file_cursor = db['fs.files'].aggregate(
+    [{"$group":  {'_id': '$filename', "count": {"$sum": 1}}},
+     {"$match": {"count": {"$gt": 1}}}]
+)
+# import pprint
+# pprint.pprint(list(file_cursor))
+print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
+
+batch_size = 1000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
 tempo = time.time()
 dados_carga_grava_fsfiles(db, batch_size, data_inicio, force_update=True)
@@ -127,13 +144,13 @@ linha = db['CARGA.AtracDesatracEscala'].find().sort(
 linha = next(linha)
 print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
 
-linha = db['fs.files'].find().sort('metadata.dataescaneamento', 1).limit(1)
+linha = db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', 1).limit(1)
 linha = next(linha)
-print('Menor data de importação (IMAGENS)',
+print('Menor data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
-linha = db['fs.files'].find().sort('metadata.dataescaneamento', -1).limit(1)
+linha = db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', -1).limit(1)
 linha = next(linha)
-print('Maior data de importação (IMAGENS)',
+print('Maior data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
 
 

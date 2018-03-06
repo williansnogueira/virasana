@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 from ajna_commons.flask.log import logger
 
 
-FALTANTES = {'metadata.carga': None}
+FALTANTES = {'metadata.carga': None,
+     'metadata.contentType': 'image/jpeg'}
+
 
 
 def create_indexes(db):
@@ -187,10 +189,9 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
     Returns:
         número de registros encontrados
     """
-    file_cursor = db['fs.files'].find(
-        {'metadata.carga': None,
-         'metadata.dataescaneamento': {'$gt': data_inicio}}
-    )
+    filtro = FALTANTES
+    filtro['metadata.dataescaneamento'] = {'$gt': data_inicio}
+    file_cursor = db['fs.files'].find(filtro)
     acum = 0
     start = datetime.utcnow()
     end = start - timedelta(days=10000)

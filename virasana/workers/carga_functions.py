@@ -220,7 +220,7 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
                     )
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
-        ' Pesquisados', str(batch_size),
+        ' Pesquisados', str(file_cursor.count()),
         'Encontrados', str(acum),
         'Menor data', str(start),
         'Maior data', str(end)

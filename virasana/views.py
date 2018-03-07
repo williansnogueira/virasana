@@ -2,6 +2,7 @@ import json
 import os
 from base64 import b64encode
 from datetime import date, datetime, timedelta
+from sys import platform
 
 import gridfs
 from bson.objectid import ObjectId
@@ -22,7 +23,7 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
                                      redisdb)
 from ajna_commons.flask.log import logger
-from virasana.workers.tasks import raspa_dir
+from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -57,6 +58,7 @@ def index():
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração
     """
+    taskid = ''
     if request.method == 'POST':
         # check if the post request has the file part
         file = request.files.get('file')
@@ -64,10 +66,16 @@ def upload_bson():
             flash('Arquivo não informado ou inválido!')
             return redirect(request.url)
         content = file.read()
-        d = {'bson': b64encode(content).decode('utf-8')}
-        redisdb.rpush(BSON_REDIS, json.dumps(d))
-        result = raspa_dir.delay()
-    return redirect(url_for('list_files', taskid=result.id))
+        if platform == 'win32':
+            with MongoClient(host=MONGODB_URI) as conn:
+                db = conn[DATABASE]
+                trata_bson(content, db)
+        else:
+            d = {'bson': b64encode(content).decode('utf-8')}
+            redisdb.rpush(BSON_REDIS, json.dumps(d))
+            result = raspa_dir.delay()
+            taskid = result.id
+    return redirect(url_for('list_files', taskid=taskid))
 
 
 @app.route('/api/uploadbson', methods=['POST'])
@@ -91,7 +99,7 @@ def api_upload():
     file = request.files.get('file')
     data = {'success': False,
             'mensagem': 'Task iniciada',
-            'taskid': 0}
+            'taskid': ''}
     try:
         if not file or file.filename == '' or not allowed_file(file.filename):
             if not file:
@@ -104,12 +112,18 @@ def api_upload():
             print(file)
         else:
             content = file.read()
-            d = {'bson': b64encode(content).decode('utf-8'),
-                 'filename': file.filename}
-            redisdb.rpush(BSON_REDIS, json.dumps(d))
-            result = raspa_dir.delay()
-            data['taskid'] = result.id
-            data['success'] = True
+            if platform == 'win32':
+                with MongoClient(host=MONGODB_URI) as conn:
+                    db = conn[DATABASE]
+                    trata_bson(content, db)
+                data['success'] = True
+            else:
+                d = {'bson': b64encode(content).decode('utf-8'),
+                    'filename': file.filename}
+                redisdb.rpush(BSON_REDIS, json.dumps(d))
+                result = raspa_dir.delay()
+                data['taskid'] = result.id
+                data['success'] = True
     except Exception as err:
         logger.error(err, exc_info=True)
         data['mensagem'] = 'Excecao ' + str(err)

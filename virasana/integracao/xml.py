@@ -26,14 +26,15 @@ def xml_todict(xml) -> dict:
     """
     result = {}
     try:
+        root = ET.fromstring(xml)
+    except ET.ParseError as err:
+        print(xml)
         xml = unicodedata.normalize('NFKD', xml) \
             .encode('ASCII', 'ignore') \
             .decode('ASCII').casefold()
         root = ET.fromstring(xml)
-    except ET.ParseError as err:
-        print(xml)
         logger.error(err, exc_info=True)
-        return result
+        # return result
     fields = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
               'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
               'UpdateCount', 'LastStateDateTime')
@@ -50,7 +51,7 @@ def xml_todict(xml) -> dict:
     return result
 
 
-def dados_xml_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
+def dados_xml_grava_fsfiles(db, batch_size=1000, data_inicio=0, update=True):
     """Busca por registros no GridFS sem info do XML
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
@@ -71,16 +72,18 @@ def dados_xml_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
         {'metadata.xml': None,
          'metadata.dataescaneamento': {'$gt': data_inicio},
          'metadata.contentType': 'image/jpeg'
-         })
+         }).limit(batch_size)
     fs = GridFS(db)
+    total = file_cursor.count()
     acum = 0
-    for linha in file_cursor.limit(batch_size):
+    for linha in file_cursor:
         filename = linha.get('filename')
         if not filename:
             continue
         xml_filename = filename[:-11] + '.xml'
         xml_document = db['fs.files'].find_one({'filename': xml_filename})
         if not xml_document:
+            print(xml_filename, ' não encontrado')
             continue
         file_id = xml_document.get('_id')
         if not fs.exists(file_id):
@@ -104,7 +107,7 @@ def dados_xml_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True):
             acum += 1
     logger.info(' '.join([
         'Resultado dados_xml_grava_fsfiles',
-        'Pesquisados', str(batch_size),
+        'Pesquisados', str(total),
         'Encontrados', str(acum)
     ]))
     return acum

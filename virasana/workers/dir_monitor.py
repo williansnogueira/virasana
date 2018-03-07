@@ -80,7 +80,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     return erros, exceptions
 
 
-def espera_resposta(api_url, bson_file, sleep_time=1, timeout=30):
+def espera_resposta(api_url, bson_file, sleep_time=1, timeout=10):
     """Espera resposta da task.
 
     Espera resposta da task que efetivamente carregará o arquivo no

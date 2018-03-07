@@ -10,10 +10,10 @@ import time
 from datetime import datetime, timedelta
 
 from pymongo import MongoClient
-
-from virasana.workers.carga_functions import (busca_info_container,
-                                              create_indexes,
-                                              dados_carga_grava_fsfiles)
+from gridfs import GridFS
+from virasana.integracao.carga import (busca_info_container,
+                                       create_indexes,
+                                       dados_carga_grava_fsfiles)
 
 db = MongoClient()['test']
 #################
@@ -101,7 +101,7 @@ db['CARGA.AtracDesatracEscala'].insert(
 
 
 # Teste com dados reais
-data_inicio = datetime(2017, 7, 1)
+data_inicio = datetime(2017, 6, 30)
 file_cursor = db['fs.files'].find(
     {'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'})
@@ -114,19 +114,12 @@ file_cursor = db['fs.files'].find(
      'metadata.contentType': 'image/jpeg'})
 
 count = file_cursor.count()
-print(count, 'Total de arquivos sem metadata.carga', 'desde', data_inicio)
+print(count, 'Total de imagens sem metadata.carga', 'desde', data_inicio)
 file_cursor = db['fs.files'].find(
     {'metadata.carga': 'NA',
      'metadata.contentType': 'image/jpeg'})
 count = file_cursor.count()
-print(count, 'Total de arquivos com metadata.carga = "NA"', 'desde', data_inicio)
-file_cursor = db['fs.files'].aggregate(
-    [{"$group":  {'_id': '$filename', "count": {"$sum": 1}}},
-     {"$match": {"count": {"$gt": 1}}}]
-)
-# import pprint
-# pprint.pprint(list(file_cursor))
-print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
+print(count, 'Total de imagens com metadata.carga = "NA"', 'desde', data_inicio)
 
 batch_size = 1000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
@@ -144,16 +137,140 @@ linha = db['CARGA.AtracDesatracEscala'].find().sort(
 linha = next(linha)
 print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
 
-linha = db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', 1).limit(1)
+linha = db['fs.files'].find(
+    {'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', 1).limit(1)
 linha = next(linha)
 print('Menor data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
-linha = db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', -1).limit(1)
+linha = db['fs.files'].find(
+    {'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', -1).limit(1)
 linha = next(linha)
 print('Maior data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
 
 
+####################
+# Consultas para saneamento das tabelas...
+print('############# Saneamento ##########')
+# Registros duplicados no GridFS
+# TODO: não aceitar duas vezes o mesmo arquivo ou fazer upsert
+file_cursor = db['fs.files'].aggregate(
+    [{"$group":
+      {'_id': '$filename',
+       'dups': {'$push': '$_id'},
+       'count': {'$sum': 1}}},
+     {"$match": {"count": {"$gt": 1}}}]
+)
+print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
+file_cursor = db['fs.files'].aggregate(
+    [{"$group":
+      {'_id': '$filename',
+       'dups': {'$push': '$_id'},
+       'count': {'$sum': 1}}},
+     {"$match": {"count": {"$gt": 1}}}]
+)
+
+fs = GridFS(db)
+for cursor in file_cursor:
+    ids = cursor['dups']
+    for _id in ids[1:]:
+        fs.delete(_id)
+
+print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
+
+
+# Registros duplicados nas tabelas CARGA
+# TODO: não aceitar duas vezes o mesmo registro ou fazer upsert
+# TODO: Como registrar esta metadata???
+# (Hard-coded não é ideal, em tese bhadrasana é dinâmico em relação às bases
+# de origem)
+"""bases = {'Conhecimento': '$conhecimento',
+         'Manifesto': '$manifesto',
+         'Container': '$container'}
+for tabela, campo in bases.items():
+    cursor = db['CARGA.' + tabela].aggregate(
+        [{"$group":  {'_id': campo, "count": {"$sum": 1}}},
+         {"$match": {"count": {"$gt": 1}}}]
+    )
+    print(len(list(cursor)), ' Registros duplicados na tabela CARGA.' + tabela)
+"""
+
+# Procurar contêineres SEM imagem
+qtde_conteineres = 10
+lista_sem_imagens = []
+container_cursor = db['CARGA.Container'].find(
+    {}, ['container']).limit(qtde_conteineres)
+for container in container_cursor:
+    # print(container)
+    # print(container['container'])
+    file_cursor = db['fs.files'].find(
+        {'metadata.carga.container.container': container['container']},
+        ['_id'])
+    # for file in file_cursor:
+    #    print(file)
+    if file_cursor.count() == 0:
+        lista_sem_imagens.append(container['container'])
+print(len(lista_sem_imagens), ' contêineres sem imagens de ',
+      qtde_conteineres, ' procurados')
+
+
+container_cursor = db['CARGA.Container'].find(
+    {}, ['container'])
+print('Total de contêineres cheios:', container_cursor.count())
+
+container_vazio_cursor = db['CARGA.ContainerVazio'].find(
+    {}, ['container'])
+print('Total de contêineres vazios:', container_vazio_cursor.count())
+
+file_cursor = db['fs.files'].find(
+    {'metadata.carga.container.container': {'$ne': None},
+     'metadata.dataescaneamento': {'$gt': data_inicio},
+     'metadata.contentType': 'image/jpeg'},
+    ['metadata.carga.container.container'])
+print('Total de imagens de container marcadas:', file_cursor.count())
+
+numero_container_set = set()
+for container in container_cursor:
+    numero_container_set.add(container['container'])
+print('Total de contêineres únicos:', len(numero_container_set))
+
+numero_vazio_set = set()
+for container in container_vazio_cursor:
+    numero_vazio_set.add(container['container'])
+print('Total de contêineres vazios únicos:', len(numero_vazio_set))
+
+print('Total de contêineres vazios e cheios únicos:',
+      len(numero_container_set | numero_vazio_set))
+
+# TODO: ver porque ficou uma lista no campo carga.container !!!???
+imagem_container_set = set()
+for container in file_cursor:
+    lista_containers_file = container['metadata']['carga']['container']
+    for numero in lista_containers_file:
+        imagem_container_set.add(numero['container'])
+print('Total de números de imagens de contêiner únicos:', len(imagem_container_set))
+
+imagem_sem_container = (imagem_container_set -
+                        numero_container_set) - numero_vazio_set
+print('Imagens de contêiner SEM contêiner (0):', len(imagem_sem_container))
+# for container in list(imagem_sem_container)[:10]:
+#   print(container)
+
+
+container_sem_imagem = (numero_container_set |
+                        numero_vazio_set) - imagem_container_set
+print('Contêineres SEM imagem:', len(container_sem_imagem))
+
+pipeline = [
+    {'$lookup':
+     {'from': 'CARGA.EscalaManifesto',
+      'localField': 'Escala',
+      'foreignField': 'Escala',
+      'as': 'manifestos'
+      }
+     }
+]
+cursor = db['CARGA.AtracDesatracEscala'].aggregate(pipeline)
 # Exemplo de script para atualizar um campo com base em outro
 #  caso dados mudem de configuração, campos mudem de nome, etc
 """cursor = db['fs.files'].find({'metadata.dataescaneamento': None})

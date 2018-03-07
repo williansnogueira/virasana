@@ -4,6 +4,7 @@ import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
 from ajna_commons.flask.log import logger
+import unicodedata
 
 
 FALTANTES = {'metadata.xml': None,
@@ -25,10 +26,13 @@ def xml_todict(xml) -> dict:
     """
     result = {}
     try:
+        xml = unicodedata.normalize('NFKD', xml) \
+        .encode('ASCII', 'ignore') \
+        .decode('ASCII').casefold()
         root = ET.fromstring(xml)
     except ET.ParseError as err:
+        print(xml)
         logger.error(err, exc_info=True)
-        logger.error(xml)
         return result
     fields = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
               'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',

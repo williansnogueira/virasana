@@ -7,8 +7,7 @@ from ajna_commons.flask.log import logger
 
 
 FALTANTES = {'metadata.carga': None,
-     'metadata.contentType': 'image/jpeg'}
-
+             'metadata.contentType': 'image/jpeg'}
 
 
 def create_indexes(db):
@@ -219,6 +218,9 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': 'NA'}}
                     )
+    else:
+        logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
+        return 0
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
         ' Pesquisados', str(file_cursor.count()),

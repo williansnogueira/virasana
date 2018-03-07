@@ -2,8 +2,10 @@
 Funções padrão para exploração do GridFS.
 
 """
-from virasana.workers import carga_functions
-from virasana.workers import xml_functions
+from virasana.integracao import carga
+from virasana.integracao import xml
+
+IMAGENS = {'metadata.contentType': 'image/jpeg'}
 
 
 def gridfs_count(db, filtro):
@@ -11,13 +13,13 @@ def gridfs_count(db, filtro):
 
 
 def stats_resumo(db):
-    filtro = {}
+    filtro = IMAGENS
     stats = {}
     total = gridfs_count(db, filtro)
     stats['total'] = total
-    filtro = carga_functions.FALTANTES
+    filtro = carga.FALTANTES
     stats['carga'] = total - gridfs_count(db, filtro)
-    filtro = xml_functions.FALTANTES
+    filtro = xml.FALTANTES
     stats['xml'] = total - gridfs_count(db, filtro)
     return stats
 

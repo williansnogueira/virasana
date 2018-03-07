@@ -10,6 +10,7 @@ aquelas que rodam tarefas custosas/demoradas em background.
 # Código dos celery tasks
 import json
 from base64 import decodebytes
+from datetime import datetime
 
 import gridfs
 from celery import Celery, states
@@ -19,17 +20,42 @@ from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
                                      MONGODB_URI, redisdb)
 from ajna_commons.models.bsonimage import BsonImageList
 
+from virasana.integracao import carga, xml
+
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)
 
 
-def trata_bson(bson_file: str, db: MongoClient) -> list:
-    """Recebe o nome de um arquivo bson e o insere no MongoDB."""
-    # .get_default_database()
-    fs = gridfs.GridFS(db)
-    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
-    files_ids = bsonimagelist.tomongo(fs)
-    return files_ids
+@celery.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(15*60.0, processa_carga.s())
+    sender.add_periodic_task(13*60.0, processa_xml.s())
+
+
+@celery.task
+def processa_xml():
+    """Verifica se há arquivos XML a carregar no GridFS.
+
+    Verifica se há novas imagens no Banco de Dados que ainda estão
+    sem a integração com XML. Havendo, grava dados XML disponíveis,
+    se encontrados, no GridFS
+    """
+    with MongoClient(host=MONGODB_URI) as conn:
+        db = conn[DATABASE]
+        xml.dados_xml_grava_fsfiles(db)
+
+
+@celery.task
+def processa_carga():
+    """Verifica se há dados do Sistema CARGA a carregar no GridFS.
+
+    Verifica se há novas imagens no Banco de Dados que ainda estão
+    sem a integração com o sistema CARGA. Havendo, grava dados disponíveis,
+    se encontrados, no GridFS
+    """
+    with MongoClient(host=MONGODB_URI) as conn:
+        db = conn[DATABASE]
+        carga.dados_carga_grava_fsfiles(db)
 
 
 @celery.task(bind=True)
@@ -53,3 +79,12 @@ def raspa_dir(self):
         trata_bson(file, db)
     return {'current': '',
             'status': 'Todos os arquivos processados'}
+
+
+def trata_bson(bson_file: str, db: MongoClient) -> list:
+    """Recebe o nome de um arquivo bson e o insere no MongoDB."""
+    # .get_default_database()
+    fs = gridfs.GridFS(db)
+    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
+    files_ids = bsonimagelist.tomongo(fs)
+    return files_ids

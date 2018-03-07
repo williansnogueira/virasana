@@ -1,25 +1,25 @@
 """
-Testes interativos em arquivos XML gerados pelos equipamentos.
+Testes interativos em arquivos XML gerados pelos escâneres.
 """
 from datetime import datetime
 
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.workers.xml_functions import dados_xml_grava_fsfiles, FALTANTES
-from virasana.workers.gridfs_functions import gridfs_count
+from virasana.integracao.xml import dados_xml_grava_fsfiles
+from virasana.integracao import gridfs_count, xml
 
 # , xml_todict
 
 db = MongoClient()['test']
 fs = GridFS(db)
 
-number = gridfs_count(db, FALTANTES)
-
+number = gridfs_count(db, xml.FALTANTES)
 print(number, 'registros sem metadata de xml')
 
 dados_xml_grava_fsfiles(db, 10000, datetime(1900, 1, 1), True)
 
+number = gridfs_count(db, xml.FALTANTES)
 print(number, 'registros sem metadata de xml')
 
 """

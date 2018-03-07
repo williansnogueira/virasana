@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from gridfs import GridFS
 from pymongo import MongoClient
 

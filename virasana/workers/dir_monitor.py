@@ -22,8 +22,8 @@ from ajna_commons.flask.log import logger
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'
 BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
-BSON_DIR = os.path.join(os.path.dirname(__file__),
-                        '..', '..', '..', '..', 'files', 'BSON')
+# BSON_DIR = os.path.join(os.path.dirname(__file__),
+#                        '..', '..', '..', '..', 'files', 'BSON')
 
 
 def despacha(filename, target=API_URL):

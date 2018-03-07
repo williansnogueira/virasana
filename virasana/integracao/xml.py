@@ -27,8 +27,8 @@ def xml_todict(xml) -> dict:
     result = {}
     try:
         xml = unicodedata.normalize('NFKD', xml) \
-        .encode('ASCII', 'ignore') \
-        .decode('ASCII').casefold()
+            .encode('ASCII', 'ignore') \
+            .decode('ASCII').casefold()
         root = ET.fromstring(xml)
     except ET.ParseError as err:
         print(xml)

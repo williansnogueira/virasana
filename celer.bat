@@ -1,0 +1,1 @@
+celery -A virasana.workers.tasks.celery worker -B --loglevel=info

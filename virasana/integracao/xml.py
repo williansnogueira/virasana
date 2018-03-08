@@ -2,9 +2,9 @@
 import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
+from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import sanitizar
-from ajna_commons.conf import ENCODE
 
 FALTANTES = {'metadata.xml': None,
              'metadata.contentType': 'image/jpeg'

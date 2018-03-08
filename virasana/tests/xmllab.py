@@ -6,8 +6,8 @@ from datetime import datetime
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.integracao.xml import dados_xml_grava_fsfiles
 from virasana.integracao import gridfs_count, xml
+from virasana.integracao.xml import dados_xml_grava_fsfiles
 
 # , xml_todict
 

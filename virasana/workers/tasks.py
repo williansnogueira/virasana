@@ -10,18 +10,22 @@ aquelas que rodam tarefas custosas/demoradas em background.
 # Código dos celery tasks
 import json
 from base64 import decodebytes
-# from datetime import datetime
 
 import gridfs
-from celery import Celery, states
 from pymongo import MongoClient
 
 from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
                                      MONGODB_URI, redisdb)
 from ajna_commons.models.bsonimage import BsonImageList
+from celery import Celery, states
 from virasana.integracao import carga, xml
 
 from .dir_monitor import despacha_dir
+
+# from datetime import datetime
+
+
+
 
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)

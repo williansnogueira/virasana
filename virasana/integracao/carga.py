@@ -9,9 +9,8 @@ from collections import Counter
 from datetime import datetime, timedelta
 from zipfile import ZipFile
 
-from ajna_commons.flask.log import logger
 from ajna_commons.conf import ENCODE
-
+from ajna_commons.flask.log import logger
 
 FALTANTES = {'metadata.carga': None,
              'metadata.contentType': 'image/jpeg'}
@@ -283,8 +282,9 @@ def nconhecimento_zip_dir(path):
                         print(info.filename)
                         print(linha)
                         tabela = linha[0]
-                        txt_content = [linha for linha in reader]
-                    contador[tabela] += len(txt_content)
+                        nlines = sum(1 for linha in reader)
+                    contador[info.filename + tabela] = nlines
+                    contador[tabela] += nlines
     return contador
 
 

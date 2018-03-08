@@ -15,10 +15,10 @@ import time
 from threading import Thread
 
 import requests
-from celery import states
 
 from ajna_commons.flask.conf import VIRASANA_URL
 from ajna_commons.flask.log import logger
+from celery import states
 
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'

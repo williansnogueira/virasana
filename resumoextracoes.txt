@@ -1,0 +1,223 @@
+Fazendo log de erros e alertas no arquivo  /home/ivan/pybr/AJNA_MOD/virasana/virasana/integracao/error.log
+Fazendo log de atividade no arquivo  /home/ivan/pybr/AJNA_MOD/virasana/virasana/integracao/access.log
+2018-03-08 11:13:30,661 INFO Configuração de log efetuada
+ATRACADO20170816FC250522888E180302H142850M9680P0.txt
+['Parametros']
+ATRACADO20170816FC250522888E180302H142850M968030.txt
+['CE']
+ATRACADO20170816FC250522888E180302H142850M968040.txt
+['NCM']
+ATRACADO20170816FC250522888E180302H142850M968090.txt
+['Container']
+ATRACADO20170816FC250522888E180302H142850M968050.txt
+['Transbordo']
+ATRACADO20170816FC250522888E180302H142850M968000.txt
+['Escala']
+ATRACADO20170816FC250522888E180302H142850M968010.txt
+['Manifesto']
+ATRACADO20170816FC250522888E180302H142850M968020.txt
+['Container Vazio']
+ATRACADO20170816FC250522888E180302H142850M968100.txt
+['Atracação Desatracação']
+ATRACADO20170816FC250522888E180302H142850M968070.txt
+['Carga Solta']
+ATRACADO20170816FC250522888E180302H142850M968080.txt
+['Granel']
+ATRACADO20170816FC250522888E180302H142850M968060.txt
+['Veiculo']
+ATRACADO20170816FC250522888E180302H142850M968110.txt
+['Escala Manifesto']
+ATRACADO20170816FC250522888E180302H142850M968120.txt
+['Manifesto Conhecimento']
+atracado20170801a15FC250522888E180221H142822M0950P0.txt
+['Parametros']
+atracado20170801a15FC250522888E180221H142822M095030.txt
+['CE']
+atracado20170801a15FC250522888E180221H142822M095040.txt
+['NCM']
+atracado20170801a15FC250522888E180221H142822M095090.txt
+['Container']
+atracado20170801a15FC250522888E180221H142822M095050.txt
+['Transbordo']
+atracado20170801a15FC250522888E180221H142822M095000.txt
+['Escala']
+atracado20170801a15FC250522888E180221H142822M095010.txt
+['Manifesto']
+atracado20170801a15FC250522888E180221H142822M095020.txt
+['Container Vazio']
+atracado20170801a15FC250522888E180221H142822M095100.txt
+['Atracação Desatracação']
+atracado20170801a15FC250522888E180221H142822M095070.txt
+['Carga Solta']
+atracado20170801a15FC250522888E180221H142822M095080.txt
+['Granel']
+atracado20170801a15FC250522888E180221H142822M095060.txt
+['Veiculo']
+atracado20170801a15FC250522888E180221H142822M095110.txt
+['Escala Manifesto']
+atracado20170801a15FC250522888E180221H142822M095120.txt
+['Manifesto Conhecimento']
+ATRACADOS201709FC250522888E180302H142918M4130P0.txt
+['Parametros']
+ATRACADOS201709FC250522888E180302H142918M413030.txt
+['CE']
+ATRACADOS201709FC250522888E180302H142918M413040.txt
+['NCM']
+ATRACADOS201709FC250522888E180302H142918M413090.txt
+['Container']
+ATRACADOS201709FC250522888E180302H142918M413050.txt
+['Transbordo']
+ATRACADOS201709FC250522888E180302H142918M413000.txt
+['Escala']
+ATRACADOS201709FC250522888E180302H142918M413010.txt
+['Manifesto']
+ATRACADOS201709FC250522888E180302H142918M413020.txt
+['Container Vazio']
+ATRACADOS201709FC250522888E180302H142918M413100.txt
+['Atracação Desatracação']
+ATRACADOS201709FC250522888E180302H142918M413070.txt
+['Carga Solta']
+ATRACADOS201709FC250522888E180302H142918M413080.txt
+['Granel']
+ATRACADOS201709FC250522888E180302H142918M413060.txt
+['Veiculo']
+ATRACADOS201709FC250522888E180302H142918M413110.txt
+['Escala Manifesto']
+ATRACADOS201709FC250522888E180302H142918M413120.txt
+['Manifesto Conhecimento']
+ATRACADOS201707FC250522888E180305H152846M4330P0.txt
+['Parametros']
+ATRACADOS201707FC250522888E180305H152846M433030.txt
+['CE']
+ATRACADOS201707FC250522888E180305H152846M433040.txt
+['NCM']
+ATRACADOS201707FC250522888E180305H152846M433090.txt
+['Container']
+ATRACADOS201707FC250522888E180305H152846M433050.txt
+['Transbordo']
+ATRACADOS201707FC250522888E180305H152846M433000.txt
+['Escala']
+ATRACADOS201707FC250522888E180305H152846M433010.txt
+['Manifesto']
+ATRACADOS201707FC250522888E180305H152846M433020.txt
+['Container Vazio']
+ATRACADOS201707FC250522888E180305H152846M433100.txt
+['Atracação Desatracação']
+ATRACADOS201707FC250522888E180305H152846M433070.txt
+['Carga Solta']
+ATRACADOS201707FC250522888E180305H152846M433080.txt
+['Granel']
+ATRACADOS201707FC250522888E180305H152846M433060.txt
+['Veiculo']
+ATRACADOS201707FC250522888E180305H152846M433110.txt
+['Escala Manifesto']
+ATRACADOS201707FC250522888E180305H152846M433120.txt
+['Manifesto Conhecimento']
+OrderedDict([('Atracação Desatracação', 740),
+             ('Atracação Desatracação - '
+              'F.C250522888.E180221.H142822.M095_access.zip',
+              113),
+             ('Atracação Desatracação - '
+              'F.C250522888.E180302.H142850.M968_access.zip',
+              132),
+             ('Atracação Desatracação - '
+              'F.C250522888.E180302.H142918.M413_access .zip',
+              251),
+             ('Atracação Desatracação - '
+              'F.C250522888.E180305.H152846.M433_access.zip',
+              244),
+             ('CE', 351509),
+             ('CE - F.C250522888.E180221.H142822.M095_access.zip', 54157),
+             ('CE - F.C250522888.E180302.H142850.M968_access.zip', 68157),
+             ('CE - F.C250522888.E180302.H142918.M413_access .zip', 121842),
+             ('CE - F.C250522888.E180305.H152846.M433_access.zip', 107353),
+             ('Carga Solta', 79858),
+             ('Carga Solta - F.C250522888.E180221.H142822.M095_access.zip',
+              12730),
+             ('Carga Solta - F.C250522888.E180302.H142850.M968_access.zip',
+              15453),
+             ('Carga Solta - F.C250522888.E180302.H142918.M413_access .zip',
+              26141),
+             ('Carga Solta - F.C250522888.E180305.H152846.M433_access.zip',
+              25534),
+             ('Container', 482281),
+             ('Container - F.C250522888.E180221.H142822.M095_access.zip',
+              73054),
+             ('Container - F.C250522888.E180302.H142850.M968_access.zip',
+              94994),
+             ('Container - F.C250522888.E180302.H142918.M413_access .zip',
+              169542),
+             ('Container - F.C250522888.E180305.H152846.M433_access.zip',
+              144691),
+             ('Container Vazio', 141083),
+             ('Container Vazio - F.C250522888.E180221.H142822.M095_access.zip',
+              20334),
+             ('Container Vazio - F.C250522888.E180302.H142850.M968_access.zip',
+              24499),
+             ('Container Vazio - F.C250522888.E180302.H142918.M413_access .zip',
+              49454),
+             ('Container Vazio - F.C250522888.E180305.H152846.M433_access.zip',
+              46796),
+             ('Escala', 740),
+             ('Escala - F.C250522888.E180221.H142822.M095_access.zip', 113),
+             ('Escala - F.C250522888.E180302.H142850.M968_access.zip', 132),
+             ('Escala - F.C250522888.E180302.H142918.M413_access .zip', 251),
+             ('Escala - F.C250522888.E180305.H152846.M433_access.zip', 244),
+             ('Escala Manifesto', 22293),
+             ('Escala Manifesto - F.C250522888.E180221.H142822.M095_access.zip',
+              3325),
+             ('Escala Manifesto - F.C250522888.E180302.H142850.M968_access.zip',
+              4011),
+             ('Escala Manifesto - F.C250522888.E180302.H142918.M413_access '
+              '.zip',
+              7657),
+             ('Escala Manifesto - F.C250522888.E180305.H152846.M433_access.zip',
+              7300),
+             ('Granel', 1445),
+             ('Granel - F.C250522888.E180221.H142822.M095_access.zip', 210),
+             ('Granel - F.C250522888.E180302.H142850.M968_access.zip', 206),
+             ('Granel - F.C250522888.E180302.H142918.M413_access .zip', 513),
+             ('Granel - F.C250522888.E180305.H152846.M433_access.zip', 516),
+             ('Manifesto', 21486),
+             ('Manifesto - F.C250522888.E180221.H142822.M095_access.zip', 3262),
+             ('Manifesto - F.C250522888.E180302.H142850.M968_access.zip', 3897),
+             ('Manifesto - F.C250522888.E180302.H142918.M413_access .zip',
+              7351),
+             ('Manifesto - F.C250522888.E180305.H152846.M433_access.zip', 6976),
+             ('Manifesto Conhecimento', 368760),
+             ('Manifesto Conhecimento - '
+              'F.C250522888.E180221.H142822.M095_access.zip',
+              56720),
+             ('Manifesto Conhecimento - '
+              'F.C250522888.E180302.H142850.M968_access.zip',
+              70583),
+             ('Manifesto Conhecimento - '
+              'F.C250522888.E180302.H142918.M413_access .zip',
+              128052),
+             ('Manifesto Conhecimento - '
+              'F.C250522888.E180305.H152846.M433_access.zip',
+              113405),
+             ('NCM', 2615830),
+             ('NCM - F.C250522888.E180221.H142822.M095_access.zip', 404400),
+             ('NCM - F.C250522888.E180302.H142850.M968_access.zip', 556808),
+             ('NCM - F.C250522888.E180302.H142918.M413_access .zip', 878520),
+             ('NCM - F.C250522888.E180305.H152846.M433_access.zip', 776102),
+             ('Parametros', 4),
+             ('Parametros - F.C250522888.E180221.H142822.M095_access.zip', 1),
+             ('Parametros - F.C250522888.E180302.H142850.M968_access.zip', 1),
+             ('Parametros - F.C250522888.E180302.H142918.M413_access .zip', 1),
+             ('Parametros - F.C250522888.E180305.H152846.M433_access.zip', 1),
+             ('Transbordo', 112820),
+             ('Transbordo - F.C250522888.E180221.H142822.M095_access.zip',
+              16958),
+             ('Transbordo - F.C250522888.E180302.H142850.M968_access.zip',
+              21355),
+             ('Transbordo - F.C250522888.E180302.H142918.M413_access .zip',
+              41889),
+             ('Transbordo - F.C250522888.E180305.H152846.M433_access.zip',
+              32618),
+             ('Veiculo', 17431),
+             ('Veiculo - F.C250522888.E180221.H142822.M095_access.zip', 6237),
+             ('Veiculo - F.C250522888.E180302.H142850.M968_access.zip', 1956),
+             ('Veiculo - F.C250522888.E180302.H142918.M413_access .zip', 3991),
+             ('Veiculo - F.C250522888.E180305.H152846.M433_access.zip', 5247)])

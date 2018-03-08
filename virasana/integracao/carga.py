@@ -5,7 +5,7 @@ import io
 import os
 import pprint
 import typing
-from collections import Counter
+from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
 from zipfile import ZipFile
 
@@ -283,9 +283,9 @@ def nconhecimento_zip_dir(path):
                         print(linha)
                         tabela = linha[0]
                         nlines = sum(1 for linha in reader)
-                    contador[info.filename + tabela] = nlines
+                    contador[tabela + ' - ' + zip_file] = nlines
                     contador[tabela] += nlines
-    return contador
+    return OrderedDict(sorted(contador.items()))
 
 
 if __name__ == '__main__':

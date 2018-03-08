@@ -46,7 +46,10 @@ def xml_todict(xml) -> dict:
         # return result
     for field in FIELDS:
         for tag in root.iter(field):
-            result[field.lower()] = sanitizar(tag.text)
+            text = ''
+            if tag.text:
+                text = sanitizar(tag.text)
+            result[field.lower()] = text
     lista_conteineres = []
     for tag in root.iter('ContainerId'):
         numero = tag.text

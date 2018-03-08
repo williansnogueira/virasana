@@ -142,3 +142,4 @@ ajna_commons
 celerybeat-schedule.dat
 celerybeat-schedule.bak
 celerybeat-schedule.*
+celerybeat-schedule.dat

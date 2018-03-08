@@ -1,16 +1,25 @@
-"""Funções para leitura e tratamento arquivos XML gerados pelos equipamentos.
-"""
+"""Funções para leitura e tratamento arquivos XML gerados pelos equipamentos."""
 import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
 from ajna_commons.flask.log import logger
-import unicodedata
+from ajna_commons.utils.sanitiza import sanitizar
 
 
 FALTANTES = {'metadata.xml': None,
              'metadata.contentType': 'image/jpeg'
              }
 
+FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
+          'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
+          'UpdateCount', 'LastStateDateTime')
+
+
+def create_indexes(db):
+    """Utilitário. Cria índices relacionados à integração XML"""
+    db['fs.files'].create_index('metadata.xml.container')
+    for field in FIELDS:
+        db['fs.files'].create_index('metadata.xml.' + field.lower())
 
 
 def xml_todict(xml) -> dict:
@@ -29,31 +38,25 @@ def xml_todict(xml) -> dict:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError as err:
-        print(xml)
-        xml = unicodedata.normalize('NFKD', xml) \
-            .encode('ASCII', 'ignore') \
-            .decode('ASCII').casefold()
+        xml = sanitizar(xml)
         root = ET.fromstring(xml)
         logger.error(err, exc_info=True)
         # return result
-    fields = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
-              'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
-              'UpdateCount', 'LastStateDateTime')
-    for field in fields:
+    for field in FIELDS:
         for tag in root.iter(field):
-            result[field] = tag.text
+            result[field.lower()] = sanitizar(tag.text)
     lista_conteineres = []
     for tag in root.iter('ContainerId'):
         numero = tag.text
         if numero is not None:
             numero = numero.replace('?', 'X')
-            lista_conteineres.append(numero)
-    result['ContainerId'] = lista_conteineres
+            lista_conteineres.append(numero.casefold())
+    result['container'] = lista_conteineres
     return result
 
 
 def dados_xml_grava_fsfiles(db, batch_size=1000, data_inicio=0, update=True):
-    """Busca por registros no GridFS sem info do XML
+    """Busca por registros no GridFS sem info do XML.
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
     importada do arquivo XML. Itera estes registros, consultando a

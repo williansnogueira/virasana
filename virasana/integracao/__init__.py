@@ -21,10 +21,12 @@ IMAGENS = {'metadata.contentType': 'image/jpeg'}
 
 
 def gridfs_count(db, filtro):
+    """Aplica filtro, retorna contagem."""
     return db['fs.files'].find(filtro).count()
 
 
 def stats_resumo(db):
+    """Números gerais do Banco de Dados e suas integrações.""" 
     filtro = IMAGENS
     stats = {}
     total = gridfs_count(db, filtro)
@@ -36,13 +38,17 @@ def stats_resumo(db):
     return stats
 
 
-def plot_stats(db):
+def plot_bars(lista):
+    """Gera gráfico de barras da lista de valores."""
     pass
 
 
 def stats_por_XXX(db):
+    """XXX."""
     pass
 
 
 def datas_bases(db):
+    """Retorna nomes dos campos que possuem as datas de referência em cada
+    integração"""
     pass

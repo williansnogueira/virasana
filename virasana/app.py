@@ -1,7 +1,4 @@
-"""
-Módulo de entrada da aplicação web.
-
-"""
+"""Módulo de entrada da aplicação web."""
 from flask import abort, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
 
@@ -15,6 +12,7 @@ DBUser.dbsession = db
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """View para efetuar login."""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('senha')
@@ -36,6 +34,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """View para efetuar logout."""
     logout_user()
     next = request.args.get('next')
     if not is_safe_url(next):

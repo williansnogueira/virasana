@@ -1,4 +1,4 @@
-"""Funções para leitura e tratamento arquivos XML gerados pelos equipamentos."""
+"""Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 import defusedxml.ElementTree as ET
 from gridfs import GridFS
 
@@ -16,7 +16,7 @@ FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
 
 
 def create_indexes(db):
-    """Utilitário. Cria índices relacionados à integração XML"""
+    """Utilitário. Cria índices relacionados à integração."""
     db['fs.files'].create_index('metadata.xml.container')
     for field in FIELDS:
         db['fs.files'].create_index('metadata.xml.' + field.lower())

@@ -1,3 +1,4 @@
+"""Coleção de views da interface web do módulo virasana."""
 import json
 import os
 from base64 import b64encode
@@ -38,13 +39,14 @@ nav = Nav()
 
 
 def allowed_file(filename):
-    """Check allowed extensions"""
+    """Check allowed extensions."""
     return '.' in filename and \
         filename.rsplit('.', 1)[-1].lower() in ['bson']
 
 
 @app.route('/')
 def index():
+    """View retorna index.html ou login se não autenticado."""
     # print(current_user)
     if current_user.is_authenticated:
         return render_template('index.html')
@@ -56,8 +58,7 @@ def index():
 # @csrf.exempt # TODO: put CSRF on tests
 @login_required
 def upload_bson():
-    """Função simplificada para upload do arquivo de uma extração
-    """
+    """Função simplificada para upload do arquivo de uma extração."""
     taskid = ''
     if request.method == 'POST':
         # check if the post request has the file part
@@ -119,7 +120,7 @@ def api_upload():
                 data['success'] = True
             else:
                 d = {'bson': b64encode(content).decode('utf-8'),
-                    'filename': file.filename}
+                     'filename': file.filename}
                 redisdb.rpush(BSON_REDIS, json.dumps(d))
                 result = raspa_dir.delay()
                 data['taskid'] = result.id
@@ -134,7 +135,7 @@ def api_upload():
 @app.route('/api/task/<taskid>')
 # @login_required
 def task_progress(taskid):
-    """Returns a json of celery task progress."""
+    """Retorna um json do progresso da celery task."""
     task = raspa_dir.AsyncResult(taskid)
     response = {
         'state': task.state,
@@ -147,8 +148,7 @@ def task_progress(taskid):
 @app.route('/list_files')
 @login_required
 def list_files():
-    """Lista arquivos no banco MongoDB
-    """
+    """Lista arquivos no banco MongoDB."""
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
@@ -161,6 +161,11 @@ def list_files():
 @app.route('/file')
 @login_required
 def file(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe o arquivo e os metadados associados a ele
+
+    """
     fs = gridfs.GridFS(db)
     if request.args.get('filename'):
         grid_data = fs.find_one({'filename': request.args.get('filename')})
@@ -172,6 +177,7 @@ def file(_id=None):
 
 @app.route('/image/<_id>')
 def image(_id):
+    """Serializa a imagem do banco para stream HTTP."""
     fs = gridfs.GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
@@ -179,6 +185,13 @@ def image(_id):
 
 
 class FilesForm(FlaskForm):
+    """Valida pesquisa de arquivos.
+
+    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
+    search_files.html
+
+    """
+
     numero = StringField('Número', validators=[optional()])
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
@@ -188,6 +201,7 @@ class FilesForm(FlaskForm):
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files(page=1):
+    """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     form = FilesForm(**request.form)
@@ -220,6 +234,7 @@ def files(page=1):
 
 @nav.navigation()
 def mynavbar():
+    """Menu da aplicação."""
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),

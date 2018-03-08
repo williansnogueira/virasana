@@ -26,7 +26,7 @@ def gridfs_count(db, filtro):
 
 
 def stats_resumo(db):
-    """Números gerais do Banco de Dados e suas integrações.""" 
+    """Números gerais do Banco de Dados e suas integrações."""
     filtro = IMAGENS
     stats = {}
     total = gridfs_count(db, filtro)
@@ -49,6 +49,9 @@ def stats_por_XXX(db):
 
 
 def datas_bases(db):
-    """Retorna nomes dos campos que possuem as datas de referência em cada
-    integração"""
+    """Retorna nomes dos campos que possuem as datas de referência.
+
+    Para cada integração, consulta se há data de referência e retorna
+
+    """
     pass

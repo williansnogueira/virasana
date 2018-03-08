@@ -1,1 +1,1 @@
-"""Para definir configurações específicas deste módulo"""
+"""Para definir configurações específicas deste módulo."""

@@ -13,6 +13,7 @@ FALTANTES = {'metadata.carga': None,
 
 
 def create_indexes(db):
+    """Utilitário. Cria índices relacionados à integração."""
     db['CARGA.ContainerVazio'].create_index('container')
     db['CARGA.ContainerVazio'].create_index('manifesto')
     db['CARGA.EscalaManifesto'].create_index('manifesto')
@@ -239,6 +240,7 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
     ]))
     return acum
 
+
 def nconhecimento_zip_dir(path):
     """Retorna o número de conhecimentos de um conjunto de extrações.
 
@@ -249,7 +251,7 @@ def nconhecimento_zip_dir(path):
 
     Args:
         path: caminho do(s) arquivo(s) de extração(ões)
-    
+
     Returns:
         número de conhecimentos
         Comparar com db['fs.files'].find(

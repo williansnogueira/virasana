@@ -23,19 +23,23 @@
             </div>
             <h3>Dados do arquivo XML</h3>
             <div id="xml">
+                {% if myfile['metadata']['xml'] %}
                 <ul>
                     {% for key, value in myfile['metadata']['xml'].items() %}
                     <li> {{ key }}: {{ value }}</li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
             <h3>Dados do sistema CARGA</h3>
             <div id="carga">
+                {% if myfile['metadata']['carga'] %}
                 <ul>
                     {% for key, value in myfile['metadata']['carga'].items() %}
                     <li> {{ key }}: {{ value }}</li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
         </div>
     </div>

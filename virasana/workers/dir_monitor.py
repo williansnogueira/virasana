@@ -23,8 +23,8 @@ from ajna_commons.flask.log import logger
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'
 BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
-BSON_DIR = os.path.join(os.path.dirname(__file__),
-                        '..', '..', '..', '..', 'files', 'BSON')
+# BSON_DIR = os.path.join(os.path.dirname(__file__),
+#                        '..', '..', '..', '..', 'files', 'BSON')
 
 
 def despacha(filename, target=API_URL):
@@ -68,7 +68,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
             if success:
                 # TODO: save on database list of tasks
                 response_json = response.json()
-                taskid = response_json.get('taskid')
+                taskid = response_json.get('taskid', '')
                 sucessos.append(taskid)
                 Thread(target=espera_resposta, args=(
                     VIRASANA_URL + '/api/task/' + taskid, bsonfile)).start()
@@ -81,7 +81,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     return erros, exceptions
 
 
-def espera_resposta(api_url, bson_file, sleep_time=1, timeout=30):
+def espera_resposta(api_url, bson_file, sleep_time=1, timeout=10):
     """Espera resposta da task.
 
     Espera resposta da task que efetivamente carregará o arquivo no

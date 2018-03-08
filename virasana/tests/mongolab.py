@@ -4,14 +4,14 @@ For tests with PyMongo and MongoDB.
 Tests for sintax and operations before putting into main code
 
 """
-import pprint
-import timeit
+# import pprint
+# import timeit
 import time
-from datetime import datetime, timedelta
+from datetime import datetime  # , timedelta
 
 from pymongo import MongoClient
 from gridfs import GridFS
-from virasana.integracao.carga import (busca_info_container,
+from virasana.integracao.carga import (  # busca_info_container,
                                        create_indexes,
                                        dados_carga_grava_fsfiles)
 
@@ -56,7 +56,7 @@ assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
 """
 data_escaneamento = datetime(2017, 1, 1)
 
-""""
+"""
 Exemplo de como criar dados para teste:
 
 
@@ -119,7 +119,8 @@ file_cursor = db['fs.files'].find(
     {'metadata.carga': 'NA',
      'metadata.contentType': 'image/jpeg'})
 count = file_cursor.count()
-print(count, 'Total de imagens com metadata.carga = "NA"', 'desde', data_inicio)
+print(count, 'Total de imagens com metadata.carga = "NA"',
+      'desde', data_inicio)
 
 batch_size = 1000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
@@ -128,7 +129,6 @@ dados_carga_grava_fsfiles(db, batch_size, data_inicio, force_update=True)
 tempo = time.time() - tempo
 print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
       tempo / batch_size, 'por registro')
-
 linha = db['CARGA.AtracDesatracEscala'].find().sort('dataatracacao').limit(1)
 linha = next(linha)
 print('Menor data de atracação (CARGA)', linha.get('dataatracacao'))
@@ -138,12 +138,14 @@ linha = next(linha)
 print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
 
 linha = db['fs.files'].find(
-    {'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', 1).limit(1)
+    {'metadata.contentType': 'image/jpeg'}
+    ).sort('metadata.dataescaneamento', 1).limit(1)
 linha = next(linha)
 print('Menor data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
 linha = db['fs.files'].find(
-    {'metadata.contentType': 'image/jpeg'}).sort('metadata.dataescaneamento', -1).limit(1)
+    {'metadata.contentType': 'image/jpeg'}
+    ).sort('metadata.dataescaneamento', -1).limit(1)
 linha = next(linha)
 print('Maior data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
@@ -155,19 +157,19 @@ print('############# Saneamento ##########')
 # Registros duplicados no GridFS
 # TODO: não aceitar duas vezes o mesmo arquivo ou fazer upsert
 file_cursor = db['fs.files'].aggregate(
-    [{"$group":
+    [{'$group':
       {'_id': '$filename',
        'dups': {'$push': '$_id'},
        'count': {'$sum': 1}}},
-     {"$match": {"count": {"$gt": 1}}}]
+     {'$match': {'count': {'$gt': 1}}}]
 )
 print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
 file_cursor = db['fs.files'].aggregate(
-    [{"$group":
+    [{'$group':
       {'_id': '$filename',
        'dups': {'$push': '$_id'},
        'count': {'$sum': 1}}},
-     {"$match": {"count": {"$gt": 1}}}]
+     {'$match': {'count': {'$gt': 1}}}]
 )
 
 fs = GridFS(db)
@@ -189,8 +191,8 @@ print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
          'Container': '$container'}
 for tabela, campo in bases.items():
     cursor = db['CARGA.' + tabela].aggregate(
-        [{"$group":  {'_id': campo, "count": {"$sum": 1}}},
-         {"$match": {"count": {"$gt": 1}}}]
+        [{'$group':  {'_id': campo, 'count': {'$sum': 1}}},
+         {'$match': {'count': {'$gt': 1}}}]
     )
     print(len(list(cursor)), ' Registros duplicados na tabela CARGA.' + tabela)
 """
@@ -248,7 +250,8 @@ for container in file_cursor:
     lista_containers_file = container['metadata']['carga']['container']
     for numero in lista_containers_file:
         imagem_container_set.add(numero['container'])
-print('Total de números de imagens de contêiner únicos:', len(imagem_container_set))
+print('Total de números de imagens de contêiner únicos:',
+ len(imagem_container_set))
 
 imagem_sem_container = (imagem_container_set -
                         numero_container_set) - numero_vazio_set

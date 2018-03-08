@@ -19,8 +19,9 @@ from pymongo import MongoClient
 from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
                                      MONGODB_URI, redisdb)
 from ajna_commons.models.bsonimage import BsonImageList
-
 from virasana.integracao import carga, xml
+
+from .dir_monitor import despacha_dir
 
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)
@@ -28,9 +29,15 @@ celery = Celery(__name__, broker=BROKER,
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+<<<<<<< HEAD
     """Configura as tarefas periódicas."""
     sender.add_periodic_task(15*60.0, processa_carga.s())
     sender.add_periodic_task(13*60.0, processa_xml.s())
+=======
+    sender.add_periodic_task(15 * 60.0, processa_carga.s())
+    sender.add_periodic_task(13 * 60.0, processa_xml.s())
+    sender.add_periodic_task(5 * 60.0, processa_bson.s())
+>>>>>>> 89608b622b4d7c48e0c05628b089059255a8babe
 
 
 @celery.task
@@ -57,6 +64,18 @@ def processa_carga():
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         carga.dados_carga_grava_fsfiles(db)
+
+
+@celery.task
+def processa_bson():
+    """Chama função do módulo dir_monitor.
+
+    Neste módulo pode ser configurado o endereço de um diretório
+    e o endereço do virasana. A função a seguir varre o diretório e,
+    havendo arquivos, envia por request POST para o URL do virasana.
+    Se obtiver sucesso, exclui o arquivo enviado do diretório
+    """
+    despacha_dir()
 
 
 @celery.task(bind=True)

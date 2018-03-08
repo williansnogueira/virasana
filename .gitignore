@@ -139,3 +139,6 @@ image_aq/covimgaq/db.sqlite3.old
 image_aq/covimgaq/db.sqlite3
 ajna_commons
 *mypy_*
+celerybeat-schedule.dat
+celerybeat-schedule.bak
+celerybeat-schedule.*

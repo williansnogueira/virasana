@@ -137,11 +137,10 @@ def api_upload():
 def task_progress(taskid):
     """Retorna um json do progresso da celery task."""
     task = raspa_dir.AsyncResult(taskid)
-    response = {
-        'state': task.state,
-        'current': task.info.get('current', ''),
-        'status': task.info.get('status', '')
-    }
+    response = {'state': task.state}
+    if task.info:
+        response['current'] = task.info.get('current', ''),
+        response['status'] = task.info.get('status', '')
     return jsonify(response)
 
 

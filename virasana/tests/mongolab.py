@@ -254,7 +254,7 @@ print('Total de números de imagens de contêiner únicos:',
 
 imagem_sem_container = (imagem_container_set -
                         numero_container_set) - numero_vazio_set
-print('Imagens de contêiner SEM contêiner (0):', len(imagem_sem_container))
+print('Imagens de contêiner SEM contêiner na base CARGA(0):', len(imagem_sem_container))
 # for container in list(imagem_sem_container)[:10]:
 #   print(container)
 

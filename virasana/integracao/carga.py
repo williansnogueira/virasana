@@ -289,5 +289,6 @@ def nconhecimento_zip_dir(path):
 
 
 if __name__ == '__main__':
-    ZIP_DIR_TEST = '/home/ivan/pybr/CARGA'
+    ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__),
+                                '..', '..', '..', '..', 'files', 'CARGA')
     pprint.pprint(nconhecimento_zip_dir(ZIP_DIR_TEST))

@@ -13,6 +13,7 @@ Pode ser importado e rodado em uma tarefa periódica (celery, cron, etc)
 import os
 import time
 from threading import Thread
+from sys import platform
 
 import requests
 from celery import states
@@ -20,11 +21,14 @@ from celery import states
 from ajna_commons.flask.conf import VIRASANA_URL
 from ajna_commons.flask.log import logger
 
+
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'
-BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
-# BSON_DIR = os.path.join(os.path.dirname(__file__),
-#                        '..', '..', '..', '..', 'files', 'BSON')
+if platform == 'win32':  # I am on ALFSTS???
+    BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
+else:
+    BSON_DIR = os.path.join(os.path.dirname(__file__),
+                            '..', '..', '..', '..', 'files', 'BSON')
 
 
 def despacha(filename, target=API_URL):
@@ -61,7 +65,8 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     erros = []
     sucessos = []
     exceptions = []
-    for filename in os.listdir(dir):
+    # Limitar a quatro arquivos por rodada!!!
+    for filename in os.listdir(dir)[:4]:
         try:
             bsonfile = os.path.join(dir, filename)
             success, response = despacha(bsonfile, target)
@@ -82,7 +87,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     return erros, exceptions
 
 
-def espera_resposta(api_url, bson_file, sleep_time=1, timeout=10):
+def espera_resposta(api_url, bson_file, sleep_time=10, timeout=180):
     """Espera resposta da task.
 
     Espera resposta da task que efetivamente carregará o arquivo no

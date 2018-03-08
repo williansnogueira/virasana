@@ -4,7 +4,7 @@ from gridfs import GridFS
 
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import sanitizar
-
+from ajna_commons.conf import ENCODE
 
 FALTANTES = {'metadata.xml': None,
              'metadata.contentType': 'image/jpeg'
@@ -13,6 +13,8 @@ FALTANTES = {'metadata.xml': None,
 FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
           'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
           'UpdateCount', 'LastStateDateTime')
+
+DATA = 'metadata.xml.date'
 
 
 def create_indexes(db):
@@ -93,8 +95,7 @@ def dados_xml_grava_fsfiles(db, batch_size=1000, data_inicio=0, update=True):
         if not fs.exists(file_id):
             continue
         grid_out = fs.get(file_id)
-        # TODO: View this encode (Use ENCODE from conf??)
-        xml = grid_out.read().decode('latin1')
+        xml = grid_out.read().decode(ENCODE)
         # TODO: see why sometimes a weird character appears in front of content
         posi = xml.find('<DataForm>')
         if posi == -1:

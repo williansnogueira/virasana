@@ -43,8 +43,8 @@ def plot_bars(lista):
     pass
 
 
-def stats_por_XXX(db):
-    """XXX."""
+def stats_por(db):
+    """soon."""
     pass
 
 
@@ -54,4 +54,7 @@ def datas_bases(db):
     Para cada integração, consulta se há data de referência e retorna
 
     """
-    pass
+    bases = {}
+    bases['xml'] = xml.DATA
+    bases['carga'] = carga.DATA
+    return bases

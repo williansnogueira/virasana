@@ -66,7 +66,8 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
             bsonfile = os.path.join(dir, filename)
             success, response = despacha(bsonfile, target)
             if success:
-                # TODO: save on database list of tasks
+                # TODO: save on database list of files to delete
+                #  (if light goes out or system fail, continue)
                 response_json = response.json()
                 taskid = response_json.get('taskid', '')
                 sucessos.append(taskid)

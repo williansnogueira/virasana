@@ -1,15 +1,22 @@
 """Functions to import CARGA data from Bhadrasana."""
 
+import csv
+import io
 import os
+import pprint
 import typing
+from collections import Counter
 from datetime import datetime, timedelta
 from zipfile import ZipFile
 
 from ajna_commons.flask.log import logger
+from ajna_commons.conf import ENCODE
 
 
 FALTANTES = {'metadata.carga': None,
              'metadata.contentType': 'image/jpeg'}
+
+DATA = 'metadata.carga.atracacao.dataatracacao'
 
 
 def create_indexes(db):
@@ -259,14 +266,34 @@ def nconhecimento_zip_dir(path):
             ).count()
 
     """
-    contador = 0
+    contador = Counter()
     for zip_file in os.listdir(path):
         with ZipFile(os.path.join(path, zip_file)) as myzip:
             info_list = myzip.infolist()
             # print('info_list ',info_list)
             for info in info_list:
-                if info.filename.lower() == 'conhecimento.txt':
-                    open
-                    count
-                    contador += count
+                if info.filename.find('0.txt') != -1:
+                    with myzip.open(info) as txt_file:
+                        txt_io = io.TextIOWrapper(
+                            txt_file,
+                            encoding=ENCODE, newline=''
+                        )
+                        reader = csv.reader(txt_io, delimiter='\t')
+                        linha = next(reader)
+                        print(info.filename)
+                        print(linha)
+                        tabela = linha[0]
+                        txt_content = [linha for linha in reader]
+                    contador[tabela] += len(txt_content)
     return contador
+
+
+ZIP_DIR_TEST = '/home/ivan/pybr/CARGA'
+
+
+def test_nconhecimento_zip_dir():
+    pprint.pprint(nconhecimento_zip_dir(ZIP_DIR_TEST))
+
+
+if __name__ == '__main__':
+    test_nconhecimento_zip_dir()

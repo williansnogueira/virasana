@@ -12,6 +12,7 @@ FALTANTES = {'metadata.xml': None,
              }
 
 
+
 def xml_todict(xml) -> dict:
     """Recebe um XML string stream, retorna um dict com campos do XML.
 

@@ -1,7 +1,9 @@
 """Functions to import CARGA data from Bhadrasana."""
 
+import os
 import typing
 from datetime import datetime, timedelta
+from zipfile import ZipFile
 
 from ajna_commons.flask.log import logger
 
@@ -25,6 +27,13 @@ def create_indexes(db):
     db['CARGA.AtracDesatracEscala'].create_index('manifesto')
     db['CARGA.Manifesto'].create_index('manifesto')
     db['CARGA.NCM'].create_index('conhecimento')
+    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacao')
+    db['fs.files'].create_index('metadata.carga.escala.escala')
+    db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
+    db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
+    db['fs.files'].create_index('metadata.carga.container.contaniner')
+    db['fs.files'].create_index('metadata.carga.ncm.conhecimento')
+    db['fs.files'].create_index('metadata.carga.containervazio.container')
 
 
 def mongo_find_in(db, collection: str, field: str, in_set,
@@ -229,3 +238,33 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
         'Maior data', str(end)
     ]))
     return acum
+
+def nconhecimento_zip_dir(path):
+    """Retorna o número de conhecimentos de um conjunto de extrações.
+
+    Dado um diretório(path) procura extrações do Siscomex CARGA, abre seus zip,
+    abre o arquivo de conhecimentos de cada zip e conta as linhas.
+    Para AUDITORIA após um arquivamento da base CARGA confirmar se número de
+    registros no arquivo (MongoDB) é igual a número original de linhas.
+
+    Args:
+        path: caminho do(s) arquivo(s) de extração(ões)
+    
+    Returns:
+        número de conhecimentos
+        Comparar com db['fs.files'].find(
+            {'metadata.carga.atracacao.dataatracacao': {$gt: date, $lt: date}}
+            ).count()
+
+    """
+    contador = 0
+    for zip_file in os.listdir(path):
+        with ZipFile(os.path.join(path, zip_file)) as myzip:
+            info_list = myzip.infolist()
+            # print('info_list ',info_list)
+            for info in info_list:
+                if info.filename.lower() == 'conhecimento.txt':
+                    open
+                    count
+                    contador += count
+    return contador

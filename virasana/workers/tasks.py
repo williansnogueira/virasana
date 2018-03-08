@@ -10,7 +10,7 @@ aquelas que rodam tarefas custosas/demoradas em background.
 # Código dos celery tasks
 import json
 from base64 import decodebytes
-from datetime import datetime
+# from datetime import datetime
 
 import gridfs
 from celery import Celery, states
@@ -28,6 +28,7 @@ celery = Celery(__name__, broker=BROKER,
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+    """Configura as tarefas periódicas."""
     sender.add_periodic_task(15*60.0, processa_carga.s())
     sender.add_periodic_task(13*60.0, processa_xml.s())
 

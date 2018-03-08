@@ -1,4 +1,5 @@
-""" Monitora um diretório e envia arquivos BSON nele para o virasana.
+"""
+Monitora um diretório e envia arquivos BSON nele para o virasana.
 
 USAGE
 python dir_monitor.py

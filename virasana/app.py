@@ -1,3 +1,7 @@
+"""
+Módulo de entrada da aplicação web.
+
+"""
 from flask import abort, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
 

@@ -288,12 +288,6 @@ def nconhecimento_zip_dir(path):
     return contador
 
 
-ZIP_DIR_TEST = '/home/ivan/pybr/CARGA'
-
-
-def test_nconhecimento_zip_dir():
-    pprint.pprint(nconhecimento_zip_dir(ZIP_DIR_TEST))
-
-
 if __name__ == '__main__':
-    test_nconhecimento_zip_dir()
+    ZIP_DIR_TEST = '/home/ivan/pybr/CARGA'
+    pprint.pprint(nconhecimento_zip_dir(ZIP_DIR_TEST))

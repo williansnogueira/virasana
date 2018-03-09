@@ -1,5 +1,6 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 import defusedxml.ElementTree as ET
+from datetime import datetime
 from gridfs import GridFS
 
 from ajna_commons.conf import ENCODE
@@ -67,7 +68,9 @@ def xml_todict(xml) -> dict:
     return result
 
 
-def dados_xml_grava_fsfiles(db, batch_size=1000, data_inicio=0, update=True):
+def dados_xml_grava_fsfiles(db, batch_size=5000,
+                            data_inicio=datetime(1900, 1, 1),
+                            update=True):
     """Busca por registros no GridFS sem info do XML.
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata

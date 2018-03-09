@@ -50,8 +50,7 @@ for linha in cursor:
     dataatracacaoiso = datetime.strptime(dataatracacao, '%d/%m/%Y')
     print(linha['_id'], dataatracacao, dataatracacaoiso)
     db['CARGA.AtracDesatracEscala'].update(
-        {'_id': linha['_id']}, {'$set': {'dataatracacao': dataatracacao,
-        'dataatracacaoiso': dataatracacaoiso}}
+        {'_id': linha['_id']}, {'$set': {'dataatracacaoiso': dataatracacaoiso}}
     )
 
 

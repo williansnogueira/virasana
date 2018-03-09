@@ -186,8 +186,9 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     return json_dict
 
 
-def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
-                              force_update=False):
+def dados_carga_grava_fsfiles(db, batch_size=100,
+                              data_inicio=datetime(1900, 1, 1),
+                              update=True, force_update=False):
     """Busca por registros no GridFS sem info do CARGA.
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
@@ -201,6 +202,8 @@ def dados_carga_grava_fsfiles(db, batch_size=100, data_inicio=0, update=True,
         data_inicio: filtra por data de escaneamento maior que a informada
         update: Caso seja setado como False, apenas faz consulta, sem
             atualizar metadata da collection fs.files
+        force_update: Marcar "NA" - not available se não encontrar dados do 
+        CARGA. Usar com consciência/cuidado.
     Returns:
         número de registros encontrados
     """

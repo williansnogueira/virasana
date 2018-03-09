@@ -17,7 +17,7 @@ fs = GridFS(db)
 number = gridfs_count(db, xml.FALTANTES)
 print(number, 'registros sem metadata de xml')
 
-dados_xml_grava_fsfiles(db, 10000, datetime(1900, 1, 1), True)
+dados_xml_grava_fsfiles(db)  # , 10000, datetime(1900, 1, 1), True)
 
 number = gridfs_count(db, xml.FALTANTES)
 print(number, 'registros sem metadata de xml')

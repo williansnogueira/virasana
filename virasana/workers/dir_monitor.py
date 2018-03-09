@@ -65,8 +65,8 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     erros = []
     sucessos = []
     exceptions = []
-    # Limitar a quatro arquivos por rodada!!!
-    for filename in os.listdir(dir)[:4]:
+    # Limitar a cinco arquivos por rodada!!!
+    for filename in os.listdir(dir)[:5]:
         try:
             bsonfile = os.path.join(dir, filename)
             success, response = despacha(bsonfile, target)

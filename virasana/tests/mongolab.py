@@ -15,6 +15,46 @@ from pymongo import MongoClient
 from virasana.integracao.carga import create_indexes, dados_carga_grava_fsfiles
 
 db = MongoClient()['test']
+
+carga_dbs = ['CARGA.AtracDesatracEscala',
+'CARGA.CargaSolta',
+'CARGA.Conhecimento',
+'CARGA.Container',
+'CARGA.ContainerVazio',
+'CARGA.Escala',
+'CARGA.EscalaManifesto',
+'CARGA.Granel',
+'CARGA.Manifesto',
+'CARGA.ManifestoConhecimento',
+'CARGA.NCM',
+'CARGA.Parametros',
+'CARGA.Transbordo',
+'CARGA.Veiculo']
+
+####EXCLUIR!!!!!!!!!!!!!!!!
+# for dbname in carga_dbs:
+#    db[dbname].remove({})
+
+
+# Corrigir datas!!!!
+for dbname in carga_dbs:
+    linha = db[dbname].find_one({})
+    for campo in linha:
+        if campo.find('data') == 0:
+            print(campo, linha[campo])
+### Com os dados acima poderiam ser corrigidos TODOS os campos de data.
+# Por ora, corrigindo apenas dataatracacao que utilizamos para pesquisar
+cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
+for linha in cursor:
+    dataatracacao = linha['dataatracacao']
+    dataatracacaoiso = datetime.strptime(dataatracacao, '%d/%m/%Y')
+    print(linha['_id'], dataatracacao, dataatracacaoiso)
+    db['CARGA.AtracDesatracEscala'].update(
+        {'_id': linha['_id']}, {'$set': {'dataatracacao': dataatracacao,
+        'dataatracacaoiso': dataatracacaoiso}}
+    )
+
+
 #################
 # Criar índices
 create_indexes(db)
@@ -99,6 +139,8 @@ db['CARGA.AtracDesatracEscala'].insert(
 # pprint.pprint(container)
 
 
+
+
 # Teste com dados reais
 data_inicio = datetime(2017, 6, 30)
 file_cursor = db['fs.files'].find(
@@ -124,17 +166,18 @@ print(count, 'Total de imagens com metadata.carga = "NA"',
 batch_size = 1000
 # dados_carga_grava_fsfiles(db, 100, data_inicio)
 tempo = time.time()
-dados_carga_grava_fsfiles(db, batch_size, data_inicio, force_update=True)
+dados_carga_grava_fsfiles(db, batch_size, data_inicio)
 tempo = time.time() - tempo
 print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
       tempo / batch_size, 'por registro')
-linha = db['CARGA.AtracDesatracEscala'].find().sort('dataatracacao').limit(1)
-linha = next(linha)
-print('Menor data de atracação (CARGA)', linha.get('dataatracacao'))
 linha = db['CARGA.AtracDesatracEscala'].find().sort(
-    'dataatracacao', -1).limit(1)
+    'dataatracacaoiso', 1).limit(1)
 linha = next(linha)
-print('Maior data de atracação (CARGA)', linha.get('dataatracacao'))
+print('Menor data de atracação (CARGA)', linha.get('dataatracacaoiso'))
+linha = db['CARGA.AtracDesatracEscala'].find().sort(
+    'dataatracacaoiso', -1).limit(1)
+linha = next(linha)
+print('Maior data de atracação (CARGA)', linha.get('dataatracacaoiso'))
 
 linha = db['fs.files'].find(
     {'metadata.contentType': 'image/jpeg'}
@@ -155,7 +198,7 @@ print('Maior data de escaneamento (IMAGENS)',
 print('############# Saneamento ##########')
 # Registros duplicados no GridFS
 # TODO: não aceitar duas vezes o mesmo arquivo ou fazer upsert
-file_cursor = db['fs.files'].aggregate(
+"""file_cursor = db['fs.files'].aggregate(
     [{'$group':
       {'_id': '$filename',
        'dups': {'$push': '$_id'},
@@ -170,7 +213,6 @@ file_cursor = db['fs.files'].aggregate(
        'count': {'$sum': 1}}},
      {'$match': {'count': {'$gt': 1}}}]
 )
-
 fs = GridFS(db)
 for cursor in file_cursor:
     ids = cursor['dups']
@@ -178,8 +220,7 @@ for cursor in file_cursor:
         fs.delete(_id)
 
 print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
-
-
+"""
 # Registros duplicados nas tabelas CARGA
 # TODO: não aceitar duas vezes o mesmo registro ou fazer upsert
 # TODO: Como registrar esta metadata???
@@ -254,7 +295,8 @@ print('Total de números de imagens de contêiner únicos:',
 
 imagem_sem_container = (imagem_container_set -
                         numero_container_set) - numero_vazio_set
-print('Imagens de contêiner SEM contêiner na base CARGA(0):', len(imagem_sem_container))
+print('Imagens de contêiner SEM contêiner na base CARGA(0):',
+      len(imagem_sem_container))
 # for container in list(imagem_sem_container)[:10]:
 #   print(container)
 

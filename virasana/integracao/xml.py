@@ -4,7 +4,7 @@ from gridfs import GridFS
 
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
-from ajna_commons.utils.sanitiza import sanitizar
+from ajna_commons.utils.sanitiza import ascii_sanitizar, sanitizar
 
 FALTANTES = {'metadata.xml': None,
              'metadata.contentType': 'image/jpeg'
@@ -40,10 +40,17 @@ def xml_todict(xml) -> dict:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError as err:
-        xml = sanitizar(xml)
-        root = ET.fromstring(xml)
-        logger.error(err, exc_info=True)
-        # return result
+        xml = ascii_sanitizar(xml)
+        # logger.error(err, exc_info=True)
+        try:
+            root = ET.fromstring(xml)
+        except:
+            print('*****************XML**********************')
+            print(xml)
+            print('*****************XML END')
+            raise Exception('XML intratável??')
+
+            # return result
     for field in FIELDS:
         for tag in root.iter(field):
             text = ''

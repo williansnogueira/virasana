@@ -152,7 +152,7 @@ def task_progress(taskid):
 @login_required
 def list_files():
     """Lista arquivos no banco MongoDB.
-    
+
     Lista 10 arquivos mais recentes no banco MongoDB,
      por uploadDate mais recente.
     Se houver upload em andamento, informa."""

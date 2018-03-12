@@ -18,7 +18,7 @@ FALTANTES = {'metadata.carga': None,
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
-# TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!!
+# TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!
 # TODO: UNIQUE INDEXES on CARGA to avoid duplicate importing
 
 

@@ -34,7 +34,7 @@ carga_dbs = ['CARGA.AtracDesatracEscala',
              'CARGA.Veiculo']
 
 # EXCLUIR!!!!!!!!!!!!!!!!
-#for dbname in carga_dbs:
+# for dbname in carga_dbs:
 #    db[dbname].remove({})
 
 
@@ -55,7 +55,6 @@ for linha in cursor:
     db['CARGA.AtracDesatracEscala'].update(
         {'_id': linha['_id']}, {'$set': {'dataatracacaoiso': dataatracacaoiso}}
     )
-
 
 
 file_cursor = db['CARGA.ContainerVazio'].aggregate(
@@ -173,8 +172,8 @@ count = file_cursor.count()
 print(count, 'Total de imagens com metadata.carga = "NA"',
       'desde', data_inicio)
 
-batch_size = 4000 #  4000
-for day in range(1, 30, 5): #  ,30
+batch_size = 4000
+for day in range(1, 30, 5):
     data_inicio = datetime(2017, 8, day)
     print('Data início', data_inicio)
     tempo = time.time()

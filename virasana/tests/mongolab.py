@@ -9,7 +9,7 @@ import timeit
 import time
 from datetime import datetime  # , timedelta
 
-from gridfs import GridFS
+# from gridfs import GridFS
 from pymongo import MongoClient
 
 from virasana.integracao.carga import busca_info_container, \
@@ -168,8 +168,9 @@ for day in range(1, 30, 5):
     tempo = time.time()
     dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
     tempo = time.time() - tempo
-    print(batch_size, 'dados Carga do fs.files percorridos em ', tempo, 'segundos.',
-        tempo / batch_size, 'por registro')
+    print(batch_size, 'dados Carga do fs.files percorridos em ',
+          tempo, 'segundos.',
+          tempo / batch_size, 'por registro')
 
 linha = db['CARGA.AtracDesatracEscala'].find().sort(
     'dataatracacaoiso', 1).limit(1)
@@ -270,7 +271,8 @@ file_cursor = db['fs.files'].find(
      'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'},
     ['metadata.carga.container.container'])
-print('Total de imagens de container com metadata do carga:', file_cursor.count())
+print('Total de imagens de container com metadata do carga:',
+      file_cursor.count())
 
 numero_container_set = set()
 for container in container_cursor:
@@ -296,7 +298,8 @@ print('Total de números de imagens de contêiner únicos:',
 
 imagem_sem_container = (imagem_container_set -
                         numero_container_set) - numero_vazio_set
-print('Números de contêiner nas imagens SEM contêiner correspondente na base CARGA, ignorando datas (tem que ser 0):',
+print('Números de contêiner nas imagens SEM contêiner correspondente' +
+      ' na base CARGA, ignorando datas (tem que ser 0):',
       len(imagem_sem_container))
 # for container in list(imagem_sem_container)[:10]:
 #   print(container)
@@ -304,7 +307,8 @@ print('Números de contêiner nas imagens SEM contêiner correspondente na base 
 
 container_sem_imagem = (numero_container_set |
                         numero_vazio_set) - imagem_container_set
-print('Números de contêineres no CARGA SEM numeração igual nas imagens:', len(container_sem_imagem))
+print('Números de contêineres no CARGA SEM numeração igual nas imagens:',
+      len(container_sem_imagem))
 
 pipeline = [
     {'$lookup':

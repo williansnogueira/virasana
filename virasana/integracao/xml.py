@@ -45,11 +45,12 @@ def xml_todict(xml) -> dict:
         # logger.error(err, exc_info=True)
         try:
             root = ET.fromstring(xml)
-        except:
+        except ET.ParseError as err:
             print('*****************XML**********************')
             print(xml)
             print('*****************XML END')
-            raise Exception('XML intratável??')
+            print(str(err))
+            raise ET.ParseError('XML intratável??')
 
             # return result
     for field in FIELDS:

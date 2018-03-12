@@ -104,7 +104,8 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
     return index
 
 
-def busca_info_container(db, numero: str, data_escaneamento: datetime, days=4) -> dict:
+def busca_info_container(db, numero: str,
+                         data_escaneamento: datetime, days=4) -> dict:
     """Busca heurística na base CARGA MongoDB de dados sobre o Contêiner.
 
     A busca é baseada na data de escaneamento. O parâmetro dias é um
@@ -207,7 +208,7 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
         days: número de dias a aceitar de diferença
         update: Caso seja setado como False, apenas faz consulta, sem
             atualizar metadata da collection fs.files
-        force_update: Marcar "NA" - not available se não encontrar dados do 
+        force_update: Marcar "NA" - not available se não encontrar dados do
         CARGA. Usar com consciência/cuidado.
     Returns:
         número de registros encontrados

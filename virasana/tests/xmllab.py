@@ -1,7 +1,6 @@
 """
 Testes interativos em arquivos XML gerados pelos escâneres.
 """
-from datetime import datetime
 
 from gridfs import GridFS
 from pymongo import MongoClient

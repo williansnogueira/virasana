@@ -19,7 +19,6 @@ FALTANTES = {'metadata.carga': None,
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
 # TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!
-# TODO: UNIQUE INDEXES on CARGA to avoid duplicate importing
 
 
 def create_indexes(db):
@@ -32,12 +31,14 @@ def create_indexes(db):
     db['CARGA.ContainerVazio'].create_index('container')
     db['CARGA.ContainerVazio'].create_index('manifesto')
     db['CARGA.ContainerVazio'].create_index(
-        [('manifesto', pymongo.ASCENDING), ('container', pymongo.ASCENDING)],
+        [('manifesto', pymongo.ASCENDING),
+         ('container', pymongo.ASCENDING)],
         unique=True)
     db['CARGA.EscalaManifesto'].create_index('manifesto')
     db['CARGA.EscalaManifesto'].create_index('escala')
-    db['CARGA.EScalaManifesto'].create_index(
-        [('manifesto', pymongo.ASCENDING), ('escala', pymongo.ASCENDING)],
+    db['CARGA.EscalaManifesto'].create_index(
+        [('manifesto', pymongo.ASCENDING),
+         ('escala', pymongo.ASCENDING)],
         unique=True)
     db['CARGA.Escala'].create_index('escala', unique=True)
     db['CARGA.Container'].create_index('container')
@@ -52,7 +53,8 @@ def create_indexes(db):
     db['CARGA.Manifesto'].create_index('manifesto', unique=True)
     db['CARGA.NCM'].create_index('conhecimento')
     db['CARGA.NCM'].create_index(
-        [('conhecimento', pymongo.ASCENDING), ('item', pymongo.ASCENDING)],
+        [('conhecimento', pymongo.ASCENDING),
+         ('item', pymongo.ASCENDING)],
         unique=True)
     db['CARGA.Container'].create_index(
         [('conhecimento', pymongo.ASCENDING),

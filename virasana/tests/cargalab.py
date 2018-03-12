@@ -270,29 +270,32 @@ print(len(lista_sem_imagens), ' contêineres sem imagens de ',
 
 container_cursor = db['CARGA.Container'].find(
     {}, ['container'])
-print('Total de contêineres cheios:', container_cursor.count())
+print('Total de contêineres cheios importados do CARGA:',
+      container_cursor.count())
 
 container_vazio_cursor = db['CARGA.ContainerVazio'].find(
     {}, ['container'])
-print('Total de contêineres vazios:', container_vazio_cursor.count())
+print('Total de contêineres vazios importados do CARGA:',
+      container_vazio_cursor.count())
 
 file_cursor = db['fs.files'].find(
     {'metadata.carga.container.container': {'$ne': None},
      'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'},
     ['metadata.carga.container.container'])
-print('Total de imagens de container com metadata do carga:',
+print('Total de imagens de container com metadata do CARGA:',
       file_cursor.count())
 
 numero_container_set = set()
 for container in container_cursor:
     numero_container_set.add(container['container'])
-print('Total de contêineres únicos:', len(numero_container_set))
+print('Total de contêineres únicos no CARGA:', len(numero_container_set))
 
 numero_vazio_set = set()
 for container in container_vazio_cursor:
     numero_vazio_set.add(container['container'])
-print('Total de contêineres vazios únicos:', len(numero_vazio_set))
+print('Total de contêineres vazios únicos no CARGA:',
+      len(numero_vazio_set))
 
 print('Total de contêineres vazios e cheios únicos:',
       len(numero_container_set | numero_vazio_set))

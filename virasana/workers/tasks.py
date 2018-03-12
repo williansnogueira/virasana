@@ -10,7 +10,7 @@ aquelas que rodam tarefas custosas/demoradas em background.
 # Código dos celery tasks
 import json
 from base64 import decodebytes
-
+from datetime import datetime, timedelta
 import gridfs
 from celery import Celery, states
 from pymongo import MongoClient
@@ -60,7 +60,8 @@ def processa_carga():
     """
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
-        carga.dados_carga_grava_fsfiles(db)
+        doisdias = datetime.now() - timedelta(days=2)
+        carga.dados_carga_grava_fsfiles(db, 5000, doisdias)
 
 
 @celery.task

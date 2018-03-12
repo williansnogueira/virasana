@@ -38,7 +38,7 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.carga.escala.escala')
     db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
     db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
-    db['fs.files'].create_index('metadata.carga.container.contaniner')
+    db['fs.files'].create_index('metadata.carga.container.container')
     db['fs.files'].create_index('metadata.carga.ncm.conhecimento')
     db['fs.files'].create_index('metadata.carga.containervazio.container')
 
@@ -76,22 +76,22 @@ def mongo_find_in(db, collection: str, field: str, in_set,
 
 
 def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
-                         threshold=None) -> int:
+                         days=4) -> int:
     """Pega da lista de atracacoes a atracação com a data mais próxima.
 
     Args:
         atracacoes: lista de dict contendo os registros das atracacoes
         data: data buscada
-        threshold: máxima diferença entre as datas - default definido no
-            começo da função
+        days: "threshold"  máxima diferença entre as datas - default definido
+         no começo da função
+
     Returns:
         índice da atracação, None se atracação não existe ou não está no
         intervalo threshold
 
     """
     index = None
-    if threshold is None:
-        threshold = timedelta(days=3)
+    threshold = timedelta(days=days)
     for ind, atracacao in enumerate(atracacoes):
         data = atracacao['dataatracacao']
         hora = atracacao['horaatracacao']
@@ -104,11 +104,12 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
     return index
 
 
-def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
+def busca_info_container(db, numero: str, data_escaneamento: datetime, days=4) -> dict:
     """Busca heurística na base CARGA MongoDB de dados sobre o Contêiner.
 
-    A busca é baseada na data de escaneamento. O threshold (diferença aceita
-    entre a data de atracação e escaneamento), por padrão, é de 4 dias.
+    A busca é baseada na data de escaneamento. O parâmetro dias é um
+    "threshold" (diferença aceita entre a data de atracação e escaneamento),
+     por padrão, é de 4 dias.
     Dentro destes 4 dias, será considerado o CE/Manifesto/Escala com menor
     diferença de data como o pertencente a este contêiner.
     Note-se que o resultado não é garantido, podendo trazer um CE incorreto.
@@ -121,6 +122,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
         numero: número completo do contêiner
         data_escaneamento: data e hora do escaneamento, conforme
         arquivo XML original do escâner
+        days: número de dias a aceitar de diferença
     Returns:
         json_dict: dict com campos e valores de informações da base CARGA
         VAZIO se não encontrar nada dentro do threshold
@@ -128,6 +130,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
         não existe ou não foi importado ou há um erro)!
     """
     json_dict = {}
+    numero = numero.casefold()
     # Primeiro busca por contêiner vazio (dez vezes mais rápido)
     containeres_vazios, manifestos_vazios_set = mongo_find_in(
         db, 'CARGA.ContainerVazio', 'container', set([numero]), 'manifesto')
@@ -137,7 +140,7 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     atracacoes_vazios, _ = mongo_find_in(
         db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
     index_atracacao = busca_atracacao_data(
-        atracacoes_vazios, data_escaneamento)
+        atracacoes_vazios, data_escaneamento, days)
     if index_atracacao is not None:
         atracacao = atracacoes_vazios[index_atracacao]
         json_dict['atracacao'] = atracacao
@@ -186,8 +189,9 @@ def busca_info_container(db, numero: str, data_escaneamento: datetime) -> dict:
     return json_dict
 
 
-def dados_carga_grava_fsfiles(db, batch_size=100,
+def dados_carga_grava_fsfiles(db, batch_size=1000,
                               data_inicio=datetime(1900, 1, 1),
+                              days=4,
                               update=True, force_update=False):
     """Busca por registros no GridFS sem info do CARGA.
 
@@ -200,6 +204,7 @@ def dados_carga_grava_fsfiles(db, batch_size=100,
         db: connection to mongo with database setted
         batch_size: número de registros a consultar/atualizar por chamada
         data_inicio: filtra por data de escaneamento maior que a informada
+        days: número de dias a aceitar de diferença
         update: Caso seja setado como False, apenas faz consulta, sem
             atualizar metadata da collection fs.files
         force_update: Marcar "NA" - not available se não encontrar dados do 
@@ -212,6 +217,9 @@ def dados_carga_grava_fsfiles(db, batch_size=100,
     file_cursor = db['fs.files'].find(filtro)
     acum = 0
     start = datetime.utcnow()
+    if file_cursor.count() == 0:
+        logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
+        return 0
     end = start - timedelta(days=10000)
     for linha in file_cursor.limit(batch_size):
         container = linha.get('metadata').get('numeroinformado')
@@ -223,9 +231,10 @@ def dados_carga_grava_fsfiles(db, batch_size=100,
                 start = data
             if data > end:
                 end = data
-            dados_carga = busca_info_container(db, container, data)
+            dados_carga = busca_info_container(db, container, data, days)
             if dados_carga != {}:
                 if update:
+                    # print(dados_carga)
                     db['fs.files'].update(
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': dados_carga}}
@@ -237,12 +246,9 @@ def dados_carga_grava_fsfiles(db, batch_size=100,
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': 'NA'}}
                     )
-    else:
-        logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
-        return 0
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
-        ' Pesquisados', str(file_cursor.count()),
+        ' Pesquisados', str(min(file_cursor.count(), batch_size)),
         'Encontrados', str(acum),
         'Menor data', str(start),
         'Maior data', str(end)

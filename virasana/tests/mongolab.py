@@ -5,44 +5,46 @@ Tests for sintax and operations before putting into main code
 
 """
 # import pprint
-# import timeit
+import timeit
 import time
 from datetime import datetime  # , timedelta
 
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.integracao.carga import create_indexes, dados_carga_grava_fsfiles
+from virasana.integracao.carga import busca_info_container, \
+    create_indexes, dados_carga_grava_fsfiles
 
 db = MongoClient()['test']
 
 carga_dbs = ['CARGA.AtracDesatracEscala',
-'CARGA.CargaSolta',
-'CARGA.Conhecimento',
-'CARGA.Container',
-'CARGA.ContainerVazio',
-'CARGA.Escala',
-'CARGA.EscalaManifesto',
-'CARGA.Granel',
-'CARGA.Manifesto',
-'CARGA.ManifestoConhecimento',
-'CARGA.NCM',
-'CARGA.Parametros',
-'CARGA.Transbordo',
-'CARGA.Veiculo']
+             'CARGA.CargaSolta',
+             'CARGA.Conhecimento',
+             'CARGA.Container',
+             'CARGA.ContainerVazio',
+             'CARGA.Escala',
+             'CARGA.EscalaManifesto',
+             'CARGA.Granel',
+             'CARGA.Manifesto',
+             'CARGA.ManifestoConhecimento',
+             'CARGA.NCM',
+             'CARGA.Parametros',
+             'CARGA.Transbordo',
+             'CARGA.Veiculo']
 
-####EXCLUIR!!!!!!!!!!!!!!!!
+# EXCLUIR!!!!!!!!!!!!!!!!
 # for dbname in carga_dbs:
 #    db[dbname].remove({})
 
 
 # Corrigir datas!!!!
-for dbname in carga_dbs:
+"""for dbname in carga_dbs:
     linha = db[dbname].find_one({})
     for campo in linha:
         if campo.find('data') == 0:
             print(campo, linha[campo])
-### Com os dados acima poderiam ser corrigidos TODOS os campos de data.
+"""
+# Com os dados acima poderiam ser corrigidos TODOS os campos de data.
 # Por ora, corrigindo apenas dataatracacao que utilizamos para pesquisar
 cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
 for linha in cursor:
@@ -67,7 +69,7 @@ container_vazio = 'apru5774515'
 data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
-"""
+
 reps = 3
 print('Início do teste de desempenho')
 tempo = timeit.timeit(
@@ -91,7 +93,6 @@ assert busca_info_container(db, container_vazio, data_escaneamento_false) == {}
 assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
 
 
-"""
 data_escaneamento = datetime(2017, 1, 1)
 
 """
@@ -138,8 +139,6 @@ db['CARGA.AtracDesatracEscala'].insert(
 # pprint.pprint(container)
 
 
-
-
 # Teste com dados reais
 data_inicio = datetime(2017, 6, 30)
 file_cursor = db['fs.files'].find(
@@ -152,9 +151,9 @@ file_cursor = db['fs.files'].find(
     {'metadata.carga': None,
      'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'})
-
 count = file_cursor.count()
 print(count, 'Total de imagens sem metadata.carga', 'desde', data_inicio)
+
 file_cursor = db['fs.files'].find(
     {'metadata.carga': 'NA',
      'metadata.contentType': 'image/jpeg'})
@@ -162,13 +161,16 @@ count = file_cursor.count()
 print(count, 'Total de imagens com metadata.carga = "NA"',
       'desde', data_inicio)
 
-batch_size = 1000
-# dados_carga_grava_fsfiles(db, 100, data_inicio)
-tempo = time.time()
-dados_carga_grava_fsfiles(db, batch_size, data_inicio)
-tempo = time.time() - tempo
-print('Dados Carga do fs.files percorridos em ', tempo, 'segundos.',
-      tempo / batch_size, 'por registro')
+batch_size = 4000
+for day in range(1, 30, 5):
+    data_inicio = datetime(2017, 9, day)
+    print('Data início', data_inicio)
+    tempo = time.time()
+    dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
+    tempo = time.time() - tempo
+    print(batch_size, 'dados Carga do fs.files percorridos em ', tempo, 'segundos.',
+        tempo / batch_size, 'por registro')
+
 linha = db['CARGA.AtracDesatracEscala'].find().sort(
     'dataatracacaoiso', 1).limit(1)
 linha = next(linha)
@@ -237,7 +239,7 @@ for tabela, campo in bases.items():
 """
 
 # Procurar contêineres SEM imagem
-qtde_conteineres = 10
+"""qtde_conteineres = 10
 lista_sem_imagens = []
 container_cursor = db['CARGA.Container'].find(
     {}, ['container']).limit(qtde_conteineres)
@@ -253,7 +255,7 @@ for container in container_cursor:
         lista_sem_imagens.append(container['container'])
 print(len(lista_sem_imagens), ' contêineres sem imagens de ',
       qtde_conteineres, ' procurados')
-
+"""
 
 container_cursor = db['CARGA.Container'].find(
     {}, ['container'])
@@ -268,7 +270,7 @@ file_cursor = db['fs.files'].find(
      'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'},
     ['metadata.carga.container.container'])
-print('Total de imagens de container marcadas:', file_cursor.count())
+print('Total de imagens de container com metadata do carga:', file_cursor.count())
 
 numero_container_set = set()
 for container in container_cursor:
@@ -294,7 +296,7 @@ print('Total de números de imagens de contêiner únicos:',
 
 imagem_sem_container = (imagem_container_set -
                         numero_container_set) - numero_vazio_set
-print('Imagens de contêiner SEM contêiner na base CARGA(0):',
+print('Números de contêiner nas imagens SEM contêiner correspondente na base CARGA, ignorando datas (tem que ser 0):',
       len(imagem_sem_container))
 # for container in list(imagem_sem_container)[:10]:
 #   print(container)
@@ -302,7 +304,7 @@ print('Imagens de contêiner SEM contêiner na base CARGA(0):',
 
 container_sem_imagem = (numero_container_set |
                         numero_vazio_set) - imagem_container_set
-print('Contêineres SEM imagem:', len(container_sem_imagem))
+print('Números de contêineres no CARGA SEM numeração igual nas imagens:', len(container_sem_imagem))
 
 pipeline = [
     {'$lookup':

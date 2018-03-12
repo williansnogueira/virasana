@@ -12,8 +12,9 @@ from datetime import datetime  # , timedelta
 # from gridfs import GridFS
 from pymongo import MongoClient
 
+from virasana.integracao import create_indexes, carga
 from virasana.integracao.carga import busca_info_container, \
-    create_indexes, dados_carga_grava_fsfiles
+    dados_carga_grava_fsfiles
 
 db = MongoClient()['test']
 
@@ -33,7 +34,7 @@ carga_dbs = ['CARGA.AtracDesatracEscala',
              'CARGA.Veiculo']
 
 # EXCLUIR!!!!!!!!!!!!!!!!
-# for dbname in carga_dbs:
+#for dbname in carga_dbs:
 #    db[dbname].remove({})
 
 
@@ -56,9 +57,20 @@ for linha in cursor:
     )
 
 
+
+file_cursor = db['CARGA.ContainerVazio'].aggregate(
+    [{'$group':
+      {'_id': ['$manifesto', '$container'],
+       'dups': {'$push': '$_id'},
+       'count': {'$sum': 1}}},
+     {'$match': {'count': {'$gt': 1}}}]
+)
+print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
+
 #################
 # Criar índices
 create_indexes(db)
+carga.create_indexes(db)
 
 
 #############################################
@@ -161,9 +173,9 @@ count = file_cursor.count()
 print(count, 'Total de imagens com metadata.carga = "NA"',
       'desde', data_inicio)
 
-batch_size = 4000
-for day in range(1, 30, 5):
-    data_inicio = datetime(2017, 9, day)
+batch_size = 4000 #  4000
+for day in range(1, 30, 5): #  ,30
+    data_inicio = datetime(2017, 8, day)
     print('Data início', data_inicio)
     tempo = time.time()
     dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
@@ -199,7 +211,6 @@ print('Maior data de escaneamento (IMAGENS)',
 # Consultas para saneamento das tabelas...
 print('############# Saneamento ##########')
 # Registros duplicados no GridFS
-# TODO: não aceitar duas vezes o mesmo arquivo ou fazer upsert
 """file_cursor = db['fs.files'].aggregate(
     [{'$group':
       {'_id': '$filename',

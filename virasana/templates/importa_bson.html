@@ -24,7 +24,11 @@
                     <span class='label label-success' id="upload-file-info"></span>
                 </big>
             </form>
- 
+            {% if task_info %}
+                <p>Processando upload de arquivo... (F5 para atualizar status)</p>
+                <p>Arquivo atual: {{ task_info['current'] }}</p>
+                <p>Mensagem: {{ task_info['status'] }}</p>
+            {% endif %}
         </div>
         <div class="col-sm-6">
             <div class="table-responsive">

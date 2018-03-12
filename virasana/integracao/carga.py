@@ -7,6 +7,7 @@ import pprint
 import typing
 from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
+import pymongo
 from zipfile import ZipFile
 
 from ajna_commons.conf import ENCODE
@@ -17,23 +18,47 @@ FALTANTES = {'metadata.carga': None,
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
+# TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!!
+# TODO: UNIQUE INDEXES on CARGA to avoid duplicate importing
+
 
 def create_indexes(db):
-    """Utilitário. Cria índices relacionados à integração."""
+    """Utilitário. Cria índices relacionados à integração.
+
+    São criados índices para desempenho nas consultas.
+    Alguns índices únicos também são criados, estes para evitar importação
+    duplicada do mesmo registro.
+    """
     db['CARGA.ContainerVazio'].create_index('container')
     db['CARGA.ContainerVazio'].create_index('manifesto')
+    db['CARGA.ContainerVazio'].create_index(
+        [('manifesto', pymongo.ASCENDING), ('container', pymongo.ASCENDING)],
+        unique=True)
     db['CARGA.EscalaManifesto'].create_index('manifesto')
     db['CARGA.EscalaManifesto'].create_index('escala')
-    db['CARGA.Escala'].create_index('escala')
+    db['CARGA.EScalaManifesto'].create_index(
+        [('manifesto', pymongo.ASCENDING), ('escala', pymongo.ASCENDING)],
+        unique=True)
+    db['CARGA.Escala'].create_index('escala', unique=True)
     db['CARGA.Container'].create_index('container')
     db['CARGA.Container'].create_index('conhecimento')
-    db['CARGA.Conhecimento'].create_index('conhecimento')
+    # db['CARGA.Conhecimento'].drop_index('conhecimento_1')
+    db['CARGA.Conhecimento'].create_index('conhecimento', unique=True)
     db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
     db['CARGA.ManifestoConhecimento'].create_index('manifesto')
     db['CARGA.AtracDesatracEscala'].create_index('escala')
     db['CARGA.AtracDesatracEscala'].create_index('manifesto')
-    db['CARGA.Manifesto'].create_index('manifesto')
+    # db['CARGA.Manifesto'].drop_index('manifesto_1')
+    db['CARGA.Manifesto'].create_index('manifesto', unique=True)
     db['CARGA.NCM'].create_index('conhecimento')
+    db['CARGA.NCM'].create_index(
+        [('conhecimento', pymongo.ASCENDING), ('item', pymongo.ASCENDING)],
+        unique=True)
+    db['CARGA.Container'].create_index(
+        [('conhecimento', pymongo.ASCENDING),
+         ('container', pymongo.ASCENDING),
+         ('item', pymongo.ASCENDING)],
+        unique=True)
     db['fs.files'].create_index('metadata.carga.atracacao.dataatracacao')
     db['fs.files'].create_index('metadata.carga.escala.escala')
     db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
@@ -129,6 +154,7 @@ def busca_info_container(db, numero: str,
         VAZIO se não encontrar nada dentro do threshold
         (Caso não encontre atracacao para o Contêiner no prazo, o dado ?ainda?
         não existe ou não foi importado ou há um erro)!
+
     """
     json_dict = {}
     numero = numero.casefold()

@@ -20,6 +20,19 @@ from virasana.integracao import xml
 IMAGENS = {'metadata.contentType': 'image/jpeg'}
 
 
+def create_indexes(db):
+    """Cria índices necessários no GridFS."""
+    db['fs.files'].create_index('uploadDate')
+    db['fs.files'].create_index('md5')
+    db['fs.files'].create_index('id')
+    db['fs.files'].create_index('idcov')
+    db['fs.files'].create_index('recintoid')
+    db['fs.files'].create_index('imagem')
+    db['fs.files'].create_index('filename')
+    db['fs.files'].create_index('numeroinformado')
+    db['fs.files'].create_index('dataescaneamento')
+
+
 def gridfs_count(db, filtro):
     """Aplica filtro, retorna contagem."""
     return db['fs.files'].find(filtro).count()

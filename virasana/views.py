@@ -58,7 +58,9 @@ def index():
 # @csrf.exempt # TODO: put CSRF on tests
 @login_required
 def upload_bson():
-    """Função simplificada para upload do arquivo de uma extração."""
+    """Função simplificada para upload do arquivo de uma extração.
+
+    Ver API/Upload BSON"""
     taskid = ''
     if request.method == 'POST':
         # check if the post request has the file part
@@ -76,7 +78,9 @@ def upload_bson():
             redisdb.rpush(BSON_REDIS, json.dumps(d))
             result = raspa_dir.delay()
             taskid = result.id
-    return redirect(url_for('list_files', taskid=taskid))
+    if taskid:
+        return redirect(url_for('list_files', taskid=taskid))
+    return redirect(url_for('list_files'))
 
 
 @app.route('/api/uploadbson', methods=['POST'])
@@ -147,13 +151,23 @@ def task_progress(taskid):
 @app.route('/list_files')
 @login_required
 def list_files():
-    """Lista arquivos no banco MongoDB."""
+    """Lista arquivos no banco MongoDB.
+    
+    Lista 10 arquivos mais recentes no banco MongoDB,
+     por uploadDate mais recente.
+    Se houver upload em andamento, informa."""
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
         lista_arquivos.append(grid_data.filename)
-    # print(lista_arquivos)
-    return render_template('importa_bson.html', lista_arquivos=lista_arquivos)
+    taskid = request.args.get('taskid')
+    task_info = None
+    if taskid:
+        task = raspa_dir.AsyncResult(taskid)
+        task_info = task.info
+    return render_template('importa_bson.html',
+                           lista_arquivos=lista_arquivos,
+                           task_info=task_info)
 
 
 @app.route('/file/<_id>')
@@ -231,12 +245,20 @@ def files(page=1):
                            oform=form)
 
 
+@app.route('/stats')
+@login_required
+def stats():
+    """Permite consulta as estatísticas do GridFS e integrações."""
+    return render_template('stats.html')
+
+
 @nav.navigation()
 def mynavbar():
     """Menu da aplicação."""
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),
+             View('Estatísticas', 'stats'),
              ]
     if current_user.is_authenticated:
         items.append(View('Sair', 'logout'))

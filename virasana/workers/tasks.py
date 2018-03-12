@@ -47,7 +47,8 @@ def processa_xml():
     """
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
-        xml.dados_xml_grava_fsfiles(db)
+        cincodias = datetime.now() - timedelta(days=5)
+        xml.dados_xml_grava_fsfiles(db, 10000, cincodias)
 
 
 @celery.task

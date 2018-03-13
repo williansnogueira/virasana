@@ -31,6 +31,7 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.imagem')
     db['fs.files'].create_index('metadata.numeroinformado')
     db['fs.files'].create_index('metadata.dataescaneamento')
+    db['fs.files'].create_index('metadata.contentType')
 
 
 def gridfs_count(db, filtro):

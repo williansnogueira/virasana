@@ -13,7 +13,7 @@ from zipfile import ZipFile
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 
-FALTANTES = {'metadata.carga': None,
+FALTANTES = {'metadata.carga.atracacao.escala': None,
              'metadata.contentType': 'image/jpeg'}
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
@@ -77,6 +77,7 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
     db['fs.files'].create_index('metadata.carga.container.container')
     db['fs.files'].create_index('metadata.carga.ncm.ncm')
+    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacao')
     cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
     for linha in cursor:
         dataatracacao = linha['dataatracacao']

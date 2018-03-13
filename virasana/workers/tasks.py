@@ -49,6 +49,9 @@ def processa_xml():
         db = conn[DATABASE]
         cincodias = datetime.now() - timedelta(days=5)
         xml.dados_xml_grava_fsfiles(db, 10000, cincodias)
+        # Olhar o passado tbm...
+        doisanos = datetime.now() - timedelta(days=730)
+        xml.dados_xml_grava_fsfiles(db, 10000, doisanos)
 
 
 @celery.task

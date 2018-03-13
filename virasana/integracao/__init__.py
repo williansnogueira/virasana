@@ -24,13 +24,13 @@ def create_indexes(db):
     """Cria índices necessários no GridFS."""
     db['fs.files'].create_index('uploadDate')
     db['fs.files'].create_index('md5')
-    db['fs.files'].create_index('id')
-    db['fs.files'].create_index('idcov')
-    db['fs.files'].create_index('recintoid')
-    db['fs.files'].create_index('imagem')
     db['fs.files'].create_index('filename')
-    db['fs.files'].create_index('numeroinformado')
-    db['fs.files'].create_index('dataescaneamento')
+    db['fs.files'].create_index('metadata.id')
+    db['fs.files'].create_index('metadata.idcov')
+    db['fs.files'].create_index('metadata.recintoid')
+    db['fs.files'].create_index('metadata.imagem')
+    db['fs.files'].create_index('metadata.numeroinformado')
+    db['fs.files'].create_index('metadata.dataescaneamento')
 
 
 def gridfs_count(db, filtro):

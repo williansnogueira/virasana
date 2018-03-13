@@ -7,7 +7,7 @@ Tests for sintax and operations before putting into main code
 # import pprint
 import timeit
 import time
-from datetime import datetime  # , timedelta
+from datetime import datetime
 
 # from gridfs import GridFS
 from pymongo import MongoClient
@@ -15,6 +15,7 @@ from pymongo import MongoClient
 from virasana.integracao import create_indexes, carga
 from virasana.integracao.carga import busca_info_container, \
     dados_carga_grava_fsfiles
+
 
 db = MongoClient()['test']
 
@@ -36,8 +37,6 @@ carga_dbs = ['CARGA.AtracDesatracEscala',
 # EXCLUIR!!!!!!!!!!!!!!!!
 # for dbname in carga_dbs:
 #    db[dbname].remove({})
-
-
 # Corrigir datas!!!!
 """for dbname in carga_dbs:
     linha = db[dbname].find_one({})
@@ -47,24 +46,6 @@ carga_dbs = ['CARGA.AtracDesatracEscala',
 """
 # Com os dados acima poderiam ser corrigidos TODOS os campos de data.
 # Por ora, corrigindo apenas dataatracacao que utilizamos para pesquisar
-cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
-for linha in cursor:
-    dataatracacao = linha['dataatracacao']
-    dataatracacaoiso = datetime.strptime(dataatracacao, '%d/%m/%Y')
-    print(linha['_id'], dataatracacao, dataatracacaoiso)
-    db['CARGA.AtracDesatracEscala'].update(
-        {'_id': linha['_id']}, {'$set': {'dataatracacaoiso': dataatracacaoiso}}
-    )
-
-
-file_cursor = db['CARGA.ContainerVazio'].aggregate(
-    [{'$group':
-      {'_id': ['$manifesto', '$container'],
-       'dups': {'$push': '$_id'},
-       'count': {'$sum': 1}}},
-     {'$match': {'count': {'$gt': 1}}}]
-)
-print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
 
 #################
 # Criar índices
@@ -80,7 +61,6 @@ container_vazio = 'apru5774515'
 data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
-
 reps = 3
 print('Início do teste de desempenho')
 tempo = timeit.timeit(
@@ -97,49 +77,6 @@ tempo = timeit.timeit(
     number=reps, globals=globals())
 print('loops(vazio):', reps, 'total time:', tempo, 'per loop:', tempo / reps)
 
-# teste de função
-assert busca_info_container(db, container, data_escaneamento_false) == {}
-assert busca_info_container(db, container, data_escaneamento_true) != {}
-assert busca_info_container(db, container_vazio, data_escaneamento_false) == {}
-assert busca_info_container(db, container_vazio, data_escaneamento_true) != {}
-
-
-data_escaneamento = datetime(2017, 1, 1)
-
-"""
-Exemplo de como criar dados para teste:
-
-
-data_escalas = data_escaneamento - timedelta(days=1)
-data_escala_4 = data_escaneamento - timedelta(days=4)
-db['fs.files'].insert({'metadata.numeroinformado': 'cheio',
-                       'metadata.dataescaneamento': data_escaneamento})
-db['fs.files'].insert({'metadata.numeroinformado': 'cheio', 'conhecimento': 1})
-
-
-db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
-db['CARGA.Container'].insert(
-    {'container': 'semconhecimento', 'conhecimento': 9})
-db['CARGA.Container'].insert({'container': 'semescala', 'conhecimento': 3})
-db['CARGA.Container'].insert(
-    {'container': 'escalaforadoprazo', 'conhecimento': 4})
-db['CARGA.ContainerVazio'].insert({'container': 'vazio'})
-db['CARGA.Conhecimento'].insert({'conhecimento': 1})
-db['CARGA.Conhecimento'].insert({'conhecimento': 2})
-db['CARGA.Conhecimento'].insert({'conhecimento': 3})
-db['CARGA.Conhecimento'].insert({'conhecimento': 3})
-db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 1, 'manifesto': 1})
-db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 2, 'manifesto': 2})
-db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 3, 'manifesto': 3})
-db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 4, 'manifesto': 4})
-db['CARGA.ConhecimentoManifesto'].insert({'conhecimento': 3, 'manifesto': 32})
-db['CARGA.ManifestoEscala'].insert({'manifesto': 1, 'escala': 1})
-db['CARGA.ManifestoEscala'].insert({'manifesto': 2, 'escala': 2})
-db['CARGA.ManifestoEscala'].insert({'manifesto': 3, 'escala': 3})
-db['CARGA.ManifestoEscala'].insert({'manifesto': 4, 'escala': 4})
-db['CARGA.AtracDesatracEscala'].insert(
-    {'escala': 4, 'dataatracacao': data_escala_4})
-"""
 
 # Ver dados retornados do CARGA
 # print('Cheio')
@@ -159,7 +96,7 @@ count = file_cursor.count()
 print(count, 'Total de imagens em fs.files', 'desde', data_inicio)
 
 file_cursor = db['fs.files'].find(
-    {'metadata.carga': None,
+    {'metadata.carga.escala.escala': None,
      'metadata.dataescaneamento': {'$gt': data_inicio},
      'metadata.contentType': 'image/jpeg'})
 count = file_cursor.count()
@@ -172,16 +109,6 @@ count = file_cursor.count()
 print(count, 'Total de imagens com metadata.carga = "NA"',
       'desde', data_inicio)
 
-batch_size = 4000
-for day in range(1, 30, 5):
-    data_inicio = datetime(2017, 8, day)
-    print('Data início', data_inicio)
-    tempo = time.time()
-    dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
-    tempo = time.time() - tempo
-    print(batch_size, 'dados Carga do fs.files percorridos em ',
-          tempo, 'segundos.',
-          tempo / batch_size, 'por registro')
 
 linha = db['CARGA.AtracDesatracEscala'].find().sort(
     'dataatracacaoiso', 1).limit(1)
@@ -205,49 +132,6 @@ linha = next(linha)
 print('Maior data de escaneamento (IMAGENS)',
       linha.get('metadata').get('dataescaneamento'))
 
-
-####################
-# Consultas para saneamento das tabelas...
-print('############# Saneamento ##########')
-# Registros duplicados no GridFS
-"""file_cursor = db['fs.files'].aggregate(
-    [{'$group':
-      {'_id': '$filename',
-       'dups': {'$push': '$_id'},
-       'count': {'$sum': 1}}},
-     {'$match': {'count': {'$gt': 1}}}]
-)
-print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
-file_cursor = db['fs.files'].aggregate(
-    [{'$group':
-      {'_id': '$filename',
-       'dups': {'$push': '$_id'},
-       'count': {'$sum': 1}}},
-     {'$match': {'count': {'$gt': 1}}}]
-)
-fs = GridFS(db)
-for cursor in file_cursor:
-    ids = cursor['dups']
-    for _id in ids[1:]:
-        fs.delete(_id)
-
-print(len(list(file_cursor)), ' Registros duplicados na tabela fs.files')
-"""
-# Registros duplicados nas tabelas CARGA
-# TODO: não aceitar duas vezes o mesmo registro ou fazer upsert
-# TODO: Como registrar esta metadata???
-# (Hard-coded não é ideal, em tese bhadrasana é dinâmico em relação às bases
-# de origem)
-"""bases = {'Conhecimento': '$conhecimento',
-         'Manifesto': '$manifesto',
-         'Container': '$container'}
-for tabela, campo in bases.items():
-    cursor = db['CARGA.' + tabela].aggregate(
-        [{'$group':  {'_id': campo, 'count': {'$sum': 1}}},
-         {'$match': {'count': {'$gt': 1}}}]
-    )
-    print(len(list(cursor)), ' Registros duplicados na tabela CARGA.' + tabela)
-"""
 
 # Procurar contêineres SEM imagem
 """qtde_conteineres = 10
@@ -323,24 +207,15 @@ container_sem_imagem = (numero_container_set |
 print('Números de contêineres no CARGA SEM numeração igual nas imagens:',
       len(container_sem_imagem))
 
-pipeline = [
-    {'$lookup':
-     {'from': 'CARGA.EscalaManifesto',
-      'localField': 'Escala',
-      'foreignField': 'Escala',
-      'as': 'manifestos'
-      }
-     }
-]
-cursor = db['CARGA.AtracDesatracEscala'].aggregate(pipeline)
-# Exemplo de script para atualizar um campo com base em outro
-#  caso dados mudem de configuração, campos mudem de nome, etc
-"""cursor = db['fs.files'].find({'metadata.dataescaneamento': None})
-print(cursor.count())
-for linha in cursor:
-    data = linha.get('metadata').get('dataimportacao')
-    db['fs.files'].update(
-        {'_id': linha['_id']},
-        {'$set': {'metadata.dataescaneamento': data}}
-    )
-"""
+
+print('Começando a procurar por dados do CARGA a inserir')
+batch_size = 3000
+for day in range(1, 30, 5):
+    data_inicio = datetime(2017, 8, day)
+    print('Data início', data_inicio)
+    tempo = time.time()
+    dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
+    tempo = time.time() - tempo
+    print(batch_size, 'dados Carga do fs.files percorridos em ',
+          tempo, 'segundos.',
+          tempo / batch_size, 'por registro')

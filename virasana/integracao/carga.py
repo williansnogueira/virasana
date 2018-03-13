@@ -34,6 +34,20 @@ def create_indexes(db):
         [('manifesto', pymongo.ASCENDING),
          ('container', pymongo.ASCENDING)],
         unique=True)
+    """
+    cursor = db['CARGA.EscalaManifesto'].aggregate(
+        [{'$group':
+          {'_id': ['$manifesto', '$escala'],
+           'dups': {'$push': '$_id'},
+           'count': {'$sum': 1}}},
+            {'$match': {'count': {'$gt': 1}}}]
+    )
+    for ind, cursor in enumerate(cursor):
+        ids = cursor['dups']
+        for _id in ids[1:]:
+            db['CARGA.EscalaManifesto'].remove(_id)
+    print('TOTAL de registros duplicados', ind)
+    """
     db['CARGA.EscalaManifesto'].create_index('manifesto')
     db['CARGA.EscalaManifesto'].create_index('escala')
     db['CARGA.EscalaManifesto'].create_index(
@@ -43,13 +57,11 @@ def create_indexes(db):
     db['CARGA.Escala'].create_index('escala', unique=True)
     db['CARGA.Container'].create_index('container')
     db['CARGA.Container'].create_index('conhecimento')
-    # db['CARGA.Conhecimento'].drop_index('conhecimento_1')
     db['CARGA.Conhecimento'].create_index('conhecimento', unique=True)
     db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
     db['CARGA.ManifestoConhecimento'].create_index('manifesto')
     db['CARGA.AtracDesatracEscala'].create_index('escala')
     db['CARGA.AtracDesatracEscala'].create_index('manifesto')
-    # db['CARGA.Manifesto'].drop_index('manifesto_1')
     db['CARGA.Manifesto'].create_index('manifesto', unique=True)
     db['CARGA.NCM'].create_index('conhecimento')
     db['CARGA.NCM'].create_index(
@@ -61,13 +73,22 @@ def create_indexes(db):
          ('container', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
         unique=True)
-    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacao')
-    db['fs.files'].create_index('metadata.carga.escala.escala')
+    db['fs.files'].create_index('metadata.carga.vazio', sparse=True)
+    db['fs.files'].create_index('metadata.carga.atracacao.escala')
     db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
     db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
     db['fs.files'].create_index('metadata.carga.container.container')
-    db['fs.files'].create_index('metadata.carga.ncm.conhecimento')
-    db['fs.files'].create_index('metadata.carga.containervazio.container')
+    db['fs.files'].create_index('metadata.carga.ncm.ncm')
+    cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
+    for linha in cursor:
+        dataatracacao = linha['dataatracacao']
+        dataatracacaoiso = datetime.strptime(dataatracacao, '%d/%m/%Y')
+        print(linha['_id'], dataatracacao, dataatracacaoiso)
+        db['CARGA.AtracDesatracEscala'].update(
+            {'_id': linha['_id']}, {
+                '$set': {'dataatracacaoiso': dataatracacaoiso}}
+        )
+    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacaoiso')
 
 
 def mongo_find_in(db, collection: str, field: str, in_set,

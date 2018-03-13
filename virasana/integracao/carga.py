@@ -18,8 +18,6 @@ FALTANTES = {'metadata.carga': None,
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
-# TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!
-
 
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração.
@@ -261,6 +259,7 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
         CARGA. Usar com consciência/cuidado.
     Returns:
         número de registros encontrados
+
     """
     filtro = FALTANTES
     filtro['metadata.dataescaneamento'] = {'$gt': data_inicio}

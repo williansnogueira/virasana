@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from pymongo import MongoClient
+# import pprint
 
-from virasana.integracao import create_indexes, carga
-from virasana.integracao.carga import busca_info_container, \
-    dados_carga_grava_fsfiles
+# from virasana.integracao.carga import busca_info_container
+
+# TODO: Query to know what CARGA Containers(Vazio e Cheio) do not have images!!
 
 db = MongoClient()['test']
 
@@ -52,7 +53,6 @@ agg_containers = db['CARGA.Container'].find(
     {'conhecimento': {'$in': conhecimentos}}
 )
 
-import pprint
 
 containers = []
 for container in agg_containers:
@@ -62,7 +62,6 @@ vazios = []
 for escala in agg_vazios:
     for vazio in escala['vazios']:
         vazios.append(vazio['container'])
-
 
 
 print('conhecimentos', conhecimentos)

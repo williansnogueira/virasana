@@ -60,7 +60,8 @@ def index():
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração.
 
-    Ver API/Upload BSON"""
+    Ver API/Upload BSON
+    """
     taskid = ''
     if request.method == 'POST':
         # check if the post request has the file part

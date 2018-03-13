@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime
 from pymongo import MongoClient
 
-from virasana.integracao.carga import busca_info_container, \
-    dados_carga_grava_fsfiles
+from virasana.integracao.carga import busca_info_container
 
 
 class FlaskTestCase(unittest.TestCase):
@@ -17,11 +16,11 @@ class FlaskTestCase(unittest.TestCase):
         self.data_escaneamento = data_escaneamento
         self.data_escaneamento_false = data_escaneamento_false
         db['fs.files'].insert(
-            {'metadata': {'numeroinformado': 'cheio'},
-             'metadata': {'dataescaneamento': data_escaneamento}})
+            {'metadata': {'numeroinformado': 'cheio',
+                          'dataescaneamento': data_escaneamento}})
         db['fs.files'].insert(
-            {'metadata': {'numeroinformado': 'vazio'},
-             'metadata': {'dataescaneamento': data_escaneamento}})
+            {'metadata': {'numeroinformado': 'vazio',
+                          'dataescaneamento': data_escaneamento}})
         db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
         db['CARGA.Container'].insert(
             {'container': 'semconhecimento', 'conhecimento': 9})
@@ -67,7 +66,7 @@ class FlaskTestCase(unittest.TestCase):
         db['CARGA.Escala'].drop()
         db['CARGA.EscalaManifesto'].drop()
         db['CARGA.Conhecimento'].drop()
-        db['CARGA.ConhecimentoManifesto'].drop()
+        db['CARGA.ManifestoConhecimento'].drop()
         db['CARGA.Container'].drop()
         db['CARGA.ContainerVazio'].drop()
 
@@ -76,7 +75,7 @@ class FlaskTestCase(unittest.TestCase):
             self.db, 'cheio', self.data_escaneamento_false) == {}
         cheio = busca_info_container(self.db, 'cheio', self.data_escaneamento)
         assert cheio != {}
-        assert cheio['vazio'] == False
+        assert cheio['vazio'] is False
         assert cheio['atracacao']['escala'] == 1
         assert cheio['container'][0]['conhecimento'] == 1
 
@@ -85,7 +84,7 @@ class FlaskTestCase(unittest.TestCase):
             self.db, 'vazio', self.data_escaneamento_false) == {}
         vazio = busca_info_container(self.db, 'vazio', self.data_escaneamento)
         assert vazio != {}
-        assert vazio['vazio'] == True
+        assert vazio['vazio'] is True
         assert vazio['atracacao']['escala'] == 2
         assert vazio['container'][0]['manifesto'] == 2
 
@@ -97,6 +96,6 @@ class FlaskTestCase(unittest.TestCase):
         assert busca_info_container(
             self.db, 'semconhecimento', self.data_escaneamento) == {}
 
-    def test_busca_semconhecimento(self):
+    def test_busca_foradoprazo(self):
         assert busca_info_container(
             self.db, 'escalaforadoprazo', self.data_escaneamento) == {}

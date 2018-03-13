@@ -61,7 +61,8 @@ container_vazio = 'apru5774515'
 data_escaneamento_false = datetime.utcnow()
 data_escaneamento_true = datetime.strptime('17-08-02', '%y-%m-%d')
 # Teste de desempenho
-reps = 3
+busca_info_container(db, container_vazio, data_escaneamento_false)
+reps = 10
 print('Início do teste de desempenho')
 tempo = timeit.timeit(
     stmt='busca_info_container(db, container_vazio, data_escaneamento_false)',
@@ -80,6 +81,7 @@ print('loops(vazio):', reps, 'total time:', tempo, 'per loop:', tempo / reps)
 
 # Ver dados retornados do CARGA
 # print('Cheio')
+# import pprint
 # pprint.pprint(busca_info_container(db, container, data_escaneamento_true))
 # print('Vazio')
 # pprint.pprint(busca_info_container(db, container_vazio,

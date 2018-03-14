@@ -157,7 +157,8 @@ def list_files():
 
     Lista 10 arquivos mais recentes no banco MongoDB,
      por uploadDate mais recente.
-    Se houver upload em andamento, informa."""
+    Se houver upload em andamento, informa.
+    """
     fs = gridfs.GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):

@@ -18,6 +18,15 @@ FALTANTES = {'metadata.carga.atracacao.escala': None,
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
+CHAVES_CARGA = [
+    'metadata.carga.vazio',
+    'metadata.carga.atracacao.escala',
+    'metadata.carga.manifesto.manifesto',
+    'metadata.carga.conhecimento.conhecimento',
+    'metadata.carga.container.container',
+    'metadata.carga.ncm.ncm',
+    'metadata.carga.atracacao.dataatracacao',
+]
 
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração.

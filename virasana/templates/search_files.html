@@ -29,42 +29,98 @@
             </div>
         </form>
     </div>
-    <div id="list" class="row">
-        &nbsp;
-        <div class="col-sm-1">
-            &nbsp;
+    <div class="row">
+        <h4>Definir filtro personalizado</h4>
+        <div id="list" class="row col-sm-6">
+            <form id="frmfiltros" class="form-group">
+                <div class="form-group col-sm-4">
+                    <select class="form-control" name="campos" id="campos">
+                        <option value="0">Selecione...</option>
+                        {% for campo in campos %}
+                        <option value="{{ campo }}">{{ campo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-sm-4">
+                    <input id="valor" class="form-control" type="text" placeholder="Valor do parâmetro">
+                </div>
+                <div class="form-group col-sm-4">
+                    <button onclick="adicionar_campo()" id="btn_ok" type="button" class="btn btn-default">OK</button>
+                </div>
+            </form>
         </div>
-        <div class="table table-responsive col-sm-10">
-            {# Display a page of todos #}
-            <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
-                <thead>
+        <div id="list" class="row col-sm-6">
+            <div class="table">
+                <table class="inlineTable table table-bordered table-hover table-responsive" id="filtros">
+                    {% if filtros %} {% for campo, valor in filtros.items() %}
                     <tr>
-                        <td>Número informado do Contêiner</td>
-                        <td>Nome do Arquivo</td>
-                        <td>Data de Escaneamento</td>
+                        <td>{{campo}}</td>
+                        <td>{{valor}}</td>
+                        <td align="center">
+                            <input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo('{{campo}}')" />
+                        </td>
                     </tr>
-                </thead>
-                {% for myfile in paginated_files %}
+                    {% endfor %} {% else %}
+                    <tr>
+                        <td>Sem resultados.</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="list" class="row">
+    &nbsp;
+    <div class="col-sm-1">
+        &nbsp;
+    </div>
+    <div class="table table-responsive col-sm-10">
+        {# Display a page of todos #}
+        <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
+            <thead>
                 <tr>
-                    <td>{{ myfile['numero'] }}</td>
-                    <td>{{ myfile['filename'] }}</td>
-                    <td>{{ myfile['upload_date'] }}</td>
-                    <td>
-                        <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
-                    </td>
+                    <td>Número informado do Contêiner</td>
+                    <td>Nome do Arquivo</td>
+                    <td>Data de Escaneamento</td>
                 </tr>
-                {% endfor %}
-            </table>
-        </div>
-        <div class="col-sm-1">
-            &nbsp;
-        </div>
+            </thead>
+            {% for myfile in paginated_files %}
+            <tr>
+                <td>{{ myfile['numero'] }}</td>
+                <td>{{ myfile['filename'] }}</td>
+                <td>{{ myfile['upload_date'] }}</td>
+                <td>
+                    <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
     </div>
-    <div id="bottom" class="row">
-        AJNA - Receita Federal do Brasil 2017
+    <div class="col-sm-1">
+        &nbsp;
     </div>
+</div>
+<div id="bottom" class="row">
+    AJNA - Receita Federal do Brasil 2017
+</div>
 </div>
 <!-- /#main -->
 {% endblock %} {% block scripts %} {{super()}}
 <script type="text/javascript">
+
+    function adicionar_campo() {
+        var campo = $("#campos").val();
+        var valor = $("#valor").val();
+        if ((campo != '') && (valor != '')) {
+            window.location.assign('/files?campo=' + campo + '&valor=' + valor)
+        }
+    }
+
+    function exclui_campo(campo) {
+        window.location.assign('/files?campo=' + campo)
+    }
+
 </script> {% endblock %}

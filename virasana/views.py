@@ -2,6 +2,7 @@
 import json
 import os
 from base64 import b64encode
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from sys import platform
 
@@ -25,6 +26,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
                                      redisdb)
 from ajna_commons.flask.log import logger
 from virasana.workers.tasks import raspa_dir, trata_bson
+from virasana.integracao.carga import CHAVES_CARGA
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -212,20 +214,39 @@ class FilesForm(FlaskForm):
     end = DateField('End', validators=[optional()], default=date.today())
 
 
+filtros = dict()
+
+
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files(page=1):
     """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
     fs = gridfs.GridFS(db)
     lista_arquivos = []
+    global filtros
+    print(filtros)
+    if filtros.get(current_user.id):
+        user_filtros = filtros[current_user.id]
+    else:
+        user_filtros = dict()
+        filtros[current_user.id] = user_filtros
     form = FilesForm(**request.form)
-    if form.validate():
+    filtro = {}
+    doc = db['fs.files'].find_one({'metadata.carga': {'$ne': None}})
+    campos = []
+    for key in doc:
+        campos.append(key)
+    for sub_key in doc.get('metadata'):
+        if sub_key not in ('carga', 'xml'):
+            campos.append('metadata.' + sub_key)
+    for chave in CHAVES_CARGA:
+        campos.append(chave)
+    if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
         end = form.end.data
         if numero == 'None':
             numero = None
-        filtro = {}
         if start and end:
             start = datetime.combine(start, datetime.min.time())
             end = datetime.combine(end, datetime.min.time())
@@ -233,6 +254,19 @@ def files(page=1):
         if numero:
             filtro['metadata.numeroinformado'] = {'$regex': numero}
         # print(filtro)
+    # Configura filtro personalizado
+    campo = request.args.get('campo')
+    if campo:
+        valor = request.args.get('valor')
+        if valor:   # valor existe, adiciona
+            user_filtros[campo] = valor
+        else:  # valor não existe, exclui chave
+            user_filtros.pop(campo)
+    if user_filtros:  # Adiciona filtro personalizado se houver
+        for campo, valor in user_filtros.items():
+            filtro[campo] = valor
+
+    if filtro:
         for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(10):
             linha = {}
             linha['_id'] = grid_data._id
@@ -243,7 +277,9 @@ def files(page=1):
         # print(lista_arquivos)
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
-                           oform=form)
+                           oform=form,
+                           campos=campos,
+                           filtros=user_filtros)
 
 
 @app.route('/stats')

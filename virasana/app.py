@@ -1,7 +1,7 @@
 """Módulo de entrada da aplicação web."""
 from flask import abort, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
-from urllib.parse import urlparse, urljoin
+# from urllib.parse import urlparse, urljoin
 from ajna_commons.flask.login import (DBUser, authenticate, is_safe_url,
                                       login_manager)
 from virasana.views import app, db
@@ -16,6 +16,8 @@ def is_safe_url(target):
     return test_url.scheme in ('http', 'https') and \
            ref_url.netloc == test_url.netloc
 """
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """View para efetuar login."""

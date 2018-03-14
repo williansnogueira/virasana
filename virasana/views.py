@@ -2,7 +2,6 @@
 import json
 import os
 from base64 import b64encode
-from collections import defaultdict
 from datetime import date, datetime, timedelta
 from sys import platform
 

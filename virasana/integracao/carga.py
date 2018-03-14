@@ -28,6 +28,7 @@ CHAVES_CARGA = [
     'metadata.carga.atracacao.dataatracacao',
 ]
 
+
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração.
 

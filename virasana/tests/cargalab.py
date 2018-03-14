@@ -7,6 +7,7 @@ Tests for sintax and operations before putting into main code
 # import pprint
 import timeit
 import time
+import sys
 from datetime import datetime
 
 # from gridfs import GridFS
@@ -209,8 +210,7 @@ container_sem_imagem = (numero_container_set |
 print('Números de contêineres no CARGA SEM numeração igual nas imagens:',
       len(container_sem_imagem))
 
-import sys
-if len(sys.argv) > 1 and sys.argv[1]=='update':
+if len(sys.argv) > 1 and sys.argv[1] == 'update':
     print('Começando a procurar por dados do CARGA a inserir')
     batch_size = 4000
     today = datetime.today()
@@ -225,5 +225,5 @@ if len(sys.argv) > 1 and sys.argv[1]=='update':
         dados_carga_grava_fsfiles(db, batch_size, data_inicio, days=4)
         tempo = time.time() - tempo
         print(batch_size, 'dados Carga do fs.files percorridos em ',
-            tempo, 'segundos.',
-            tempo / batch_size, 'por registro')
+              tempo, 'segundos.',
+              tempo / batch_size, 'por registro')

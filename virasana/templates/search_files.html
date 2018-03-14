@@ -2,8 +2,13 @@
 <div id="main" class="container-fluid">
     <div id="top" class="row">
         <form method="POST" action="/files">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="col-sm-12">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            </div>
             <div class="row">
+                <div class="col-sm-12">
+                    <h4>Filtrar por número e datas</h4>
+                </div>
                 <div class="col-sm-3">
                     <label for="numero">Número do contêiner</label>
                 </div>
@@ -23,14 +28,14 @@
                         <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
                     </div>
                     <div class="col-sm-3">
-                        <input class="btn btn-default" type="submit" />
+                        <input class="btn btn-default btn-info" type="submit" value="Filtrar" />
                     </div>
                 </div>
             </div>
         </form>
     </div>
     <div class="row">
-        <h4>Definir filtro personalizado</h4>
+        <h4>OU Definir filtro personalizado</h4>
         <div id="list" class="row col-sm-6">
             <form id="frmfiltros" class="form-group">
                 <div class="form-group col-sm-4">
@@ -46,7 +51,7 @@
                     <input id="valor" class="form-control" type="text" placeholder="Valor do parâmetro">
                 </div>
                 <div class="form-group col-sm-4">
-                    <button onclick="adicionar_campo()" id="btn_ok" type="button" class="btn btn-default">OK</button>
+                    <button onclick="adicionar_campo()" id="btn_ok" type="button" class="btn btn-default btn-info">Filtrar</button>
                 </div>
             </form>
         </div>

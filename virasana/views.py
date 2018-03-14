@@ -264,7 +264,7 @@ def files(page=1):
             user_filtros.pop(campo)
     if user_filtros:  # Adiciona filtro personalizado se houver
         for campo, valor in user_filtros.items():
-            filtro[campo] = valor
+            filtro[campo] = valor.lower()
 
     if filtro:
         for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(10):

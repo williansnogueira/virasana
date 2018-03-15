@@ -234,13 +234,14 @@ def files(page=1):
     filtro = {}
     doc = db['fs.files'].find_one({'metadata.carga': {'$ne': None}})
     campos = []
-    for key in doc:
-        campos.append(key)
-    for sub_key in doc.get('metadata'):
-        if sub_key not in ('carga', 'xml'):
-            campos.append('metadata.' + sub_key)
-    for chave in CHAVES_CARGA:
-        campos.append(chave)
+    if doc:
+        for key in doc:
+            campos.append(key)
+        for sub_key in doc.get('metadata'):
+            if sub_key not in ('carga', 'xml'):
+                campos.append('metadata.' + sub_key)
+        for chave in CHAVES_CARGA:
+            campos.append(chave)
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data

@@ -25,7 +25,7 @@ from ajna_commons.flask.log import logger
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'
 if platform == 'win32':  # I am on ALFSTS???
-    BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON')
+    BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'BSON_IVAN')
 else:
     BSON_DIR = os.path.join(os.path.dirname(__file__),
                             '..', '..', '..', '..', 'files', 'BSON')
@@ -74,10 +74,15 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
                 response_json = response.json()
-                taskid = response_json.get('taskid', '')
-                sucessos.append(taskid)
-                Thread(target=espera_resposta, args=(
-                    VIRASANA_URL + '/api/task/' + taskid, bsonfile)).start()
+                if platform == 'win32':
+                    if response_json.get('success', False) is True:
+                        os.remove(bsonfile)
+                        logger.info('Arquivo ' + bsonfile + ' removido.')
+                else:
+                    taskid = response_json.get('taskid', '')
+                    sucessos.append(taskid)
+                    Thread(target=espera_resposta, args=(
+                        VIRASANA_URL + '/api/task/' + taskid, bsonfile)).start()
             else:
                 erros.append(response)
                 logger.error(response.text)

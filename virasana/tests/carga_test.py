@@ -110,9 +110,11 @@ class FlaskTestCase(unittest.TestCase):
 
     def test_grava_fsfiles(self):
         processados = dados_carga_grava_fsfiles(self.db)
-        semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
         assert processados == 2
+        semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
         assert semcarga == 0
+        processados = dados_carga_grava_fsfiles(self.db)
+        assert processados == 0
 
     def test_nlinhas_zip_dir(self):
         contador = nlinhas_zip_dir(ZIP_DIR_TEST)

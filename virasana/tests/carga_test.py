@@ -1,8 +1,13 @@
+import os
 import unittest
 from datetime import datetime
 from pymongo import MongoClient
 
-from virasana.integracao.carga import busca_info_container
+from virasana.integracao.carga import busca_info_container, \
+    create_indexes, dados_carga_grava_fsfiles, nlinhas_zip_dir
+
+
+ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__), 'sample')
 
 
 class FlaskTestCase(unittest.TestCase):
@@ -17,9 +22,11 @@ class FlaskTestCase(unittest.TestCase):
         self.data_escaneamento_false = data_escaneamento_false
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'cheio',
+                          'contentType': 'image/jpeg',
                           'dataescaneamento': data_escaneamento}})
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'vazio',
+                          'contentType': 'image/jpeg',
                           'dataescaneamento': data_escaneamento}})
         db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
         db['CARGA.Container'].insert(
@@ -58,6 +65,7 @@ class FlaskTestCase(unittest.TestCase):
         db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 2, 'dataatracacao': data_escalas,
              'horaatracacao': '00:00:01'})
+        create_indexes(db)
 
     def tearDown(self):
         db = self.db
@@ -99,3 +107,16 @@ class FlaskTestCase(unittest.TestCase):
     def test_busca_foradoprazo(self):
         assert busca_info_container(
             self.db, 'escalaforadoprazo', self.data_escaneamento) == {}
+
+    def test_grava_fsfiles(self):
+        processados = dados_carga_grava_fsfiles(self.db)
+        semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
+        assert processados == 2
+        assert semcarga == 0
+
+    def test_nlinhas_zip_dir(self):
+        contador = nlinhas_zip_dir(ZIP_DIR_TEST)
+        print(contador)
+        assert contador is not None
+        assert contador['Alimento'] == 9
+        assert contador['Esporte'] == 9

@@ -13,12 +13,10 @@
                     <ul>
                         <li>File Name: {{ myfile['filename'] }}</li>
                         <li>Upload Date: {{ myfile['upload_date'] }}</li>
-                        {% for key, value in myfile['metadata'].items() %}
-                        {% if value is not mapping %}
+                        {% for key, value in myfile['metadata'].items() %} {% if value is not mapping %}
                         <li> {{ key }}: {{ value }}</li>
-                        {% endif %}
-                        {% endfor %}
-                        </ul>
+                        {% endif %} {% endfor %}
+                    </ul>
                 </div>
             </div>
             <h3>Dados do arquivo XML</h3>
@@ -35,9 +33,18 @@
             <div id="carga">
                 {% if myfile['metadata']['carga'] %}
                 <ul>
-                    {% for key, value in myfile['metadata']['carga'].items() %}
-                    <li> {{ key }}: {{ value }}</li>
-                    {% endfor %}
+                    {% for key, value in myfile['metadata']['carga'].items() %} {% if key == 'vazio' %}
+                    <h5>{% if value %}VAZIO{% else %}CHEIO{% endif %}</h5>
+                    {% else %}
+                    <li>{{key}}</li>
+                    <ul>
+                        {% if key == 'atracacao' %} {% for campo, valor in value.items() %}
+                        <li> {{ campo }}: {{ valor }}</li>
+                        {% endfor %} {% else %} {% for linha in value %} <ul>{% for campo, valor in linha.items() %}
+                        <li> {{ campo }}: {{ valor }}</li>
+                        {% endfor %} </ul>{% endfor %} {% endif %}
+                    </ul>
+                    {% endif %} {% endfor %}
                 </ul>
                 {% endif %}
             </div>

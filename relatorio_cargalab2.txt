@@ -3,4 +3,4 @@ Maior data de escaneamento (IMAGENS) 2017-09-21 02:58:36.317000
 Total de números de container únicos importados do CARGA 130752
 Total de arquivos de imagem de escaneamento 103759
 Contâineres CARGA sem escaneamento 64052
-Critério: Foram consultados todos os números da importaçãoCARGA da data inicial até a data final menos 3 dias
+Critério: Foram consultados todos os números da importação CARGA da data inicial até a data final menos 3 dias

@@ -316,11 +316,11 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     return acum
 
 
-def nconhecimento_zip_dir(path):
-    """Retorna o número de conhecimentos de um conjunto de extrações.
+def nlinhas_zip_dir(path):
+    """Retorna o número de linhas de um conjunto de extrações.
 
     Dado um diretório(path) procura extrações do Siscomex CARGA, abre seus zip,
-    abre o arquivo de conhecimentos de cada zip e conta as linhas.
+    abre o arquivo de cada zip e conta as linhas.
     Para AUDITORIA após um arquivamento da base CARGA confirmar se número de
     registros no arquivo (MongoDB) é igual a número original de linhas.
 
@@ -360,4 +360,4 @@ def nconhecimento_zip_dir(path):
 if __name__ == '__main__':
     ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__),
                                 '..', '..', '..', '..', 'files', 'CARGA')
-    pprint.pprint(nconhecimento_zip_dir(ZIP_DIR_TEST))
+    pprint.pprint(nlinhas_zip_dir(ZIP_DIR_TEST))

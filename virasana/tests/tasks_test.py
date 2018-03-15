@@ -78,8 +78,6 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         for file in files:
             self._fs.delete(file._id)
 
-
-class FlaskCeleryBsonTestCase1(FlaskCeleryBsonTestCase):
     def test_apiupload(self):
         bson = open(TEST_BSON, 'rb').read()
         data = {}

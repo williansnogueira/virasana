@@ -23,6 +23,7 @@ XML = {'metadata.contentType': 'text/xml'}
 
 DATA = 'metadata.dataescaneamento'
 
+
 def create_indexes(db):
     """Cria índices necessários no GridFS."""
     db['fs.files'].create_index('uploadDate')
@@ -44,13 +45,14 @@ def gridfs_count(db, filtro={}):
 
 def stats_resumo_imagens(db):
     """Números gerais do Banco de Dados e suas integrações.
-    
-    Estatístics gerais sobre as imagens"""
+
+    Estatístics gerais sobre as imagens
+    """
     stats = {}
     total = gridfs_count(db, IMAGENS)
     stats['total'] = total
     stats['carga'] = total - gridfs_count(db, carga.FALTANTES)
-    stats['xml'] = total - gridfs_count(db,  xml.FALTANTES)
+    stats['xml'] = total - gridfs_count(db, xml.FALTANTES)
     linha = db['fs.files'].find(
         {'metadata.contentType': 'image/jpeg'}
     ).sort('metadata.dataescaneamento', 1).limit(1)

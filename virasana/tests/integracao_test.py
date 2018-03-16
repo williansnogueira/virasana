@@ -44,7 +44,7 @@ class TestCase(unittest.TestCase):
         fs = GridFS(db)
         metadata = {'contentType': 'text/xml',
                     'dataescaneamento': data_escaneamento}
-        fs.put(b'<DataForm></DataForm>',
+        fs.put(b'<DataForm><ContainerId>comxml</ContainerId></DataForm>',
                filename='comxml.xml', metadata=metadata)
         # Cria documentos simulando registros importados do CARGA
         db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})

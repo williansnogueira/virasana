@@ -81,10 +81,13 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
                 else:
                     taskid = response_json.get('taskid', '')
                     sucessos.append(taskid)
-                    Thread(target=espera_resposta, args=(
-                        VIRASANA_URL + '/api/task/' + taskid, bsonfile)).start()
+                    Thread(target=espera_resposta,
+                           args=(
+                               VIRASANA_URL + '/api/task/' + taskid,
+                               bsonfile)).start()
             else:
                 erros.append(response)
+
                 logger.error(response.text)
         except Exception as err:
             exceptions.append(err)

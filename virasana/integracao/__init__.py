@@ -19,6 +19,9 @@ from virasana.integracao import xml
 
 IMAGENS = {'metadata.contentType': 'image/jpeg'}
 
+XML = {'metadata.contentType': 'text/xml'}
+
+DATA = 'metadata.dataescaneamento'
 
 def create_indexes(db):
     """Cria índices necessários no GridFS."""
@@ -34,21 +37,34 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.contentType')
 
 
-def gridfs_count(db, filtro):
+def gridfs_count(db, filtro={}):
     """Aplica filtro, retorna contagem."""
     return db['fs.files'].find(filtro).count()
 
 
-def stats_resumo(db):
-    """Números gerais do Banco de Dados e suas integrações."""
-    filtro = IMAGENS
+def stats_resumo_imagens(db):
+    """Números gerais do Banco de Dados e suas integrações.
+    
+    Estatístics gerais sobre as imagens"""
     stats = {}
-    total = gridfs_count(db, filtro)
+    total = gridfs_count(db, IMAGENS)
     stats['total'] = total
-    filtro = carga.FALTANTES
-    stats['carga'] = total - gridfs_count(db, filtro)
-    filtro = xml.FALTANTES
-    stats['xml'] = total - gridfs_count(db, filtro)
+    stats['carga'] = total - gridfs_count(db, carga.FALTANTES)
+    stats['xml'] = total - gridfs_count(db,  xml.FALTANTES)
+    linha = db['fs.files'].find(
+        {'metadata.contentType': 'image/jpeg'}
+    ).sort('metadata.dataescaneamento', 1).limit(1)
+    linha = next(linha)
+    for data_path in DATA.split('.'):
+        linha = linha.get(data_path)
+    stats['start'] = linha
+    linha = db['fs.files'].find(
+        {'metadata.contentType': 'image/jpeg'}
+    ).sort('metadata.dataescaneamento', -1).limit(1)
+    linha = next(linha)
+    for data_path in DATA.split('.'):
+        linha = linha.get(data_path)
+    stats['end'] = linha
     return stats
 
 
@@ -62,13 +78,14 @@ def stats_por(db):
     pass
 
 
-def datas_bases(db):
+def datas_bases():
     """Retorna nomes dos campos que possuem as datas de referência.
 
     Para cada integração, consulta se há data de referência e retorna
 
     """
     bases = {}
+    bases['gridfs'] = DATA
     bases['xml'] = xml.DATA
     bases['carga'] = carga.DATA
     return bases

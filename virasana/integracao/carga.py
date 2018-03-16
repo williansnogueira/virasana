@@ -283,10 +283,11 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     end = start - timedelta(days=10000)
     for linha in file_cursor.limit(batch_size):
         container = linha.get('metadata').get('numeroinformado')
-        container = container.lower()  # Lembrar que está tudo minusculo no BD!
+        if container:  # Lembrar que está tudo minusculo no BD!
+            container = container.lower()
         data = linha.get('metadata').get('dataescaneamento')
         # print(container, data)
-        if data is not None:
+        if data and container:
             if data < start:
                 start = data
             if data > end:

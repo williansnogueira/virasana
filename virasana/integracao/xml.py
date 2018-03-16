@@ -7,7 +7,7 @@ from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import ascii_sanitizar, sanitizar
 
-FALTANTES = {'metadata.xml': None,
+FALTANTES = {'metadata.xml.date': None,
              'metadata.contentType': 'image/jpeg'
              }
 

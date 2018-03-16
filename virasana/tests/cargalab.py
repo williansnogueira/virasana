@@ -232,4 +232,3 @@ container_sem_imagem = (numero_container_set |
                         numero_vazio_set) - imagem_container_set
 print('Números de contêineres no CARGA SEM numeração igual nas imagens:',
       len(container_sem_imagem))
-

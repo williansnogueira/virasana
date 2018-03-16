@@ -15,9 +15,9 @@ sobre a base para informar os usuários.
 
 """
 import io
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from virasana.integracao import carga
 from virasana.integracao import xml
@@ -50,6 +50,8 @@ def gridfs_count(db, filtro={}):
 
 
 stats = {}
+
+
 def stats_resumo_imagens(db):
     """Números gerais do Banco de Dados e suas integrações.
 
@@ -59,7 +61,7 @@ def stats_resumo_imagens(db):
     ultima_consulta = stats.get('data')
     now_atual = datetime.now()
     if ultima_consulta and \
-        now_atual - ultima_consulta < timedelta(hours=1):
+            now_atual - ultima_consulta < timedelta(hours=1):
         return stats
     stats['data'] = now_atual
     total = gridfs_count(db, IMAGENS)
@@ -82,19 +84,22 @@ def stats_resumo_imagens(db):
     stats['end'] = linha
     # Qtde por Terminal
     cursor = db['fs.files'].aggregate(
-        [{'$group':
+        [{'$match': {'metadata.contentType': 'image/jpeg'}},
+         {'$group':
           {'_id': '$metadata.recinto',
-           
+
            'count': {'$sum': 1}}
           }])
-    stats['recinto'] = {}
+    recintos = dict()
     for recinto in cursor:
-        print(recinto)
-        stats['recinto'][recinto['_id']] = recinto['count']
+        recintos[recinto['_id']] = recinto['count']
+    ordered = OrderedDict(
+        {key: recintos[key] for key in sorted(recintos)})
+    stats['recinto'] = ordered
     return stats
 
 
-def plot_pie(labels, values):
+def plot_pie(values, labels):
     """Gera gráfico de pizza."""
     fig1, ax1 = plt.subplots()
     ax1.pie(values, labels=labels, shadow=True)
@@ -103,7 +108,6 @@ def plot_pie(labels, values):
     png = io.BytesIO()
     canvas.print_png(png)
     return png
-
 
 
 def stats_por(db):

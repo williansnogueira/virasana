@@ -3,15 +3,21 @@
     <div id="top" class="row">
     </div>
     <div id="stats" class="row">
-        {% for key, value in stats.items() %}
-            {% if value is not mapping %}
-            <li> {{ key }}: {{ value }}</li>
-            {% else %}
-                {% for campo, valor in value.items() %}
-                    <li> {{ campo }}: {{ valor }}</li>
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
+        <div class="col-md-6">
+            <img src="/pie" />
+        </div>
+        <div class="col-md-6">
+
+            {% for key, value in stats.items() %}
+                {% if value is not mapping %}
+                <li> {{ key }}: {{ value }}</li>
+                {% else %}
+                    {% for campo, valor in value.items() %}
+                        <li> {{ campo }}: {{ valor }}</li>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
     </div>
     <div id="bottom" class="row">
         AJNA - Receita Federal do Brasil 2017

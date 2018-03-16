@@ -293,6 +293,14 @@ def stats():
                            stats=stats)
 
 
+@app.route('/pie')
+def plot():
+    stats = stats_resumo_imagens(db)
+    stats = stats['recinto']
+    output = plot_pie(stats.values(), stats.keys())
+    return Response(response=output.getvalue(), mimetype='image/png')
+
+
 @nav.navigation()
 def mynavbar():
     """Menu da aplicação."""

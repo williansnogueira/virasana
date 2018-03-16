@@ -14,7 +14,11 @@ Além disso, podem ser criadas e mantidas aqui funções que dêem estatíticas
 sobre a base para informar os usuários.
 
 """
+import io
 from datetime import datetime, timedelta
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 from virasana.integracao import carga
 from virasana.integracao import xml
 
@@ -90,9 +94,16 @@ def stats_resumo_imagens(db):
     return stats
 
 
-def plot_bars(lista):
-    """Gera gráfico de barras da lista de valores."""
-    pass
+def plot_pie(labels, values):
+    """Gera gráfico de pizza."""
+    fig1, ax1 = plt.subplots()
+    ax1.pie(values, labels=labels, shadow=True)
+    ax1.axis('equal')
+    canvas = FigureCanvas(fig1)
+    png = io.BytesIO()
+    canvas.print_png(png)
+    return png
+
 
 
 def stats_por(db):

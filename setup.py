@@ -20,6 +20,7 @@ setup(
         'Flask-nav',
         'Flask-session',
         'Flask-wtf',
+        'matplotlib',
         'pymongo',
         'pandas',
         'raven',

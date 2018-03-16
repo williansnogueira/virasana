@@ -26,19 +26,23 @@ class TestCase(unittest.TestCase):
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'cheio',
                           'contentType': 'image/jpeg',
+                          'recinto': 'A',
                           'dataescaneamento': data_escaneamento}})
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'vazio',
                           'contentType': 'image/jpeg',
+                          'recinto': 'A',
                           'dataescaneamento': data_escaneamento}})
         db['fs.files'].insert(
             {'filename': 'comxmlS_stamp.jpg',
              'metadata': {'numeroinformado': 'comxml',
                           'contentType': 'image/jpeg',
+                          'recinto': 'B',
                           'dataescaneamento': data_escaneamento}})
         db['fs.files'].insert(
             {'filename': 'semxmlS_stamp.jpg',
              'metadata': {'contentType': 'image/jpeg',
+                          'recinto': 'C',
                           'dataescaneamento': data_escaneamento}})
         # Cria documentos simulando XML
         fs = GridFS(db)
@@ -111,6 +115,9 @@ class TestCase(unittest.TestCase):
         assert stats['total'] == 4
         assert stats['carga'] == 0
         assert stats['xml'] == 0
+        assert stats['recinto']['A'] == 2
+        assert stats['recinto']['B'] == 1
+        assert stats['recinto']['C'] == 1
 
     def test_datas_bases(self):
         datas = datas_bases()

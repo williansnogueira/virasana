@@ -4,20 +4,72 @@
     </div>
     <div id="metadata" class="row">
         <div id="accordion">
-            <h3>Dados do arquivo de Imagem</h3>
-            <div id="file">
+            <h3>Resumo</h3>
+            <div id="resumo">
                 <div class="col-md-6">
                     <img src="/image/{{ myfile['_id'] }}" />
                 </div>
                 <div class="col-md-6">
-                    <ul>
-                        <li>File Name: {{ myfile['filename'] }}</li>
-                        <li>Upload Date: {{ myfile['upload_date'] }}</li>
-                        {% for key, value in myfile['metadata'].items() %} {% if value is not mapping %}
-                        <li> {{ key }}: {{ value }}</li>
-                        {% endif %} {% endfor %}
-                    </ul>
+                    Container: {{ myfile['metadata']['numeroinformado'] }}<br>
+                    IMPORTAÇAO <br>
+                    Data de escaneamento: 
+                    {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
+                    <br>
+                    Data de atracação: 
+                    {{ myfile['metadata']['carga']['atracacao']['dataatracacao'] }} 
+                    {{ myfile['metadata']['carga']['atracacao']['horaatracacao'] }}
+                    <br>
+                    Data de desatracação: 
+                    {{ myfile['metadata']['carga']['atracacao']['datadesatracacao'] }} 
+                    {{ myfile['metadata']['carga']['atracacao']['horadesatracacao'] }}
+                    <br>
+                    Escala: 
+                    {{ myfile['metadata']['carga']['atracacao']['escala'] }} 
+                    <br>
+                    Manifesto: 
+                    {{ myfile['metadata']['carga']['manifesto'][0]['manifesto'] }}
+                    <br>
+                    Porto de carregamento:
+                    {{ myfile['metadata']['carga']['manifesto'][0]['codigoportocarregamento'] }}
+                    <br>
+                    {% if myfile['metadata']['carga']['vazio'] %}
+                        VAZIO<br>
+                        Dados de vazio...<br>
+                        {% else %}
+                        CHEIO<br>
+                        Peso bruto declarado:
+                        {{ myfile['metadata']['carga']['container'][0]['pesobrutoitem'] }} kg
+                        <br>
+                        Volume:
+                        {{ myfile['metadata']['carga']['container'][0]['volumeitem'] }} m³
+                        <br>
+                        NCMs: <ul>
+                        {% for value in myfile['metadata']['carga']['ncm'] %}
+                        <li>{{value['ncm']}} - {{value['descricao']}}</li>
+                        {% endfor %}
+                        </ul>
+                        Conhecimentos: <ul>
+                        {% for value in myfile['metadata']['carga']['conhecimento'] %}
+                        <li>CE {{value['tipo'].upper()}} {{value['conhecimento']}} -
+                             Porto origem {{value['codigoportoorigem'].upper()}}</li>
+                        <ul>
+                            <li>Consignatário {{value['nomeconsignatario']}}</li>
+                            <li>{{value['descricaomercadoria']}}</li>
+                        </ul>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
+            </div>
+            <h3>Dados do arquivo de Imagem</h3>
+            <div id="file">
+                <ul>
+                    <li>File Name: {{ myfile['filename'] }}</li>
+                    <li>Upload Date: {{ myfile['upload_date'] }}</li>
+                    {% for key, value in myfile['metadata'].items() %} {% if value is not mapping %}
+                    <li> {{ key }}: {{ value }}</li>
+                    {% endif %} {% endfor %}
+                </ul>
             </div>
             <h3>Dados do arquivo XML</h3>
             <div id="xml">
@@ -40,9 +92,10 @@
                     <ul>
                         {% if key == 'atracacao' %} {% for campo, valor in value.items() %}
                         <li> {{ campo }}: {{ valor }}</li>
-                        {% endfor %} {% else %} {% for linha in value %} <ul>{% for campo, valor in linha.items() %}
-                        <li> {{ campo }}: {{ valor }}</li>
-                        {% endfor %} </ul>{% endfor %} {% endif %}
+                        {% endfor %} {% else %} {% for linha in value %}
+                        <ul>{% for campo, valor in linha.items() %}
+                            <li> {{ campo }}: {{ valor }}</li>
+                            {% endfor %} </ul>{% endfor %} {% endif %}
                     </ul>
                     {% endif %} {% endfor %}
                 </ul>
@@ -50,10 +103,11 @@
             </div>
         </div>
     </div>
-</div>
-<div id="bottom" class="row">
-    AJNA - Receita Federal do Brasil 2017
-</div>
+    <div id="bottom" class="row">
+        <div class="col-md-12">
+            AJNA - Receita Federal do Brasil 2017
+        </div>
+    </div>
 </div>
 <!-- /#main -->
 {% endblock %} {% block scripts %} {{super()}}

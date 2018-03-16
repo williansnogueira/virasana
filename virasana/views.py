@@ -25,6 +25,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
                                      redisdb)
 from ajna_commons.flask.log import logger
 from virasana.workers.tasks import raspa_dir, trata_bson
+from virasana.integracao import stats_resumo_imagens
 from virasana.integracao.carga import CHAVES_CARGA
 
 app = Flask(__name__, static_url_path='/static')
@@ -287,7 +288,9 @@ def files(page=1):
 @login_required
 def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
-    return render_template('stats.html')
+    stats = stats_resumo_imagens(db)
+    return render_template('stats.html',
+                           stats=stats)
 
 
 @nav.navigation()

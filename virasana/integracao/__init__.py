@@ -14,6 +14,7 @@ Além disso, podem ser criadas e mantidas aqui funções que dêem estatíticas
 sobre a base para informar os usuários.
 
 """
+from datetime import datetime, timedelta
 from virasana.integracao import carga
 from virasana.integracao import xml
 
@@ -32,6 +33,7 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.id')
     db['fs.files'].create_index('metadata.idcov')
     db['fs.files'].create_index('metadata.recintoid')
+    db['fs.files'].create_index('metadata.recinto')
     db['fs.files'].create_index('metadata.imagem')
     db['fs.files'].create_index('metadata.numeroinformado')
     db['fs.files'].create_index('metadata.dataescaneamento')
@@ -43,30 +45,48 @@ def gridfs_count(db, filtro={}):
     return db['fs.files'].find(filtro).count()
 
 
+stats = {}
 def stats_resumo_imagens(db):
     """Números gerais do Banco de Dados e suas integrações.
 
     Estatístics gerais sobre as imagens
     """
-    stats = {}
+    global stats
+    ultima_consulta = stats.get('data')
+    now_atual = datetime.now()
+    if ultima_consulta and \
+        now_atual - ultima_consulta < timedelta(hours=1):
+        return stats
+    stats['data'] = now_atual
     total = gridfs_count(db, IMAGENS)
     stats['total'] = total
     stats['carga'] = total - gridfs_count(db, carga.FALTANTES)
     stats['xml'] = total - gridfs_count(db, xml.FALTANTES)
     linha = db['fs.files'].find(
         {'metadata.contentType': 'image/jpeg'}
-    ).sort('metadata.dataescaneamento', 1).limit(1)
+    ).sort(DATA, 1).limit(1)
     linha = next(linha)
     for data_path in DATA.split('.'):
         linha = linha.get(data_path)
     stats['start'] = linha
     linha = db['fs.files'].find(
         {'metadata.contentType': 'image/jpeg'}
-    ).sort('metadata.dataescaneamento', -1).limit(1)
+    ).sort(DATA, -1).limit(1)
     linha = next(linha)
     for data_path in DATA.split('.'):
         linha = linha.get(data_path)
     stats['end'] = linha
+    # Qtde por Terminal
+    cursor = db['fs.files'].aggregate(
+        [{'$group':
+          {'_id': '$metadata.recinto',
+           
+           'count': {'$sum': 1}}
+          }])
+    stats['recinto'] = {}
+    for recinto in cursor:
+        print(recinto)
+        stats['recinto'][recinto['_id']] = recinto['count']
     return stats
 
 
@@ -91,3 +111,7 @@ def datas_bases():
     bases['xml'] = xml.DATA
     bases['carga'] = carga.DATA
     return bases
+
+
+if __name__ == '__main__':
+    print(stats_resumo_imagens)

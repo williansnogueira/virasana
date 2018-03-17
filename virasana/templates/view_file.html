@@ -7,7 +7,9 @@
             <h3>Resumo</h3>
             <div id="resumo">
                 <div class="col-md-6">
+                        <a href="padma_proxy/{{ myfile['_id'] }}" target="_BLANK">TESTE</a>
                     <img src="/image/{{ myfile['_id'] }}" />
+                    
                 </div>
                 <div class="col-md-6">
                     Container: {{ myfile['metadata']['numeroinformado'] }}<br>
@@ -15,7 +17,8 @@
                     Data de escaneamento: 
                     {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
                     <br>
-                    Data de atracação: 
+                    {% if myfile['metadata']['carga'] %} 
+                    Data de atracação:
                     {{ myfile['metadata']['carga']['atracacao']['dataatracacao'] }} 
                     {{ myfile['metadata']['carga']['atracacao']['horaatracacao'] }}
                     <br>
@@ -35,7 +38,7 @@
                     {% if myfile['metadata']['carga']['vazio'] %}
                         VAZIO<br>
                         Dados de vazio...<br>
-                        {% else %}
+                    {% else %}
                         CHEIO<br>
                         Peso bruto declarado:
                         {{ myfile['metadata']['carga']['container'][0]['pesobrutoitem'] }} kg
@@ -58,6 +61,9 @@
                         </ul>
                         {% endfor %}
                         </ul>
+                    {% endif %}
+                    {% else %}
+
                     {% endif %}
                 </div>
             </div>

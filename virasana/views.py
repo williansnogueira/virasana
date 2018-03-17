@@ -4,7 +4,6 @@ import os
 import requests
 from base64 import b64encode
 from datetime import date, datetime, timedelta
-from io import BytesIO
 from sys import platform
 
 from bson.objectid import ObjectId
@@ -19,13 +18,12 @@ from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
-from PIL import Image
 from pymongo import MongoClient
 from wtforms import DateField, StringField
 from wtforms.validators import optional
 
-from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, PADMA_URL,
-                                     SECRET, redisdb)
+from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
+                                     PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.integracao import stats_resumo_imagens, plot_pie
@@ -163,7 +161,7 @@ def list_files():
      por uploadDate mais recente.
     Se houver upload em andamento, informa.
     """
-    fs = gridfs.GridFS(db)
+    fs = GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
         lista_arquivos.append(grid_data.filename)
@@ -186,7 +184,7 @@ def file(_id=None):
     Exibe o arquivo e os metadados associados a ele
 
     """
-    fs = gridfs.GridFS(db)
+    fs = GridFS(db)
     if request.args.get('filename'):
         grid_data = fs.find_one({'filename': request.args.get('filename')})
     else:
@@ -198,7 +196,7 @@ def file(_id=None):
 @app.route('/image/<_id>')
 def image(_id):
     """Serializa a imagem do banco para stream HTTP."""
-    fs = gridfs.GridFS(db)
+    fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
     return Response(response=image, mimetype='image/jpeg')
@@ -225,7 +223,7 @@ filtros = dict()
 @login_required
 def files(page=1):
     """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
-    fs = gridfs.GridFS(db)
+    fs = GridFS(db)
     lista_arquivos = []
     global filtros
     print(filtros)
@@ -311,10 +309,10 @@ def padma_proxy(image_id):
     if fs.exists(_id):
         grid_out = fs.get(_id)
         image = grid_out.read()
-        filename = grid_out.filename
+        # filename = grid_out.filename
         data = {}
-        data['file'] = image  #, filename)
-        headers = {} 
+        data['file'] = image
+        headers = {}
         # headers['Content-Type'] = 'image/jpeg'
         r = requests.post(PADMA_URL + '/teste',
                           files=data, headers=headers)

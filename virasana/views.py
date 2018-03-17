@@ -1,11 +1,12 @@
 """Coleção de views da interface web do módulo virasana."""
 import json
 import os
+import requests
 from base64 import b64encode
 from datetime import date, datetime, timedelta
+from io import BytesIO
 from sys import platform
 
-import gridfs
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
@@ -17,12 +18,14 @@ from flask_nav import Nav
 from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
+from gridfs import GridFS
+from PIL import Image
 from pymongo import MongoClient
 from wtforms import DateField, StringField
 from wtforms.validators import optional
 
-from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, SECRET,
-                                     redisdb)
+from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI, PADMA_URL,
+                                     SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.integracao import stats_resumo_imagens, plot_pie
@@ -299,6 +302,24 @@ def plot():
     stats = stats['recinto']
     output = plot_pie(stats.values(), stats.keys())
     return Response(response=output.getvalue(), mimetype='image/png')
+
+
+@app.route('/padma_proxy/<image_id>')
+def padma_proxy(image_id):
+    fs = GridFS(db)
+    _id = ObjectId(image_id)
+    if fs.exists(_id):
+        grid_out = fs.get(_id)
+        image = grid_out.read()
+        filename = grid_out.filename
+        data = {}
+        data['file'] = image  #, filename)
+        headers = {} 
+        # headers['Content-Type'] = 'image/jpeg'
+        r = requests.post(PADMA_URL + '/teste',
+                          files=data, headers=headers)
+        result = r.text
+    return result
 
 
 @nav.navigation()

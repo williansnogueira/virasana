@@ -75,10 +75,39 @@ class FlaskTestCase(unittest.TestCase):
         rv = self.app.get('/', follow_redirects=True)
         assert b'AJNA' in rv.data
 
+    def test_upload_bson(self):
+        self.login('ajna', 'ajna')
+        rv = self.app.get('/uploadbson', follow_redirects=True)
+        assert b'AJNA' in rv.data
+        print(rv.data)
+
+    def test_task_progress(self):
+        self.login('ajna', 'ajna')
+        rv = self.app.get('/api/task/123')
+        assert b'state' in rv.data
+        print(rv.data)
+
     def test_list(self):
-        rv = self.login('ajna', 'ajna')
-        assert rv is not None
-        rv = self.app.get('/list_files', follow_redirects=True)
+        self.login('ajna', 'ajna')
+        rv = self.app.get('/list_files')
         assert b'AJNA' in rv.data
         print(rv.data)
         # TODO: insert file and test return on list
+
+    def test_file(self):
+        self.login('ajna', 'ajna')
+        # rv = self.app.get('/file/123')
+        # assert b'AJNA' in rv.data
+        # print(rv.data)
+
+    def test_image(self):
+        self.login('ajna', 'ajna')
+        # rv = self.app.get('/image/123')
+        # assert b'AJNA' in rv.data
+        # print(rv.data)
+
+    def test_files(self):
+        self.login('ajna', 'ajna')
+        rv = self.app.get('/files')
+        assert b'AJNA' in rv.data
+        print(rv.data)

@@ -13,7 +13,7 @@ from pymongo import MongoClient
 
 from ajna_commons.flask.conf import BACKEND, BROKER
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
-from virasana.views import app
+import virasana.app as app
 from virasana.workers.tasks import celery
 
 # from virasana.workers.raspadir import trata
@@ -48,8 +48,9 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         self.worker = celery_worker
 
     def setUp(self):
-        app.testing = True
-        self.app = app.test_client()
+        app.app.testing = True
+        self.app = app.app.test_client()
+        app.DBUser.dbsession = None  # Bypass mongodb authentication
         self._bsonimage = BsonImage(
             filename=os.path.join(IMG_FOLDER, 'stamp1.jpg'),
             chave='virasana1',
@@ -79,6 +80,10 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
             self._fs.delete(file._id)
 
     def test_apiupload(self):
+        self.app.post('/login', data=dict(
+                username='ajna',
+                senha='ajna',
+            ), follow_redirects=True)
         bson = open(TEST_BSON, 'rb').read()
         data = {}
         data['file'] = (BytesIO(bson), 'test.bson')

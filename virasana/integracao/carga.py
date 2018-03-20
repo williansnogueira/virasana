@@ -277,7 +277,7 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     filtro['metadata.dataescaneamento'] = \
     { '$gt': data_inicio,
      '$lt': data_inicio + timedelta(days=days*2)}
-    # print(filtro)
+    print(filtro)
     file_cursor = db['fs.files'].find(filtro)
     acum = 0
     total = min(file_cursor.count(), batch_size)

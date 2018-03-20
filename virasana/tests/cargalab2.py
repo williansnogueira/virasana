@@ -25,6 +25,17 @@ datafim = linha.get('metadata').get('dataescaneamento')
 print('Maior data de escaneamento (IMAGENS)', datafim)
 datafim = datafim - timedelta(days=3)
 
+linha = db['CARGA.AtracDesatracEscala'].find().sort(
+    'dataatracacaoiso', 1).limit(1)
+linha = next(linha)
+iniciocarga = linha.get('dataatracacaoiso')
+print('Menor data de atracação (CARGA)', iniciocarga)
+linha = db['CARGA.AtracDesatracEscala'].find().sort(
+    'dataatracacaoiso', -1).limit(1)
+linha = next(linha)
+fimcarga = linha.get('dataatracacaoiso')
+print('Maior data de atracação (CARGA)', fimcarga)
+
 agg_vazios = db['CARGA.AtracDesatracEscala'].aggregate(
     [{'$match': {'dataatracacaoiso':
                  {'$gt': datainicio,
@@ -71,25 +82,21 @@ for escala in agg_conhecimentos:
         conhecimentos.append(conhecimento['conhecimento'])
 
 
-agg_conhecimentos_2 = db['CARGA.Conhecimento'].find(
-    {'conhecimento': {'$in': conhecimentos},
-     'codigoportodestino': 'brssz'}
-
-)
-
 conhecimentos = []
-for conhecimento in agg_conhecimentos_2:
-    conhecimentos.append(conhecimento['conhecimento'])
-
-
-agg_containers = db['CARGA.Container'].find(
-    {'conhecimento': {'$in': conhecimentos}}
-)
-
-
 containers = []
-for container in agg_containers:
-    containers.append(container['container'].lower())
+for conhecimento in conhecimentos:
+    agg_conhecimentos_2 = db['CARGA.Conhecimento'].find(
+        {'conhecimento': conhecimento,
+         'codigoportodestino': 'brssz'},
+        {'conhecimento': 1}
+    )
+    if agg_conhecimentos_2.count() > 0:
+        agg_containers = db['CARGA.Container'].find(
+            {'conhecimento': conhecimento['conhecimento']}
+        )
+        for container in agg_containers:
+            containers.append(container['container'].lower())
+
 
 vazios = []
 for escala in agg_vazios:
@@ -118,5 +125,18 @@ print('Total de arquivos de imagem de escaneamento',
       len(container_arquivo))
 print('Contâineres CARGA sem escaneamento',
       len(container_carga - container_arquivo))
+
+
+cursor = db['fs.files'].find(
+    {'metadata.carga.atracacao.escala': None,
+     'metadata.contentType': 'image/jpeg',
+     'metadata.dataescaneamento':
+     {'$gt': iniciocarga, '$lt': fimcarga + timedelta(days=1)}
+     },
+    {'metadata.carga.atracacao.escala': 1,
+     'metadata.contentType': 1,
+     'metadata.dataescaneamento': 1})
+print('Imagens de escaneamento sem dados CARGA', cursor.count())
+
 print('Critério: Foram consultados todos os números da importação' +
       'CARGA da data inicial até a data final menos 3 dias')

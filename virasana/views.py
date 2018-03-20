@@ -58,7 +58,6 @@ def index():
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
-# @csrf.exempt # TODO: put CSRF on tests
 @login_required
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração.
@@ -88,7 +87,7 @@ def upload_bson():
 
 
 @app.route('/api/uploadbson', methods=['POST'])
-@csrf.exempt  # TODO: put CSRF on tests ??? Or just use JWT???
+@login_required
 def api_upload():
     """Função para upload via API de um arquivo BSON.
 
@@ -141,7 +140,7 @@ def api_upload():
 
 
 @app.route('/api/task/<taskid>')
-# @login_required
+@login_required
 def task_progress(taskid):
     """Retorna um json do progresso da celery task."""
     task = raspa_dir.AsyncResult(taskid)
@@ -194,6 +193,7 @@ def file(_id=None):
 
 
 @app.route('/image/<_id>')
+@login_required
 def image(_id):
     """Serializa a imagem do banco para stream HTTP."""
     fs = GridFS(db)
@@ -296,6 +296,7 @@ def stats():
 
 @app.route('/pie')
 def plot():
+    """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
     stats = stats_resumo_imagens(db)
     stats = stats['recinto']
     output = plot_pie(stats.values(), stats.keys())
@@ -304,6 +305,7 @@ def plot():
 
 @app.route('/padma_proxy/<image_id>')
 def padma_proxy(image_id):
+    """Teste. Envia uma imagem para padma teste e repassa retorno."""
     fs = GridFS(db)
     _id = ObjectId(image_id)
     if fs.exists(_id):

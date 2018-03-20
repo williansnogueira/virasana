@@ -1,7 +1,7 @@
 """Unit tests para os módulos do pacote integração."""
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 from gridfs import GridFS
 
@@ -159,11 +159,15 @@ class TestCase(unittest.TestCase):
             self.db, 'escalaforadoprazo', self.data_escaneamento) == {}
 
     def test_grava_fsfiles_carga(self):
-        processados = carga.dados_carga_grava_fsfiles(self.db)
+        processados = carga.dados_carga_grava_fsfiles(
+            self.db,
+            data_inicio=self.data_escaneamento - timedelta(days=3))
         assert processados == 2
         semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
         assert semcarga == 3
-        processados = carga.dados_carga_grava_fsfiles(self.db)
+        processados = carga.dados_carga_grava_fsfiles(
+            self.db,
+            data_inicio=self.data_escaneamento - timedelta(days=3))
         assert processados == 0
 
     def test_grava_fsfiles_xml(self):

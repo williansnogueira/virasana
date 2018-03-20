@@ -128,5 +128,82 @@ def datas_bases():
     return bases
 
 
+def peso_container_documento(db, numeros: list):
+    """Procedimento necessário para apurar o peso do contêiner.
+
+    Procedimento necessário para apurar o peso do contêiner tendo em vista
+    as informações importadas do CARGA.
+
+    Args:
+        db: conexão ao MongoDB GridFS
+        numero: lista com os números de contêiner
+
+    Returns:
+        dict[numero] = peso
+
+    """
+    cursor = db['fs.files'].find(
+        {'metadata.carga.atracacao.escala': {'$ne': None},
+         'metadata.contentType': 'image/jpeg',
+         'metadata.carga.container.container': {'$in': numeros}},
+        {'_id': 0, 'metadata.carga.container.container': 1,
+         'metadata.carga.container.pesobrutoitem': 1}
+    )
+    result = {}
+    for linha in cursor:
+        peso = 0.
+        for item in linha['metadata']['container']:
+            peso += float(item['pesobrutoitem'])
+        result[linha['metadata']['container']['container']] = peso
+    return result
+
+
+def volume_container(db, numeros: list):
+    """Procedimento necessário para apurar o volume do contêiner.
+
+    Procedimento necessário para apurar o volume do contêiner tendo em vista
+    as informações importadas do CARGA.
+
+    Args:
+        db: conexão ao MongoDB GridFS
+        numero: lista com os números de contêiner
+
+    Returns:
+        dict[numero] = volume
+
+    """
+    cursor = db['fs.files'].find(
+        {'metadata.carga.atracacao.escala': {'$ne': None},
+         'metadata.contentType': 'image/jpeg',
+         'metadata.carga.container.container': {'$in': numeros}},
+        {'_id': 0, 'metadata.carga.container.container': 1,
+         'metadata.carga.container.volumeitem': 1}
+    )
+    result = {}
+    for linha in cursor:
+        volume = 0.
+        for item in linha['metadata']['container']:
+            volume += float(item['volumeitem'])
+        result[linha['metadata']['container']['container']] = volume
+    return result
+
+
+def peso_container_balanca(db, numero: list):
+    """Procedimento necessário para apurar o peso pesado do contêiner.
+
+    Procedimento necessário para apurar o peso do contêiner tendo em vista
+    as informações importadas dos sistemas de pesagem dos Recintos Aduaneiros.
+
+    Args:
+        db: conexão ao MongoDB GridFS
+        numero: lista com os números de
+
+    Returns:
+        dict[numero] = peso
+
+    """
+    pass
+
+
 if __name__ == '__main__':
     print(stats_resumo_imagens)

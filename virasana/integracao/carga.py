@@ -16,6 +16,7 @@ from ajna_commons.flask.log import logger
 FALTANTES = {'metadata.carga.atracacao.escala': None,
              'metadata.contentType': 'image/jpeg'}
 
+
 DATA = 'metadata.carga.atracacao.dataatracacao'
 
 CHAVES_CARGA = [
@@ -273,11 +274,15 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
 
     """
     filtro = FALTANTES
-    filtro['metadata.dataescaneamento'] = {'$gt': data_inicio}
+    filtro['metadata.dataescaneamento'] = \
+    { '$gt': data_inicio,
+     '$lt': data_inicio + timedelta(days=days*2)}
+    # print(filtro)
     file_cursor = db['fs.files'].find(filtro)
     acum = 0
+    total = min(file_cursor.count(), batch_size)
     start = datetime.utcnow()
-    if file_cursor.count() == 0:
+    if total == 0:
         logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
         return 0
     end = start - timedelta(days=10000)
@@ -309,7 +314,7 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
                     )
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
-        ' Pesquisados', str(min(file_cursor.count(), batch_size)),
+        ' Pesquisados', str(total),
         'Encontrados', str(acum),
         'Menor data', str(start),
         'Maior data', str(end)

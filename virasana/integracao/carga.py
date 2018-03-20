@@ -275,8 +275,8 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     """
     filtro = FALTANTES
     filtro['metadata.dataescaneamento'] = \
-    { '$gt': data_inicio,
-     '$lt': data_inicio + timedelta(days=days*2)}
+        {'$gt': data_inicio,
+         '$lt': data_inicio + timedelta(days=days * 2)}
     print(filtro)
     file_cursor = db['fs.files'].find(filtro)
     acum = 0

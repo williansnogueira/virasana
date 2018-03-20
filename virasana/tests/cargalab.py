@@ -6,17 +6,13 @@ Tests for sintax and operations before putting into main code
 """
 # import pprint
 import timeit
-import time
-import sys
 from datetime import datetime
 
 # from gridfs import GridFS
 from pymongo import MongoClient
 
 from virasana.integracao import create_indexes, carga
-from virasana.integracao.carga import busca_info_container, \
-    dados_carga_grava_fsfiles
-
+from virasana.integracao.carga import busca_info_container
 
 db = MongoClient()['test']
 

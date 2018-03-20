@@ -81,9 +81,9 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
 
     def test_apiupload(self):
         self.app.post('/login', data=dict(
-                username='ajna',
-                senha='ajna',
-            ), follow_redirects=True)
+            username='ajna',
+            senha='ajna',
+        ), follow_redirects=True)
         bson = open(TEST_BSON, 'rb').read()
         data = {}
         data['file'] = (BytesIO(bson), 'test.bson')

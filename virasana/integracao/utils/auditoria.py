@@ -3,8 +3,10 @@ from collections import defaultdict
 
 
 class Auditoria():
+    """Recebe params, monta consultas de auditoria entre campos fs.files."""
+
     def __init__(self, db):
-        """init
+        """Init.
 
         Args:
             db: conexão ao MongoDB a ser usada

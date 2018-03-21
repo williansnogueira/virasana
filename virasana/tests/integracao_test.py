@@ -6,7 +6,9 @@ from pymongo import MongoClient
 from gridfs import GridFS
 
 from virasana.integracao import carga, xml, create_indexes, \
-    DATA, datas_bases, gridfs_count, stats_resumo_imagens
+    DATA, datas_bases, gridfs_count, peso_container_documento, \
+    stats_resumo_imagens, volume_container
+
 
 ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__), 'sample')
 
@@ -27,7 +29,14 @@ class TestCase(unittest.TestCase):
             {'metadata': {'numeroinformado': 'cheio',
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
-                          'dataescaneamento': data_escaneamento}})
+                          'dataescaneamento': data_escaneamento,
+                          }})
+        db['fs.files'].insert(
+            {'metadata': {'numeroinformado': 'cheio2',
+                          'contentType': 'image/jpeg',
+                          'recinto': 'A',
+                          'dataescaneamento': data_escaneamento,
+                          }})
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'vazio',
                           'contentType': 'image/jpeg',
@@ -51,7 +60,23 @@ class TestCase(unittest.TestCase):
         fs.put(b'<DataForm><ContainerId>comxml</ContainerId></DataForm>',
                filename='comxml.xml', metadata=metadata)
         # Cria documentos simulando registros importados do CARGA
-        db['CARGA.Container'].insert({'container': 'cheio', 'conhecimento': 1})
+        db['CARGA.Container'].insert(
+            {'container': 'cheio',
+             'conhecimento': 1,
+             'pesobrutoitem': '10,00',
+             'volumeitem': '1,00'})
+        db['CARGA.Container'].insert(
+            {'container': 'cheio2',
+             'conhecimento': 2,
+             'item': 1,
+             'pesobrutoitem': '10,00',
+             'volumeitem': '1,00'})
+        db['CARGA.Container'].insert(
+            {'container': 'cheio2',
+             'conhecimento': 2,
+             'item': 2,
+             'pesobrutoitem': '10,00',
+             'volumeitem': '1,00'})
         db['CARGA.Container'].insert(
             {'container': 'semconhecimento', 'conhecimento': 9})
         db['CARGA.Container'].insert(
@@ -107,15 +132,15 @@ class TestCase(unittest.TestCase):
         carga.create_indexes(self.db)
 
     def test_count(self):
-        assert gridfs_count(self.db) == 5
+        assert gridfs_count(self.db) == 6
 
     def test_stats(self):
         stats = stats_resumo_imagens(self.db)
         assert stats is not None
-        assert stats['total'] == 4
+        assert stats['total'] == 5
         assert stats['carga'] == 0
         assert stats['xml'] == 0
-        assert stats['recinto']['A'] == 2
+        assert stats['recinto']['A'] == 3
         assert stats['recinto']['B'] == 1
         assert stats['recinto']['C'] == 1
 
@@ -162,7 +187,7 @@ class TestCase(unittest.TestCase):
         processados = carga.dados_carga_grava_fsfiles(
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
-        assert processados == 2
+        assert processados == 3
         semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
         assert semcarga == 3
         processados = carga.dados_carga_grava_fsfiles(
@@ -174,7 +199,7 @@ class TestCase(unittest.TestCase):
         processados = xml.dados_xml_grava_fsfiles(self.db)
         assert processados == 1
         semxml = self.db['fs.files'].find({'metadata.xml': None}).count()
-        assert semxml == 4
+        assert semxml == 5
         processados = xml.dados_xml_grava_fsfiles(self.db)
         assert processados == 0
 
@@ -184,3 +209,23 @@ class TestCase(unittest.TestCase):
         assert contador is not None
         assert contador['Alimento'] == 9
         assert contador['Esporte'] == 9
+
+    def test_peso(self):
+        # Primeiro processar carga para inserir peso
+        carga.dados_carga_grava_fsfiles(
+            self.db,
+            data_inicio=self.data_escaneamento - timedelta(days=3))
+        pesos = peso_container_documento(self.db, ['cheio', 'cheio2'])
+        assert pesos['cheio'] == 10.0
+        assert pesos['cheio2'] == 20.0
+
+    def test_volume(self):
+        # Primeiro processar carga para inserir peso
+        carga.dados_carga_grava_fsfiles(
+            self.db,
+            data_inicio=self.data_escaneamento - timedelta(days=3))
+        pesos = volume_container(self.db, ['cheio', 'cheio2'])
+        print(pesos)
+        assert pesos['cheio'] == 1.0
+        assert pesos['cheio2'] == 2.0
+        

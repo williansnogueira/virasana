@@ -152,9 +152,9 @@ def peso_container_documento(db, numeros: list):
     result = {}
     for linha in cursor:
         peso = 0.
-        for item in linha['metadata']['container']:
-            peso += float(item['pesobrutoitem'])
-        result[linha['metadata']['container']['container']] = peso
+        for item in linha['metadata']['carga']['container']:
+            peso += float(item['pesobrutoitem'].replace(',', '.'))
+        result[linha['metadata']['carga']['container'][0]['container']] = peso
     return result
 
 
@@ -182,9 +182,9 @@ def volume_container(db, numeros: list):
     result = {}
     for linha in cursor:
         volume = 0.
-        for item in linha['metadata']['container']:
-            volume += float(item['volumeitem'])
-        result[linha['metadata']['container']['container']] = volume
+        for item in linha['metadata']['carga']['container']:
+            volume += float(item['volumeitem'].replace(',', '.'))
+        result[linha['metadata']['carga']['container'][0]['container']] = volume
     return result
 
 

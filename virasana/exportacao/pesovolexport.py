@@ -33,7 +33,7 @@ cursor = db['fs.files'].find(
      'metadata.carga.container.pesobrutoitem': 1,
      'metadata.carga.container.volumeitem': 1})
 
-containers = [['_id', 'numero', 'peso', 'volume']]
+containers = []
 for linha in cursor:
     item = linha['metadata']['carga']['container']
     if item[0].get('pesobrutoitem'):
@@ -56,7 +56,8 @@ for linha in cursor:
 
 print(len(containers))
 
-containers = random.sample(containers, 1000)
+export = [['id', 'numero', 'peso', 'volume']]
+export.extend(random.sample(containers, 1000))
 with open('pesovolexport.csv', 'w') as out:
     writer = csv.writer(out)
-    writer.writerows(containers)
+    writer.writerows(export)

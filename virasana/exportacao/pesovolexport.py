@@ -18,7 +18,9 @@ import random
 from datetime import datetime
 from pymongo import MongoClient
 from ajna_commons.flask.conf import (DATABASE, MONGODB_URI)
-from virasana.integracao import carga, peso_container_documento, volume_container
+from ajna_commons.conf import ENCODE
+from virasana.integracao import carga, peso_container_documento, \
+                                volume_container
 
 db = MongoClient(host=MONGODB_URI)[DATABASE]
 print('iniciando consulta')
@@ -58,6 +60,6 @@ print(len(containers))
 
 export = [['id', 'numero', 'peso', 'volume']]
 export.extend(random.sample(containers, 1000))
-with open('pesovolexport.csv', 'w') as out:
+with open('pesovolexport.csv', 'w', encoding=ENCODE, newline='') as out:
     writer = csv.writer(out)
     writer.writerows(export)

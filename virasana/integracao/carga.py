@@ -16,6 +16,10 @@ from ajna_commons.flask.log import logger
 FALTANTES = {'metadata.carga.atracacao.escala': None,
              'metadata.contentType': 'image/jpeg'}
 
+ENCONTRADOS = {'metadata.carga.atracacao.escala': {'$ne': None},
+             'metadata.contentType': 'image/jpeg'}
+
+NUMERO = 'metadata.carga.container.container'
 
 DATA = 'metadata.carga.atracacao.dataatracacao'
 

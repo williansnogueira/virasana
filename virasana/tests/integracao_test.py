@@ -224,8 +224,8 @@ class TestCase(unittest.TestCase):
         carga.dados_carga_grava_fsfiles(
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
-        pesos = volume_container(self.db, ['cheio', 'cheio2'])
-        print(pesos)
-        assert pesos['cheio'] == 1.0
-        assert pesos['cheio2'] == 2.0
+        volumes = volume_container(self.db, ['cheio', 'cheio2'])
+        print(volumes)
+        assert volumes['cheio'] == 1.0
+        assert volumes['cheio2'] == 2.0
         

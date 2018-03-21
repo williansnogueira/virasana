@@ -26,7 +26,7 @@ print('iniciando consulta')
 
 filtro = carga.ENCONTRADOS
 filtro['metadata.dataescaneamento'] = {'$gt': datetime(
-    2017, 8, 5), '$lt': datetime(2017, 8, 20)}
+    2017, 10, 5), '$lt': datetime(2017, 10, 20)}
 cursor = db['fs.files'].find(
     filtro,
     {'metadata.carga.container.container': 1,

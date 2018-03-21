@@ -16,7 +16,7 @@ carga.create_indexes(db)
 
 if len(sys.argv) > 1 and sys.argv[1] == 'update':
     print('Começando a procurar por dados do CARGA a inserir')
-    batch_size = 5000
+    batch_size = 8000
     today = datetime.today()
     if len(sys.argv) > 2:
         year = int(sys.argv[2])
@@ -28,7 +28,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'update':
         month = today.month
 
     print(year, month)
-    for day in range(1, 30, 3):
+    for day in range(1, 30, 10):
         data_inicio = datetime(year, month, day)
         print('Data início', data_inicio)
         tempo = time.time()

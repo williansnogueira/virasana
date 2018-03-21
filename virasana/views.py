@@ -87,7 +87,8 @@ def upload_bson():
 
 
 @app.route('/api/uploadbson', methods=['POST'])
-@login_required
+@csrf.exempt
+# @login_required
 def api_upload():
     """Função para upload via API de um arquivo BSON.
 

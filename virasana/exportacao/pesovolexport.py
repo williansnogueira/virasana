@@ -2,6 +2,7 @@
 
 Exporta csv com id imagem, numero container, peso e volume
 na quantidade q para o diretório out.
+Para gerar arquivos para treinamento de algoritmos de aprendizagem de máquina
 
 Usage:
     python pesovolexport.py -q 1000 -out ../pesos

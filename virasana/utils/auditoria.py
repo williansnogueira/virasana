@@ -36,3 +36,4 @@ class Auditoria():
                 lista.append(linha)
             result[key] = lista
         return result
+

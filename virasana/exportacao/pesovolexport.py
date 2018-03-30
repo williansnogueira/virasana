@@ -21,7 +21,7 @@ from pymongo import MongoClient
 from ajna_commons.flask.conf import (DATABASE, MONGODB_URI)
 from ajna_commons.conf import ENCODE
 from virasana.integracao import carga, peso_container_documento, \
-                                volume_container
+    volume_container
 
 db = MongoClient(host=MONGODB_URI)[DATABASE]
 print('iniciando consulta')
@@ -32,20 +32,25 @@ filtro['metadata.dataescaneamento'] = {'$gt': datetime(
     2017, 10, 5), '$lt': datetime(2017, 10, 20)}
 cursor = db['fs.files'].find(
     filtro,
-    {'metadata.carga.container.container': 1,
+    {'metadata.recintoid': 1,
+     'metadata.carga.container.container': 1,
+     'metadata.carga.container.taracontainer': 1,
      'metadata.carga.container.pesobrutoitem': 1,
      'metadata.carga.container.volumeitem': 1})
 
 containers = []
 for linha in cursor:
+    recinto = linha['metadata']['recintoid']
     item = linha['metadata']['carga']['container']
     if item[0].get('pesobrutoitem'):
+        tara = float(item[0]['taracontainer'].replace(',', '.'))
         peso = float(item[0]['pesobrutoitem'].replace(',', '.'))
         volume = float(item[0]['volumeitem'].replace(',', '.'))
         containers.append(
             [linha['_id'],
+             recinto,
              linha['metadata']['carga']['container'][0]['container'],
-             peso, volume])
+             tara, peso, volume])
     #####
     # Rever importaçao! Pelo jeito está puxando contêiner 2 vezes,
     # 1 para MBL e outra para HBL
@@ -59,7 +64,7 @@ for linha in cursor:
 
 print(len(containers))
 
-export = [['id', 'numero', 'peso', 'volume']]
+export = [['id', 'recintoid', 'numero', 'tara', 'peso', 'volume']]
 export.extend(random.sample(containers, 1000))
 with open('pesovolexport.csv', 'w', encoding=ENCODE, newline='') as out:
     writer = csv.writer(out)

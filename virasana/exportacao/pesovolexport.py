@@ -23,6 +23,8 @@ from ajna_commons.conf import ENCODE
 from virasana.integracao import carga, peso_container_documento, \
     volume_container
 
+N_SAMPLES = 5000
+
 db = MongoClient(host=MONGODB_URI)[DATABASE]
 print('iniciando consulta')
 
@@ -65,7 +67,7 @@ for linha in cursor:
 print(len(containers))
 
 export = [['id', 'recintoid', 'numero', 'tara', 'peso', 'volume']]
-export.extend(random.sample(containers, 1000))
+export.extend(random.sample(containers, N_SAMPLES))
 with open('pesovolexport.csv', 'w', encoding=ENCODE, newline='') as out:
     writer = csv.writer(out)
     writer.writerows(export)

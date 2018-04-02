@@ -15,6 +15,7 @@ Usage:
 
 """
 import csv
+import click
 import random
 from datetime import datetime
 from pymongo import MongoClient
@@ -24,50 +25,56 @@ from virasana.integracao import carga, peso_container_documento, \
     volume_container
 
 N_SAMPLES = 5000
-
-db = MongoClient(host=MONGODB_URI)[DATABASE]
-print('iniciando consulta')
-
-
 filtro = carga.ENCONTRADOS
 filtro['metadata.dataescaneamento'] = {'$gt': datetime(
     2017, 10, 5), '$lt': datetime(2017, 10, 20)}
-cursor = db['fs.files'].find(
-    filtro,
-    {'metadata.recintoid': 1,
-     'metadata.carga.container.container': 1,
-     'metadata.carga.container.taracontainer': 1,
-     'metadata.carga.container.pesobrutoitem': 1,
-     'metadata.carga.container.volumeitem': 1})
 
-containers = []
-for linha in cursor:
-    recinto = linha['metadata']['recintoid']
-    item = linha['metadata']['carga']['container']
-    if item[0].get('pesobrutoitem'):
-        tara = float(item[0]['taracontainer'].replace(',', '.'))
-        peso = float(item[0]['pesobrutoitem'].replace(',', '.'))
-        volume = float(item[0]['volumeitem'].replace(',', '.'))
-        containers.append(
-            [linha['_id'],
-             recinto,
-             linha['metadata']['carga']['container'][0]['container'],
-             tara, peso, volume])
-    #####
-    # Rever importaçao! Pelo jeito está puxando contêiner 2 vezes,
-    # 1 para MBL e outra para HBL
-    # peso = 0.
-    # volume = 0.
-    # for item in linha['metadata']['carga']['container']:
-    #    if item.get('pesobrutoitem'):
-    #        peso += float(item['pesobrutoitem'].replace(',', '.'))
-    #        volume += float(item['volumeitem'].replace(',', '.'))
-    # if peso != 0.:
+@click.command()
+@click.option('--q', default=N_SAMPLES, help='Número de amostras (imagens)')
+@click.option('--out', default='.', help='Diretório de destino')
+def export(q, out):
+    print('iniciando consulta')
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    cursor = db['fs.files'].find(
+        filtro,
+        {'metadata.recintoid': 1,
+        'metadata.carga.container.container': 1,
+        'metadata.carga.container.taracontainer': 1,
+        'metadata.carga.container.pesobrutoitem': 1,
+        'metadata.carga.container.volumeitem': 1})
 
-print(len(containers))
+    containers = []
+    for linha in cursor:
+        recinto = linha['metadata']['recintoid']
+        item = linha['metadata']['carga']['container']
+        if item[0].get('pesobrutoitem'):
+            tara = float(item[0]['taracontainer'].replace(',', '.'))
+            peso = float(item[0]['pesobrutoitem'].replace(',', '.'))
+            volume = float(item[0]['volumeitem'].replace(',', '.'))
+            containers.append(
+                [linha['_id'],
+                recinto,
+                linha['metadata']['carga']['container'][0]['container'],
+                tara, peso, volume])
+        #####
+        # Rever importaçao! Pelo jeito está puxando contêiner 2 vezes,
+        # 1 para MBL e outra para HBL
+        # peso = 0.
+        # volume = 0.
+        # for item in linha['metadata']['carga']['container']:
+        #    if item.get('pesobrutoitem'):
+        #        peso += float(item['pesobrutoitem'].replace(',', '.'))
+        #        volume += float(item['volumeitem'].replace(',', '.'))
+        # if peso != 0.:
 
-export = [['id', 'recintoid', 'numero', 'tara', 'peso', 'volume']]
-export.extend(random.sample(containers, N_SAMPLES))
-with open('pesovolexport.csv', 'w', encoding=ENCODE, newline='') as out:
-    writer = csv.writer(out)
-    writer.writerows(export)
+    print(len(containers))
+
+    export = [['id', 'recintoid', 'numero', 'tara', 'peso', 'volume']]
+    export.extend(random.sample(containers, q))
+    with open(os.path.join(out, 'pesovolexport.csv'),
+         'w', encoding=ENCODE, newline='') as out:
+        writer = csv.writer(out)
+        writer.writerows(export)
+
+if __name__=='__main__':
+    export()

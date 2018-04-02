@@ -244,6 +244,13 @@ def busca_info_container(db, numero: str,
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
         conhecimentos = [linha['conhecimento'] for linha in manifestos
                          if linha['manifesto'] == manifesto[0]]
+        
+        # Separar APENAS os Conhecimentos BL ou MBL
+        filtro = {'conhecimento': {'$in': list(conhecimentos)},
+                  'tipo': {'$in': ['bl', 'mbl']}}
+        cursor = db['CARGA.Conhecimento'].find(filtro, {'conhecimento': 1})
+        conhecimentos = [linha['conhecimento'] for linha in cursor]
+
         json_dict['conhecimento'], _ = mongo_find_in(
             db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos)
         json_dict['ncm'], _ = mongo_find_in(

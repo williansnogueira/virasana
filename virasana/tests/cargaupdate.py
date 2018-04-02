@@ -1,3 +1,4 @@
+import click
 import time
 import sys
 from datetime import datetime
@@ -7,28 +8,21 @@ from pymongo import MongoClient
 
 from virasana.integracao import create_indexes, carga
 
+batch_size = 8000
+today = datetime.today()
 
-db = MongoClient()['test']
-
-create_indexes(db)
-carga.create_indexes(db)
-
-
-if len(sys.argv) > 1 and sys.argv[1] == 'update':
+@click.command()
+@click.option('--year', default=today.year, help='Ano')
+@click.option('--month', default=today.month , help='mês')
+@click.option('--batch_size', default=batch_size , help='Tamanho do lote')
+@click.option('--interval', default=5 , help='Intervalo de dias')
+def update(year, month, batch_size, interval):
+    db = MongoClient()['test']
+    create_indexes(db)
+    carga.create_indexes(db)
     print('Começando a procurar por dados do CARGA a inserir')
-    batch_size = 8000
-    today = datetime.today()
-    if len(sys.argv) > 2:
-        year = int(sys.argv[2])
-    else:
-        year = today.year
-    if len(sys.argv) > 3:
-        month = int(sys.argv[3])
-    else:
-        month = today.month
-
-    print(year, month)
-    for day in range(1, 30, 10):
+    print(year, month, batch_size, interval)
+    for day in range(1, 30, interval):
         data_inicio = datetime(year, month, day)
         print('Data início', data_inicio)
         tempo = time.time()
@@ -37,3 +31,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'update':
         print(batch_size, 'dados Carga do fs.files percorridos em ',
               tempo, 'segundos.',
               tempo / batch_size, 'por registro')
+
+if __name__=='__main__':
+    update()

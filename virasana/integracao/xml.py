@@ -1,5 +1,6 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
-import defusedxml.ElementTree as ET
+# import defusedxml.ElementTree as ET
+import lxml.etree as ET
 from datetime import datetime
 from gridfs import GridFS
 

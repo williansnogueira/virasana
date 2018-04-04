@@ -1,9 +1,11 @@
+"""
+Atualização manual dos metadados do CARGA nas imagens.
+"""
 import click
 import time
 import sys
 from datetime import datetime
 
-# from gridfs import GridFS
 from pymongo import MongoClient
 
 from virasana.integracao import create_indexes, carga
@@ -12,10 +14,11 @@ batch_size = 8000
 today = datetime.today()
 
 @click.command()
-@click.option('--year', default=today.year, help='Ano')
-@click.option('--month', default=today.month , help='mês')
-@click.option('--batch_size', default=batch_size , help='Tamanho do lote')
-@click.option('--interval', default=5 , help='Intervalo de dias')
+@click.option('--year', default=today.year, help='Ano - padrão atual')
+@click.option('--month', default=today.month , help='Mes - padrão atual')
+@click.option('--batch_size', default=batch_size , 
+              help='Tamanho do lote - padrão' + str(batch_size))
+@click.option('--interval', default=5 , help='Intervalo de dias - padrão 5')
 def update(year, month, batch_size, interval):
     db = MongoClient()['test']
     create_indexes(db)

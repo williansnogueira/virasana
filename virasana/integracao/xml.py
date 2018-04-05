@@ -1,12 +1,14 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 # import defusedxml.ElementTree as ET
+import bson
 import lxml.etree as ET
 from datetime import datetime
 from gridfs import GridFS
+import chardet
 
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
-from ajna_commons.utils.sanitiza import ascii_sanitizar, sanitizar
+from ajna_commons.utils.sanitiza import unicode_sanitizar, sanitizar
 
 FALTANTES = {'metadata.xml.date': None,
              'metadata.contentType': 'image/jpeg'
@@ -42,7 +44,10 @@ def xml_todict(xml) -> dict:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError as err:
-        xml = ascii_sanitizar(xml)
+        print('*****************XML**********************')
+        print(xml)
+        print('*****************XML END')
+        xml = unicode_sanitizar(xml)
         # logger.error(err, exc_info=True)
         try:
             root = ET.fromstring(xml)
@@ -51,9 +56,12 @@ def xml_todict(xml) -> dict:
             print(xml)
             print('*****************XML END')
             print(str(err))
-            raise ET.ParseError('XML intratável??')
+            return result
+            # raise ET.ParseError('XML intratável??')
 
             # return result
+    alerta = xml.find('>al<') == -1
+    result['alerta'] = alerta
     for field in FIELDS:
         for tag in root.iter(field):
             text = ''
@@ -109,15 +117,26 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         file_id = xml_document.get('_id')
         if not fs.exists(file_id):
             continue
-        grid_out = fs.get(file_id)
-        xml = grid_out.read().decode(ENCODE)
-        # TODO: see why sometimes a weird character appears in front of content
-        posi = xml.find('<DataForm>')
-        if posi == -1:
-            xml = xml[2:]
-        else:
-            xml = xml[posi:]
-        dados_xml = xml_todict(xml)
+        raw = fs.get(file_id).read()
+        encode = chardet.detect(raw)
+        # print(encode)
+        encoding = [encode['encoding'], 'latin1', 'utf8', 'ascii', 'windows-1250', 'windows-1252']
+        dados_xml = {}
+        for e in encoding:
+            try:
+                xml = raw.decode(e)
+                # TODO: see why sometimes a weird character appears in front of content
+                posi = xml.find('<DataForm>')
+                # print('POSI', posi)
+                if posi == -1:
+                    xml = xml[2:]
+                else:
+                    xml = xml[posi:]
+                ET.fromstring(xml)
+                dados_xml = xml_todict(xml)
+                break
+            except Exception as err:
+                print('Erro de encoding', e, err)
         if dados_xml != {}:
             if update:
                 db['fs.files'].update(

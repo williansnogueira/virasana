@@ -150,6 +150,7 @@ def peso_container_documento(db, numeros: list):
          'metadata.carga.container.pesobrutoitem': 1}
     )
     result = {}
+    # Contêiner pode ter uso parcial, portanto é necessário somar
     for linha in cursor:
         peso = 0.
         for item in linha['metadata']['carga']['container']:
@@ -179,6 +180,7 @@ def volume_container(db, numeros: list):
         {'_id': 0, 'metadata.carga.container.container': 1,
          'metadata.carga.container.volumeitem': 1}
     )
+    # Contêiner pode ter uso parcial, portanto é necessário somar
     result = {}
     for linha in cursor:
         volume = 0.

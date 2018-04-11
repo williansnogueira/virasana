@@ -18,6 +18,9 @@ FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
           'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
           'UpdateCount', 'LastStateDateTime')
 
+# Fields to be converted to ISODate
+DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
+
 DATA = 'metadata.xml.date'
 
 
@@ -67,6 +70,11 @@ def xml_todict(xml) -> dict:
             text = ''
             if tag.text:
                 text = sanitizar(tag.text)
+            if tag in DATE_FIELDS:
+                try:
+                    text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
+                except ValueError:
+                    pass
             result[field.lower()] = text
     lista_conteineres = []
     for tag in root.iter('ContainerId'):

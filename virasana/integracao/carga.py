@@ -21,7 +21,10 @@ ENCONTRADOS = {'metadata.carga.atracacao.escala': {'$ne': None},
 
 NUMERO = 'metadata.carga.container.container'
 
-DATA = 'metadata.carga.atracacao.dataatracacao'
+DATA = 'metadata.carga.atracacao.dataatracacaoiso'
+
+# db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort(metadata.carga.atracacao.dataatracacao, -1).limit(10)
+
 
 CHAVES_CARGA = [
     'metadata.carga.vazio',
@@ -96,8 +99,9 @@ def create_indexes(db):
     cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
     for linha in cursor:
         dataatracacao = linha['dataatracacao']
-        dataatracacaoiso = datetime.strptime(dataatracacao, '%d/%m/%Y')
-        print(linha['_id'], dataatracacao, dataatracacaoiso)
+        horaatracacao = linha['horaatracacao']
+        dataatracacaoiso = datetime.strptime(dataatracacao+horaatracacao, '%d/%m/%Y%H:%M:%S')
+        # print(linha['_id'], dataatracacao, dataatracacaoiso)
         db['CARGA.AtracDesatracEscala'].update(
             {'_id': linha['_id']}, {
                 '$set': {'dataatracacaoiso': dataatracacaoiso}}

@@ -28,6 +28,9 @@ XML = {'metadata.contentType': 'text/xml'}
 
 DATA = 'metadata.dataescaneamento'
 
+STATS_LIVE = 30  # Tempo em minutos para manter cache de stats
+stats = {}
+
 
 def create_indexes(db):
     """Cria índices necessários no GridFS."""
@@ -49,9 +52,6 @@ def gridfs_count(db, filtro={}):
     return db['fs.files'].find(filtro).count()
 
 
-stats = {}
-
-
 def stats_resumo_imagens(db):
     """Números gerais do Banco de Dados e suas integrações.
 
@@ -61,33 +61,47 @@ def stats_resumo_imagens(db):
     ultima_consulta = stats.get('data')
     now_atual = datetime.now()
     if ultima_consulta and \
-            now_atual - ultima_consulta < timedelta(hours=1):
+            now_atual - ultima_consulta < timedelta(minutes=STATS_LIVE):
         return stats
-    stats['data'] = now_atual
+    stats['Data do levantamento'] = now_atual
     total = gridfs_count(db, IMAGENS)
-    stats['total'] = total
-    stats['carga'] = total - gridfs_count(db, carga.FALTANTES)
-    stats['xml'] = total - gridfs_count(db, xml.FALTANTES)
-    linha = db['fs.files'].find(
-        {'metadata.contentType': 'image/jpeg'}
-    ).sort(DATA, 1).limit(1)
-    linha = next(linha)
-    for data_path in DATA.split('.'):
-        linha = linha.get(data_path)
-    stats['start'] = linha
-    linha = db['fs.files'].find(
-        {'metadata.contentType': 'image/jpeg'}
-    ).sort(DATA, -1).limit(1)
-    linha = next(linha)
-    for data_path in DATA.split('.'):
-        linha = linha.get(data_path)
-    stats['end'] = linha
+    stats['Total de imagens'] = total
+    stats['Imagens com info do Carga'] = total - \
+        gridfs_count(db, carga.FALTANTES)
+    stats['Images com info do XML'] = total - gridfs_count(db, xml.FALTANTES)
+    # DATAS
+    datas = {'imagem': DATA,
+             'XML': xml.DATA,
+             'Carga': carga.DATA}
+    for base, data in datas.items():
+        # print(data)
+        linha = db['fs.files'].find(
+            {'metadata.contentType': 'image/jpeg',
+             data: {'$ne': None}}
+        ).sort(data, 1).limit(1)
+        linha = next(linha)
+        for data_path in data.split('.'):
+            if linha:
+                linha = linha.get(data_path)
+        if isinstance(linha, datetime):
+            linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
+        stats['Menor ' + data_path + ' ' + base] = linha
+        linha = db['fs.files'].find(
+            {'metadata.contentType': 'image/jpeg',
+             data: {'$ne': None}}
+        ).sort(data, -1).limit(1)
+        linha = next(linha)
+        for data_path in data.split('.'):
+            if linha:
+                linha = linha.get(data_path)
+        if isinstance(linha, datetime):
+            linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
+        stats['Maior ' + data_path + ' ' + base] = linha
     # Qtde por Terminal
     cursor = db['fs.files'].aggregate(
         [{'$match': {'metadata.contentType': 'image/jpeg'}},
          {'$group':
           {'_id': '$metadata.recinto',
-
            'count': {'$sum': 1}}
           }])
     recintos = dict()
@@ -186,7 +200,8 @@ def volume_container(db, numeros: list):
         volume = 0.
         for item in linha['metadata']['carga']['container']:
             volume += float(item['volumeitem'].replace(',', '.'))
-        result[linha['metadata']['carga']['container'][0]['container']] = volume
+        result[linha['metadata']['carga']
+               ['container'][0]['container']] = volume
     return result
 
 

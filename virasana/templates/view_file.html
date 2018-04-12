@@ -7,64 +7,46 @@
             <h3>Resumo</h3>
             <div id="resumo">
                 <div class="col-md-6">
-                        <a href="padma_proxy/{{ myfile['_id'] }}" target="_BLANK">TESTE</a>
-                    <img src="/image/{{ myfile['_id'] }}" />
-                    
+                    <p>
+                        <a href="/padma_proxy/{{ myfile['_id'] }}" target="_BLANK">Testar imagem</a>
+                    </p>
+                    <p>
+                        <img src="/image/{{ myfile['_id'] }}" />
+                    </p>
                 </div>
                 <div class="col-md-6">
-                    Container: {{ myfile['metadata']['numeroinformado'] }}<br>
-                    IMPORTAÇAO <br>
-                    Data de escaneamento: 
-                    {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
-                    <br>
-                    {% if myfile['metadata']['carga'] %} 
-                    Data de atracação:
-                    {{ myfile['metadata']['carga']['atracacao']['dataatracacao'] }} 
-                    {{ myfile['metadata']['carga']['atracacao']['horaatracacao'] }}
-                    <br>
-                    Data de desatracação: 
-                    {{ myfile['metadata']['carga']['atracacao']['datadesatracacao'] }} 
-                    {{ myfile['metadata']['carga']['atracacao']['horadesatracacao'] }}
-                    <br>
-                    Escala: 
-                    {{ myfile['metadata']['carga']['atracacao']['escala'] }} 
-                    <br>
-                    Manifesto: 
-                    {{ myfile['metadata']['carga']['manifesto'][0]['manifesto'] }}
-                    <br>
-                    Porto de carregamento:
-                    {{ myfile['metadata']['carga']['manifesto'][0]['codigoportocarregamento'] }}
-                    <br>
-                    {% if myfile['metadata']['carga']['vazio'] %}
-                        VAZIO<br>
-                        Dados de vazio...<br>
-                    {% else %}
-                        CHEIO<br>
-                        Peso bruto declarado:
-                        {{ myfile['metadata']['carga']['container'][0]['pesobrutoitem'] }} kg
-                        <br>
-                        Volume:
-                        {{ myfile['metadata']['carga']['container'][0]['volumeitem'] }} m³
-                        <br>
-                        NCMs: <ul>
+                    Container: {{ myfile['metadata']['numeroinformado'] }}
+                    <br> IMPORTAÇAO
+                    <br> Data de escaneamento: {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
+                    <br> {% if myfile['metadata']['carga'] %} Data de atracação: {{ myfile['metadata']['carga']['atracacao']['dataatracacao']
+                    }} {{ myfile['metadata']['carga']['atracacao']['horaatracacao'] }}
+                    <br> Data de desatracação: {{ myfile['metadata']['carga']['atracacao']['datadesatracacao'] }} {{ myfile['metadata']['carga']['atracacao']['horadesatracacao']
+                    }}
+                    <br> Escala: {{ myfile['metadata']['carga']['atracacao']['escala'] }}
+                    <br> Manifesto: {{ myfile['metadata']['carga']['manifesto'][0]['manifesto'] }}
+                    <br> Porto de carregamento: {{ myfile['metadata']['carga']['manifesto'][0]['codigoportocarregamento'] }}
+                    <br> {% if myfile['metadata']['carga']['vazio'] %} VAZIO
+                    <br> Dados de vazio...
+                    <br> {% else %} CHEIO
+                    <br> Peso bruto declarado: {{ myfile['metadata']['carga']['container'][0]['pesobrutoitem'] }} kg
+                    <br> Volume: {{ myfile['metadata']['carga']['container'][0]['volumeitem'] }} m³
+                    <br> NCMs:
+                    <ul>
                         {% for value in myfile['metadata']['carga']['ncm'] %}
                         <li>{{value['ncm']}} - {{value['descricao']}}</li>
                         {% endfor %}
-                        </ul>
-                        Conhecimentos: <ul>
+                    </ul>
+                    Conhecimentos:
+                    <ul>
                         {% for value in myfile['metadata']['carga']['conhecimento'] %}
-                        <li>CE {{value['tipo'].upper()}} {{value['conhecimento']}} -
-                             Porto origem {{value['codigoportoorigem'].upper()}}</li>
+                        <li>CE {{value['tipo'].upper()}} {{value['conhecimento']}} - Porto origem {{value['codigoportoorigem'].upper()}}</li>
                         <ul>
                             <li>Consignatário {{value['nomeconsignatario']}}</li>
                             <li>{{value['descricaomercadoria']}}</li>
                         </ul>
                         {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% else %}
-
-                    {% endif %}
+                    </ul>
+                    {% endif %} {% else %} {% endif %}
                 </div>
             </div>
             <h3>Dados do arquivo de Imagem</h3>

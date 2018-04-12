@@ -19,7 +19,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from wtforms import DateField, StringField
+from wtforms import BooleanField, DateField, StringField
 from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
@@ -215,6 +215,7 @@ class FilesForm(FlaskForm):
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())
+    alerta = BooleanField('Alerta', validators=[optional()], default=False)
 
 
 filtros = dict()
@@ -245,10 +246,13 @@ def files(page=1):
                 campos.append('metadata.' + sub_key)
         for chave in CHAVES_CARGA:
             campos.append(chave)
+    print(form.alerta)
+    print(form.alerta.data)
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
         end = form.end.data
+        alerta = form.alerta.data
         if numero == 'None':
             numero = None
         if start and end:
@@ -257,6 +261,9 @@ def files(page=1):
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
             filtro['metadata.numeroinformado'] = {'$regex': numero}
+        if alerta:
+            filtro['metadata.xml.alerta'] = True
+
         # print(filtro)
     # Configura filtro personalizado
     campo = request.args.get('campo')
@@ -271,7 +278,8 @@ def files(page=1):
             filtro[campo] = valor.lower()
 
     if filtro:
-        for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(10):
+        filtro['metadata.contentType'] = 'image/jpeg'
+        for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(50):
             linha = {}
             linha['_id'] = grid_data._id
             linha['filename'] = grid_data.filename
@@ -279,6 +287,8 @@ def files(page=1):
             linha['numero'] = grid_data.metadata.get('numeroinformado')
             lista_arquivos.append(linha)
         # print(lista_arquivos)
+    print(form.alerta)
+    print(form.alerta.data)
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
                            oform=form,

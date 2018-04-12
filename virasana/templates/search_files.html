@@ -15,6 +15,9 @@
                 <div class="col-sm-6">
                     <label for="date">Período de escaneamento da imagem</label>
                 </div>
+                <div class="col-sm-3">
+                    <label for="alerta">Com alerta?</label>
+                </div>
             </div>
             <div class="row">
                 <div class="form-group">
@@ -27,7 +30,10 @@
                     <div class="col-sm-3">
                         <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-1">
+                        <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
+                    </div>
+                    <div class="col-sm-2">
                         <input class="btn btn-default btn-info" type="submit" value="Filtrar" />
                     </div>
                 </div>
@@ -68,7 +74,7 @@
                     </tr>
                     {% endfor %} {% else %}
                     <tr>
-                        <td>Sem resultados.</td>
+                        <td>Sem filtros personalizados.</td>
                     </tr>
                     {% endif %}
                 </table>

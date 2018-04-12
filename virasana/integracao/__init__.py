@@ -57,6 +57,9 @@ def stats_resumo_imagens(db):
 
     Estatístics gerais sobre as imagens
     """
+    # import cProfile, pstats, io
+    # pr = cProfile.Profile()
+    # pr.enable()
     global stats
     ultima_consulta = stats.get('data')
     now_atual = datetime.now()
@@ -110,6 +113,12 @@ def stats_resumo_imagens(db):
     ordered = OrderedDict(
         {key: recintos[key] for key in sorted(recintos)})
     stats['recinto'] = ordered
+    # pr.disable()
+    # s = io.StringIO()
+    # sortby = 'cumulative'
+    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    # ps.print_stats()
+    # print(s.getvalue())
     return stats
 
 

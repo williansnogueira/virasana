@@ -107,20 +107,20 @@ def stats_resumo_imagens(db):
           {'_id': '$metadata.recinto',
            'count': {'$sum': 1}}
           }])
-"""
-ROBO3T
-db['fs.files'].aggregate([
-    {'$match': {'metadata.contentType': 'image/jpeg'}},
-{'$project' : 
- { 'month' : {'$month' : "$metadata.dataescaneamento"},
-  'year' : {'$year' :  "$metadata.dataescaneamento"}}},
-{'$group': 
-  {'_id': {'$metadata.recinto', month : "$month", year : "$year"},
-  'count': {'$sum': 1}
-  }
-}
-]) 
-"""         
+    """
+    ROBO3T
+    db['fs.files'].aggregate([
+        {'$match': {'metadata.contentType': 'image/jpeg'}},
+    {'$project' : 
+    { 'month' : {'$month' : "$metadata.dataescaneamento"},
+    'year' : {'$year' :  "$metadata.dataescaneamento"}}},
+    {'$group': 
+    {'_id': {'$metadata.recinto', month : "$month", year : "$year"},
+    'count': {'$sum': 1}
+    }
+    }
+    ]) 
+    """         
     recintos = dict()
     for recinto in cursor:
         recintos[recinto['_id']] = recinto['count']

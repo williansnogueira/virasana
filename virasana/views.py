@@ -99,6 +99,7 @@ def api_upload():
 
     Args:
         file: arquivo BSON gerado pelo AJNA e enviado via HTTP POST
+
     Returns:
         json['success']: True or False
         json['taskid']: ID da task do celery a ser monitorada
@@ -158,7 +159,7 @@ def list_files():
     """Lista arquivos no banco MongoDB.
 
     Lista 10 arquivos mais recentes no banco MongoDB,
-     por uploadDate mais recente.
+    por uploadDate mais recente.
     Se houver upload em andamento, informa.
     """
     fs = GridFS(db)
@@ -181,8 +182,7 @@ def list_files():
 def file(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
-    Exibe o arquivo e os metadados associados a ele
-
+    Exibe o arquivo e os metadados associados a ele.
     """
     fs = GridFS(db)
     if request.args.get('filename'):

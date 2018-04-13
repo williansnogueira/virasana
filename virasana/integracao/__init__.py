@@ -85,7 +85,8 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     for base, data in datas.items():
         # print(data)
         filtro_data = filtro
-        filtro_data[data] = {'$ne': None}
+        if data != DATA:
+            filtro_data[data] = {'$ne': None}
         linha = db['fs.files'].find(filtro_data).sort(data, 1).limit(1)
         linha = next(linha)
         for data_path in data.split('.'):

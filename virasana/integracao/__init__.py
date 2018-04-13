@@ -52,7 +52,7 @@ def gridfs_count(db, filtro={}):
     return db['fs.files'].find(filtro).count()
 
 
-def stats_resumo_imagens(db):
+def stats_resumo_imagens(db, datainicio=None, datafim=None):
     """Números gerais do Banco de Dados e suas integrações.
 
     Estatístics gerais sobre as imagens
@@ -61,27 +61,32 @@ def stats_resumo_imagens(db):
     # pr = cProfile.Profile()
     # pr.enable()
     global stats
+    datainicio = datetime(2018,1,1)
+    datafim = datetime(2018,2,1)
+    filtro = IMAGENS
+    if datainicio and datafim:
+        print(datainicio, datafim)
+        filtro['metadata.dataescaneamento'] = {'$gt': datainicio, '$lt': datafim}
     ultima_consulta = stats.get('data')
     now_atual = datetime.now()
     if ultima_consulta and \
             now_atual - ultima_consulta < timedelta(minutes=STATS_LIVE):
         return stats
     stats['Data do levantamento'] = now_atual
-    total = gridfs_count(db, IMAGENS)
+    total = gridfs_count(db, filtro)
     stats['Total de imagens'] = total
     stats['Imagens com info do Carga'] = total - \
-        gridfs_count(db, carga.FALTANTES)
-    stats['Images com info do XML'] = total - gridfs_count(db, xml.FALTANTES)
+        gridfs_count(db, dict(filtro, **carga.FALTANTES))
+    stats['Images com info do XML'] = total - gridfs_count(db, dict(filtro, **xml.FALTANTES))
     # DATAS
     datas = {'imagem': DATA,
              'XML': xml.DATA,
              'Carga': carga.DATA}
     for base, data in datas.items():
         # print(data)
-        linha = db['fs.files'].find(
-            {'metadata.contentType': 'image/jpeg',
-             data: {'$ne': None}}
-        ).sort(data, 1).limit(1)
+        filtro_data = filtro
+        filtro_data[data] = {'$ne': None}
+        linha = db['fs.files'].find(filtro_data).sort(data, 1).limit(1)
         linha = next(linha)
         for data_path in data.split('.'):
             if linha:
@@ -89,10 +94,7 @@ def stats_resumo_imagens(db):
         if isinstance(linha, datetime):
             linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
         stats['Menor ' + data_path + ' ' + base] = linha
-        linha = db['fs.files'].find(
-            {'metadata.contentType': 'image/jpeg',
-             data: {'$ne': None}}
-        ).sort(data, -1).limit(1)
+        linha = db['fs.files'].find(filtro_data).sort(data, -1).limit(1)
         linha = next(linha)
         for data_path in data.split('.'):
             if linha:
@@ -102,7 +104,7 @@ def stats_resumo_imagens(db):
         stats['Maior ' + data_path + ' ' + base] = linha
     # Qtde por Terminal
     cursor = db['fs.files'].aggregate(
-        [{'$match': {'metadata.contentType': 'image/jpeg'}},
+        [{'$match': filtro},
          {'$group':
           {'_id': '$metadata.recinto',
            'count': {'$sum': 1}}

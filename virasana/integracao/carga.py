@@ -1,4 +1,4 @@
-"""Functions to import CARGA data from Bhadrasana."""
+"""Funçãoes para importar os dados do formulário CARGA do Bhadrasana."""
 
 import csv
 import io
@@ -17,13 +17,14 @@ FALTANTES = {'metadata.carga.atracacao.escala': None,
              'metadata.contentType': 'image/jpeg'}
 
 ENCONTRADOS = {'metadata.carga.atracacao.escala': {'$ne': None},
-             'metadata.contentType': 'image/jpeg'}
+               'metadata.contentType': 'image/jpeg'}
 
 NUMERO = 'metadata.carga.container.container'
 
 DATA = 'metadata.carga.atracacao.dataatracacaoiso'
 
-# db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort(metadata.carga.atracacao.dataatracacao, -1).limit(10)
+# db['fs.files'].find({'metadata.contentType': 'image/jpeg'}).sort(
+# metadata.carga.atracacao.dataatracacao, -1).limit(10)
 
 
 CHAVES_CARGA = [
@@ -100,7 +101,8 @@ def create_indexes(db):
     for linha in cursor:
         dataatracacao = linha['dataatracacao']
         horaatracacao = linha['horaatracacao']
-        dataatracacaoiso = datetime.strptime(dataatracacao+horaatracacao, '%d/%m/%Y%H:%M:%S')
+        dataatracacaoiso = datetime.strptime(dataatracacao+horaatracacao,
+                                             '%d/%m/%Y%H:%M:%S')
         # print(linha['_id'], dataatracacao, dataatracacaoiso)
         db['CARGA.AtracDesatracEscala'].update(
             {'_id': linha['_id']}, {
@@ -111,18 +113,22 @@ def create_indexes(db):
 
 def mongo_find_in(db, collection: str, field: str, in_set,
                   set_field: str=None) -> typing.Tuple[list, set]:
-    """Perform a find $in in_set on db.collection.
+    """Realiza um find $in in_set no db.collection.
 
     Args:
-        db: connection to mongo with database setted
-        collection: name of mongo collection to query
-        field: field to filter by
-        in_set: list or set of values to pass to $in operator
-        result_field: field to retrieve unique values (optional)
+        db: conexão ao MongoDB com banco de dados selecionado "setted"
+
+        collection: nome da coleção mongo para aplicar a "query"
+
+        field: campo para aplicar a "filter by"
+
+        in_set: lista ou conjunto de valores a passar para o operador "$in"
+
+        result_field: campo para obter valores únicos (opcional)
 
     Returns:
-        dictionary of results, formated key:value (Only not null fields)
-        set of set_field
+        Dicionário de resultados, formatado key:value (Somente campos não nulos)
+        Conjuntos de set_field
 
     """
     result = []
@@ -143,16 +149,18 @@ def mongo_find_in(db, collection: str, field: str, in_set,
 
 def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
                          days=4) -> int:
-    """Pega da lista de atracacoes a atracação com a data mais próxima.
+    """Pega da lista de atracações, a atracação com a data mais próxima.
 
     Args:
         atracacoes: lista de dict contendo os registros das atracacoes
+
         data: data buscada
+
         days: "threshold"  máxima diferença entre as datas - default definido
-         no começo da função
+        no começo da função
 
     Returns:
-        índice da atracação, None se atracação não existe ou não está no
+        Índice da atracação, None se atracação não existe ou não está no
         intervalo threshold
 
     """
@@ -176,23 +184,29 @@ def busca_info_container(db, numero: str,
 
     A busca é baseada na data de escaneamento. O parâmetro dias é um
     "threshold" (diferença aceita entre a data de atracação e escaneamento),
-     por padrão, é de 4 dias.
+    por padrão, é de 4 dias.
+
     Dentro destes 4 dias, será considerado o CE/Manifesto/Escala com menor
     diferença de data como o pertencente a este contêiner.
     Note-se que o resultado não é garantido, podendo trazer um CE incorreto.
+
     As informações são imperfeitas e não há como garantir trazer o CE correto,
     mas espera-se um acerto próximo de 100%, já que a frequência de cada
     contêiner em cada porto tem um intervalo típico de semanas e até meses,
     sendo extremamente incomum um contêiner ter duas "viagens" no mesmo
-    porto em menos de 4 dias +/-
+    porto em menos de 4 dias +/-.
+
     Args:
         numero: número completo do contêiner
+
         data_escaneamento: data e hora do escaneamento, conforme
         arquivo XML original do escâner
+
         days: número de dias a aceitar de diferença
+
     Returns:
-        json_dict: dict com campos e valores de informações da base CARGA
-        VAZIO se não encontrar nada dentro do threshold
+        json_dict: Dicionário com campos e valores de informações da base
+        CARGA VAZIO se não encontrar nada dentro do threshold
         (Caso não encontre atracacao para o Contêiner no prazo, o dado ?ainda?
         não existe ou não foi importado ou há um erro)!
 
@@ -248,7 +262,7 @@ def busca_info_container(db, numero: str,
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
         conhecimentos = [linha['conhecimento'] for linha in manifestos
                          if linha['manifesto'] == manifesto[0]]
-        
+
         # Separar APENAS os Conhecimentos BL ou MBL
         filtro = {'conhecimento': {'$in': list(conhecimentos)},
                   'tipo': {'$in': ['bl', 'mbl']}}
@@ -276,16 +290,22 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     estas informações, grava no campo metadata.carga do fs.files
 
     Args:
-        db: connection to mongo with database setted
+        db: conexão com o banco de dados selecionado.
+
         batch_size: número de registros a consultar/atualizar por chamada
+
         data_inicio: filtra por data de escaneamento maior que a informada
+
         days: número de dias a aceitar de diferença
+
         update: Caso seja setado como False, apenas faz consulta, sem
-            atualizar metadata da collection fs.files
+        atualizar metadata da collection fs.files
+
         force_update: Marcar "NA" - not available se não encontrar dados do
         CARGA. Usar com consciência/cuidado.
+
     Returns:
-        número de registros encontrados
+        Número de registros encontrados
 
     """
     filtro = FALTANTES
@@ -342,6 +362,7 @@ def nlinhas_zip_dir(path):
 
     Dado um diretório(path) procura extrações do Siscomex CARGA, abre seus zip,
     abre o arquivo de cada zip e conta as linhas.
+
     Para AUDITORIA após um arquivamento da base CARGA confirmar se número de
     registros no arquivo (MongoDB) é igual a número original de linhas.
 
@@ -349,10 +370,11 @@ def nlinhas_zip_dir(path):
         path: caminho do(s) arquivo(s) de extração(ões)
 
     Returns:
-        número de conhecimentos
-        Comparar com db['fs.files'].find(
-            {'metadata.carga.atracacao.dataatracacao': {$gt: date, $lt: date}}
-            ).count()
+        Número de conhecimentos
+
+    Comparar com:
+        db['fs.files'].find({'metadata.carga.atracacao.dataatracacao':
+                                {$gt: date, $lt: date}}).count()
 
     """
     contador = Counter()

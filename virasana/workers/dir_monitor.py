@@ -36,11 +36,14 @@ def despacha(filename, target=API_URL):
 
     Args:
         file: caminho completo do arquivo a enviar
+
         target: URL do Servidor e API destino
+
     Returns:
         (Erro, Resposta)
         (True, None) se tudo correr bem
         (False, response) se ocorrer erro
+
     """
     bson = open(filename, 'rb')
     files = {'file': bson}
@@ -58,9 +61,12 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
 
     Args:
         dir: caminho completo do diretório a pesquisar
+
         target: URL do Servidor e API destino
+
     Returns:
-        list of errors
+        Lista de erros
+
     """
     erros = []
     sucessos = []
@@ -105,9 +111,13 @@ def espera_resposta(api_url, bson_file, sleep_time=10, timeout=180):
 
     Args:
         api_url: endereço para acesso aos dados da task
+
         bson_file: caminho completo do arquivo original que foi enviado
+
         sleep_time: tempo entre requisições ao Servidor em segundos
+
         timeout: tempo total para aguardar resposta, em segundos
+
     """
     enter_time = time.time()
     rv = None

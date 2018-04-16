@@ -1,12 +1,12 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 # import defusedxml.ElementTree as ET
-import bson
+# import bson
 import lxml.etree as ET
 from datetime import datetime
 from gridfs import GridFS
 import chardet
 
-from ajna_commons.conf import ENCODE
+# from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import unicode_sanitizar, sanitizar
 
@@ -37,11 +37,14 @@ def xml_todict(xml) -> dict:
     Lê o XML que acompanha as imagens no formato do Escâner da ALFSTS,
     retorna dict(s) com os dados considerados mais importantes e resumos
     (ex.: número do(s) cc(s), datas, etc) - configurar na var. fields
+
     Args:
         xml: string de texto na memória com o conteúdo do arquivo XML
+
     Returns:
-        dicionário com as tags selecionadas. A tag container é uma lista
+        Dicionário com as tags selecionadas. A tag container é uma lista
         (imagens de cc de 20' podem conter dois contêineres escaneados)
+
     """
     result = {}
     try:
@@ -98,12 +101,17 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
 
     Args:
         db: connection to mongo with database setted
+
         batch_size: número de registros a consultar/atualizar por chamada
+
         data_inicio: filtra por data de escaneamento maior que a informada
+
         update: Caso seja setado como False, apenas faz consulta, sem
             atualizar metadata da collection fs.files
+
     Returns:
-        número de registros encontrados
+        Número de registros encontrados
+
     """
     file_cursor = db['fs.files'].find(
         {'metadata.xml': None,
@@ -128,12 +136,18 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         raw = fs.get(file_id).read()
         encode = chardet.detect(raw)
         # print(encode)
-        encoding = [encode['encoding'], 'latin1', 'utf8', 'ascii', 'windows-1250', 'windows-1252']
+        encoding = [encode['encoding'],
+                    'latin1',
+                    'utf8',
+                    'ascii',
+                    'windows-1250',
+                    'windows-1252']
         dados_xml = {}
         for e in encoding:
             try:
                 xml = raw.decode(e)
-                # TODO: see why sometimes a weird character appears in front of content
+                # TODO: see why sometimes a weird character
+                # appears in front of content
                 posi = xml.find('<DataForm>')
                 # print('POSI', posi)
                 if posi == -1:

@@ -73,10 +73,11 @@ def xml_todict(xml) -> dict:
             text = ''
             if tag.text:
                 text = sanitizar(tag.text)
-            if tag in DATE_FIELDS:
+            if field in DATE_FIELDS:
                 try:
+                    text = text.split('.')[0]
                     text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
-                except ValueError:
+                except ValueError as err:
                     pass
             result[field.lower()] = text
     lista_conteineres = []
@@ -161,6 +162,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                 print('Erro de encoding', e, err)
         if dados_xml != {}:
             if update:
+                print(dados_xml)
                 db['fs.files'].update(
                     {'_id': linha['_id']},
                     {'$set': {'metadata.xml': dados_xml}}

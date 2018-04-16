@@ -162,7 +162,6 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                 print('Erro de encoding', e, err)
         if dados_xml != {}:
             if update:
-                print(dados_xml)
                 db['fs.files'].update(
                     {'_id': linha['_id']},
                     {'$set': {'metadata.xml': dados_xml}}

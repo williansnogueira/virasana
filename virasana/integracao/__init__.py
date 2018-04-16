@@ -61,8 +61,8 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # pr = cProfile.Profile()
     # pr.enable()
     global stats
-    datainicio = datetime(2018,1,1)
-    datafim = datetime(2018,2,1)
+    # datainicio = datetime(2018,1,1)
+    # datafim = datetime(2018,2,1)
     filtro = IMAGENS
     if datainicio and datafim:
         print(datainicio, datafim)
@@ -84,7 +84,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
              'Carga': carga.DATA}
     for base, data in datas.items():
         # print(data)
-        filtro_data = filtro
+        filtro_data = dict(filtro)
         if data != DATA:
             filtro_data[data] = {'$ne': None}
         linha = db['fs.files'].find(filtro_data).sort(data, 1).limit(1)

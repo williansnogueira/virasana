@@ -228,7 +228,6 @@ def files(page=1):
     fs = GridFS(db)
     lista_arquivos = []
     global filtros
-    print(filtros)
     if filtros.get(current_user.id):
         user_filtros = filtros[current_user.id]
     else:
@@ -246,8 +245,6 @@ def files(page=1):
                 campos.append('metadata.' + sub_key)
         for chave in CHAVES_CARGA:
             campos.append(chave)
-    print(form.alerta)
-    print(form.alerta.data)
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
@@ -287,8 +284,6 @@ def files(page=1):
             linha['numero'] = grid_data.metadata.get('numeroinformado')
             lista_arquivos.append(linha)
         # print(lista_arquivos)
-    print(form.alerta)
-    print(form.alerta.data)
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
                            oform=form,
@@ -296,13 +291,26 @@ def files(page=1):
                            filtros=user_filtros)
 
 
-@app.route('/stats')
+class StatsForm(FlaskForm):
+    """Valida datas da tela de estatísticas."""
+    start = DateField('Start', validators=[optional()],
+                      default=date.today() - timedelta(days=90))
+    end = DateField('End', validators=[optional()], default=date.today())
+
+
+@app.route('/stats', methods=['GET', 'POST'])
 @login_required
 def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
-    stats = stats_resumo_imagens(db)
+    stats = {}
+    form = StatsForm(**request.form)
+    if form.validate():
+        start = datetime.combine(form.start.data, datetime.min.time())
+        end = datetime.combine(form.end.data, datetime.max.time())
+        stats = stats_resumo_imagens(db, start, end)
     return render_template('stats.html',
-                           stats=stats)
+                           stats=stats,
+                           oform=form)
 
 
 @app.route('/pie')

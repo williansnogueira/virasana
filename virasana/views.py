@@ -42,7 +42,7 @@ nav = Nav()
 
 
 def allowed_file(filename):
-    """Check allowed extensions."""
+    """Checa extensões permitidas."""
     return '.' in filename and \
         filename.rsplit('.', 1)[-1].lower() in ['bson']
 
@@ -101,7 +101,7 @@ def api_upload():
         file: arquivo BSON gerado pelo AJNA e enviado via HTTP POST
 
     Returns:
-        json['success']: True or False
+        json['success']: True ou False
         json['taskid']: ID da task do celery a ser monitorada
 
     """

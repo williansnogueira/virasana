@@ -65,7 +65,8 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
         target: URL do Servidor e API destino
 
     Returns:
-        list of errors
+        Lista de erros
+
     """
     erros = []
     sucessos = []
@@ -116,6 +117,7 @@ def espera_resposta(api_url, bson_file, sleep_time=10, timeout=180):
         sleep_time: tempo entre requisições ao Servidor em segundos
 
         timeout: tempo total para aguardar resposta, em segundos
+
     """
     enter_time = time.time()
     rv = None

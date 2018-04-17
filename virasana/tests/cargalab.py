@@ -11,7 +11,7 @@ from datetime import datetime
 # from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.integracao import create_indexes, carga
+from virasana.integracao import carga, create_indexes
 from virasana.integracao.carga import busca_info_container
 
 db = MongoClient()['test']

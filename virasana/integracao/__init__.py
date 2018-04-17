@@ -16,7 +16,7 @@ sobre a base para informar os usuários.
 """
 import io
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from virasana.integracao import carga
@@ -68,17 +68,18 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         print(datainicio, datafim)
         filtro['metadata.dataescaneamento'] = {
             '$gt': datainicio, '$lt': datafim}
-    ultima_consulta = stats.get('data')
     now_atual = datetime.now()
+    """ultima_consulta = stats.get('data')
     if ultima_consulta and \
             now_atual - ultima_consulta < timedelta(minutes=STATS_LIVE):
         return stats
+    """
     stats['Data do levantamento'] = now_atual
     total = gridfs_count(db, filtro)
     stats['Total de imagens'] = total
     stats['Imagens com info do Carga'] = total - \
         gridfs_count(db, dict(filtro, **carga.FALTANTES))
-    stats['Images com info do XML'] = total - \
+    stats['Imagens com info do XML'] = total - \
         gridfs_count(db, dict(filtro, **xml.FALTANTES))
     # DATAS
     datas = {'imagem': DATA,
@@ -119,15 +120,15 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     ROBO3T
     db['fs.files'].aggregate([
         {'$match': {'metadata.contentType': 'image/jpeg'}},
-    {'$project' : 
+    {'$project' :
     { 'month' : {'$month' : "$metadata.dataescaneamento"},
     'year' : {'$year' :  "$metadata.dataescaneamento"}}},
-    {'$group': 
+    {'$group':
     {'_id': {'$metadata.recinto', month : "$month", year : "$year"},
     'count': {'$sum': 1}
     }
     }
-    ]) 
+    ])
     """
     recintos = dict()
     for recinto in cursor:

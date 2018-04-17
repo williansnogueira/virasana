@@ -7,8 +7,9 @@ import pprint
 import typing
 from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
-import pymongo
 from zipfile import ZipFile
+
+import pymongo
 
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
@@ -101,7 +102,7 @@ def create_indexes(db):
     for linha in cursor:
         dataatracacao = linha['dataatracacao']
         horaatracacao = linha['horaatracacao']
-        dataatracacaoiso = datetime.strptime(dataatracacao+horaatracacao,
+        dataatracacaoiso = datetime.strptime(dataatracacao + horaatracacao,
                                              '%d/%m/%Y%H:%M:%S')
         # print(linha['_id'], dataatracacao, dataatracacaoiso)
         db['CARGA.AtracDesatracEscala'].update(
@@ -127,7 +128,7 @@ def mongo_find_in(db, collection: str, field: str, in_set,
         result_field: campo para obter valores únicos (opcional)
 
     Returns:
-        Dicionário de resultados, formatado key:value (Somente campos não nulos)
+        Dicionário de resultados formatado key:value(Somente campos não nulos)
         Conjuntos de set_field
 
     """
@@ -149,7 +150,7 @@ def mongo_find_in(db, collection: str, field: str, in_set,
 
 def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
                          days=4) -> int:
-    """Pega da lista de atracações, a atracação com a data mais próxima.
+    """Pega da lista de atracações a atracação com a data mais próxima.
 
     Args:
         atracacoes: lista de dict contendo os registros das atracacoes
@@ -216,24 +217,29 @@ def busca_info_container(db, numero: str,
     # Primeiro busca por contêiner vazio (dez vezes mais rápido)
     containeres_vazios, manifestos_vazios_set = mongo_find_in(
         db, 'CARGA.ContainerVazio', 'container', set([numero]), 'manifesto')
+    # print(containeres_vazios)
     escalas_vazios, escalas_vazios_set = mongo_find_in(
         db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_vazios_set,
         'escala')
+    # print('escalas', escalas_vazios)
     atracacoes_vazios, _ = mongo_find_in(
         db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
+    # print('atracacoes', atracacoes_vazios)
     index_atracacao = busca_atracacao_data(
         atracacoes_vazios, data_escaneamento, days)
+    # print('INDEX', index_atracacao)
     if index_atracacao is not None:
         atracacao = atracacoes_vazios[index_atracacao]
         json_dict['atracacao'] = atracacao
         json_dict['vazio'] = True
         manifesto = [linha['manifesto'] for linha in escalas_vazios
                      if linha['escala'] == atracacao['escala']]
+
         json_dict['manifesto'], _ = mongo_find_in(
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
-        # print(atracacao)
         json_dict['container'] = [linha for linha in containeres_vazios
                                   if linha['manifesto'] == manifesto[0]]
+        # print(json_dict)
         return json_dict
     # else:
     # Não achou atracacao vazio do Contêiner. Verificar se Contêiner é cheio
@@ -275,7 +281,8 @@ def busca_info_container(db, numero: str,
             db, 'CARGA.NCM', 'conhecimento', conhecimentos)
         json_dict['container'] = [linha for linha in containeres
                                   if linha['conhecimento'] in conhecimentos]
-    return json_dict
+        return json_dict
+    return {}
 
 
 def dados_carga_grava_fsfiles(db, batch_size=1000,
@@ -310,10 +317,11 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     """
     filtro = FALTANTES
     filtro['metadata.dataescaneamento'] = \
-        {'$gt': data_inicio }
+        {'$gt': data_inicio}
     #         '$lt': data_inicio + timedelta(days=days * 2)}
-    print(filtro)
-    file_cursor = db['fs.files'].find(filtro).sort('metadata.dataescaneamento', 1)
+    # print(filtro)
+    file_cursor = db['fs.files'].find(filtro).sort(
+        'metadata.dataescaneamento', 1)
     acum = 0
     total = min(file_cursor.count(), batch_size)
     start = datetime.utcnow()

@@ -15,33 +15,42 @@ Usage:
 
 """
 import csv
-import click
+import os
 import random
 from datetime import datetime
+
+import click
 from pymongo import MongoClient
-from ajna_commons.flask.conf import (DATABASE, MONGODB_URI)
+
 from ajna_commons.conf import ENCODE
-from virasana.integracao import carga, peso_container_documento, \
-    volume_container
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from virasana.integracao import carga
 
 N_SAMPLES = 5000
 filtro = carga.ENCONTRADOS
 filtro['metadata.dataescaneamento'] = {'$gt': datetime(
     2017, 10, 5), '$lt': datetime(2017, 10, 20)}
 
+
 @click.command()
 @click.option('--q', default=N_SAMPLES, help='Número de amostras (imagens)')
 @click.option('--out', default='.', help='Diretório de destino')
 def export(q, out):
+    """Exporta csv com peso e volume do contêiner.
+
+    Consulta MongoDB exportando campos selecionados e gravando em
+    arquivo csv para facilitar posterior treinamento de modelo sklearn.
+
+    """
     print('iniciando consulta')
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     cursor = db['fs.files'].find(
         filtro,
         {'metadata.recintoid': 1,
-        'metadata.carga.container.container': 1,
-        'metadata.carga.container.taracontainer': 1,
-        'metadata.carga.container.pesobrutoitem': 1,
-        'metadata.carga.container.volumeitem': 1})
+         'metadata.carga.container.container': 1,
+         'metadata.carga.container.taracontainer': 1,
+         'metadata.carga.container.pesobrutoitem': 1,
+         'metadata.carga.container.volumeitem': 1})
 
     containers = []
     for linha in cursor:
@@ -53,9 +62,9 @@ def export(q, out):
             volume = float(item[0]['volumeitem'].replace(',', '.'))
             containers.append(
                 [linha['_id'],
-                recinto,
-                linha['metadata']['carga']['container'][0]['container'],
-                tara, peso, volume])
+                 recinto,
+                 linha['metadata']['carga']['container'][0]['container'],
+                 tara, peso, volume])
         #####
         # Rever importaçao! Pelo jeito está puxando contêiner 2 vezes,
         # 1 para MBL e outra para HBL
@@ -72,9 +81,10 @@ def export(q, out):
     export = [['id', 'recintoid', 'numero', 'tara', 'peso', 'volume']]
     export.extend(random.sample(containers, q))
     with open(os.path.join(out, 'pesovolexport.csv'),
-         'w', encoding=ENCODE, newline='') as out:
+              'w', encoding=ENCODE, newline='') as out:
         writer = csv.writer(out)
         writer.writerows(export)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     export()

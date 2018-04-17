@@ -1,25 +1,36 @@
+"""Script de linha de comando para integração do Sistema CARGA.
+
+Script de linha de comando para fazer atualização 'manual'
+dos metadados do Sistema CARGA nas imagens.
+Faz um loop, a cada "interval" dias, pesquisa o Banco de Dados de
+imagens no mês (Ex. interval = 10, pesquisará iniciando dias 1, 10 e 20)
+Args:
+    year: ano a pesquisar
+    month: mês a pesquisar
+    interval: intervalo de dias
+    batch_size: tamanho do lote de atualização/limite de registros da consulta
+
 """
-Atualização manual dos metadados do CARGA nas imagens.
-"""
-import click
 import time
-import sys
 from datetime import datetime
 
+import click
 from pymongo import MongoClient
 
-from virasana.integracao import create_indexes, carga
+from virasana.integracao import carga, create_indexes
 
 batch_size = 8000
 today = datetime.today()
 
+
 @click.command()
 @click.option('--year', default=today.year, help='Ano - padrão atual')
-@click.option('--month', default=today.month , help='Mes - padrão atual')
-@click.option('--batch_size', default=batch_size , 
+@click.option('--month', default=today.month, help='Mes - padrão atual')
+@click.option('--batch_size', default=batch_size,
               help='Tamanho do lote - padrão' + str(batch_size))
-@click.option('--interval', default=5 , help='Intervalo de dias - padrão 5')
+@click.option('--interval', default=5, help='Intervalo de dias - padrão 5')
 def update(year, month, batch_size, interval):
+    """Script de linha de comando para integração de dados do sistema Carga."""
     db = MongoClient()['test']
     create_indexes(db)
     carga.create_indexes(db)
@@ -35,5 +46,6 @@ def update(year, month, batch_size, interval):
               tempo, 'segundos.',
               tempo / batch_size, 'por registro')
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     update()

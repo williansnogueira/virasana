@@ -1,11 +1,11 @@
 """Coleção de views da interface web do módulo virasana."""
 import json
 import os
-import requests
 from base64 import b64encode
 from datetime import date, datetime, timedelta
 from sys import platform
 
+import requests
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
@@ -25,9 +25,9 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
-from virasana.workers.tasks import raspa_dir, trata_bson
-from virasana.integracao import stats_resumo_imagens, plot_pie
+from virasana.integracao import plot_pie, stats_resumo_imagens
 from virasana.integracao.carga import CHAVES_CARGA
+from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -293,6 +293,7 @@ def files(page=1):
 
 class StatsForm(FlaskForm):
     """Valida datas da tela de estatísticas."""
+
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())

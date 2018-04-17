@@ -1,14 +1,22 @@
-"""Unit tests para os módulos do pacote integração."""
+"""Unit tests para os módulos do pacote integração.
+
+Cria banco de dados com dados fabricados para testes do pacote integracao no
+método setUp. Limpa tudo no final no método tearDown. Chamar via pytest ou tox
+
+Chamar python virasana/tests/integracao_test.py criará o Banco de Dados
+SEM apagar tudo no final. Para inspeção visual do BD criado para testes.
+
+"""
 import os
 import unittest
 from datetime import datetime, timedelta
-from pymongo import MongoClient
+
 from gridfs import GridFS
+from pymongo import MongoClient
 
-from virasana.integracao import carga, xml, create_indexes, \
-    DATA, datas_bases, gridfs_count, peso_container_documento, \
-    stats_resumo_imagens, volume_container
-
+from virasana.integracao import (DATA, carga, create_indexes, datas_bases,
+                                 gridfs_count, peso_container_documento,
+                                 stats_resumo_imagens, volume_container, xml)
 
 ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__), 'sample')
 
@@ -85,10 +93,10 @@ class TestCase(unittest.TestCase):
             {'container': 'escalaforadoprazo', 'conhecimento': 4})
         db['CARGA.ContainerVazio'].insert(
             {'container': 'vazio', 'manifesto': 2})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 1})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 2})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 3})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 4})
+        db['CARGA.Conhecimento'].insert({'conhecimento': 1, 'tipo': 'mbl'})
+        db['CARGA.Conhecimento'].insert({'conhecimento': 2, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert({'conhecimento': 3, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert({'conhecimento': 4, 'tipo': 'bl'})
         db['CARGA.ManifestoConhecimento'].insert(
             {'conhecimento': 1, 'manifesto': 1})
         db['CARGA.ManifestoConhecimento'].insert(
@@ -99,6 +107,10 @@ class TestCase(unittest.TestCase):
             {'conhecimento': 4, 'manifesto': 4})
         db['CARGA.ManifestoConhecimento'].insert(
             {'conhecimento': 3, 'manifesto': 32})
+        db['CARGA.Manifesto'].insert(
+            {'manifesto': 1})
+        db['CARGA.Manifesto'].insert(
+            {'manifesto': 2})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 1, 'escala': 1})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 2, 'escala': 2})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 3, 'escala': 3})
@@ -113,6 +125,7 @@ class TestCase(unittest.TestCase):
         db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 2, 'dataatracacao': data_escalas,
              'horaatracacao': '00:00:01'})
+        # carga.create_indexes(db)
 
     def tearDown(self):
         db = self.db
@@ -123,6 +136,7 @@ class TestCase(unittest.TestCase):
         db['CARGA.EscalaManifesto'].drop()
         db['CARGA.Conhecimento'].drop()
         db['CARGA.ManifestoConhecimento'].drop()
+        db['CARGA.Manifesto'].drop()
         db['CARGA.Container'].drop()
         db['CARGA.ContainerVazio'].drop()
 
@@ -137,9 +151,9 @@ class TestCase(unittest.TestCase):
     def test_stats(self):
         stats = stats_resumo_imagens(self.db)
         assert stats is not None
-        assert stats['total'] == 5
-        assert stats['carga'] == 0
-        assert stats['xml'] == 0
+        assert stats['Total de imagens'] == 5
+        assert stats['Imagens com info do Carga'] == 0
+        assert stats['Imagens com info do XML'] == 0
         assert stats['recinto']['A'] == 3
         assert stats['recinto']['B'] == 1
         assert stats['recinto']['C'] == 1
@@ -156,6 +170,7 @@ class TestCase(unittest.TestCase):
             self.db, 'cheio', self.data_escaneamento_false) == {}
         cheio = carga.busca_info_container(
             self.db, 'cheio', self.data_escaneamento)
+        print('CHEIO', cheio)
         assert cheio != {}
         assert cheio['vazio'] is False
         assert cheio['atracacao']['escala'] == 1
@@ -216,6 +231,7 @@ class TestCase(unittest.TestCase):
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
         pesos = peso_container_documento(self.db, ['cheio', 'cheio2'])
+        print('pesos', pesos)
         assert pesos['cheio'] == 10.0
         assert pesos['cheio2'] == 20.0
 
@@ -225,7 +241,17 @@ class TestCase(unittest.TestCase):
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
         volumes = volume_container(self.db, ['cheio', 'cheio2'])
-        print(volumes)
+        print('VOLUMES', volumes)
         assert volumes['cheio'] == 1.0
         assert volumes['cheio2'] == 2.0
-        
+
+
+# Chamar python virasana/tests/integracao_test.py criará o Banco de Dados
+# SEM apagar tudo no final. Para inspeção visual do BD criado para testes.
+if __name__ == '__main__':
+    print('Criando banco unit_test e Dados...')
+    testdb = TestCase()
+    testdb.setUp()
+    carga.dados_carga_grava_fsfiles(
+        testdb.db,
+        data_inicio=testdb.data_escaneamento - timedelta(days=3))

@@ -12,15 +12,14 @@ Pode ser importado e rodado em uma tarefa periódica (celery, cron, etc)
 """
 import os
 import time
-from threading import Thread
 from sys import platform
+from threading import Thread
 
 import requests
 from celery import states
 
 from ajna_commons.flask.conf import VIRASANA_URL
 from ajna_commons.flask.log import logger
-
 
 # VIRASANA_URL = "http://localhost:5001"
 API_URL = VIRASANA_URL + '/api/uploadbson'

@@ -11,6 +11,7 @@ aquelas que rodam tarefas custosas/demoradas em background.
 import json
 from base64 import decodebytes
 from datetime import datetime, timedelta
+
 import gridfs
 from celery import Celery, states
 from pymongo import MongoClient

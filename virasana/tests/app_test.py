@@ -3,6 +3,7 @@ import os
 import unittest
 
 import virasana.app as app
+from ajna_commons.flask.login import DBUser
 
 
 class FlaskTestCase(unittest.TestCase):
@@ -15,7 +16,7 @@ class FlaskTestCase(unittest.TestCase):
             app.app.testing = True
             app.app.config['WTF_CSRF_ENABLED'] = False
             self.app = app.app.test_client()
-            app.DBUser.dbsession = None  # Bypass mongodb authentication
+            DBUser.dbsession = None  # Bypass mongodb authentication
 
     def tearDown(self):
         rv = self.logout()

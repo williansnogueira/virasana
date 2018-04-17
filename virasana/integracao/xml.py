@@ -1,14 +1,19 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
-# import defusedxml.ElementTree as ET
-# import bson
-import lxml.etree as ET
 from datetime import datetime
-from gridfs import GridFS
+from sys import platform
+
 import chardet
+from gridfs import GridFS
 
 # from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
-from ajna_commons.utils.sanitiza import unicode_sanitizar, sanitizar
+from ajna_commons.utils.sanitiza import sanitizar, unicode_sanitizar
+
+if platform == 'win32':
+    import lxml.etree as ET
+else:
+    import defusedxml.ElementTree as ET
+
 
 FALTANTES = {'metadata.xml.date': None,
              'metadata.contentType': 'image/jpeg'

@@ -1,10 +1,10 @@
 
 """Unit tests para os módulos do pacote integração."""
-import os
 import unittest
-from datetime import datetime, timedelta
-from pymongo import MongoClient
+from datetime import datetime
+
 from gridfs import GridFS
+from pymongo import MongoClient
 
 from virasana.utils.auditoria import Auditoria
 
@@ -125,5 +125,3 @@ class TestCase(unittest.TestCase):
     def test_auditoria(self):
         auditor = Auditoria(self.db)
         auditor.add_relatorio('nome', {})
-
-

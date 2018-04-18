@@ -15,12 +15,16 @@ sobre a base para informar os usuários.
 
 """
 import io
-from collections import OrderedDict
+import matplotlib.pyplot as plt
+
+from collections import defaultdict, OrderedDict
 from datetime import datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.pyplot as plt
+from pymongo import MongoClient
+
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from virasana.integracao import carga
-from virasana.integracao import xml
+from virasana.integracao import xmli
 
 IMAGENS = {'metadata.contentType': 'image/jpeg'}
 
@@ -60,30 +64,25 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # import cProfile, pstats, io
     # pr = cProfile.Profile()
     # pr.enable()
-    global stats
     # datainicio = datetime(2018,1,1)
     # datafim = datetime(2018,2,1)
+    stats = {}
     filtro = IMAGENS
     if datainicio and datafim:
         print(datainicio, datafim)
         filtro['metadata.dataescaneamento'] = {
             '$gt': datainicio, '$lt': datafim}
     now_atual = datetime.now()
-    """ultima_consulta = stats.get('data')
-    if ultima_consulta and \
-            now_atual - ultima_consulta < timedelta(minutes=STATS_LIVE):
-        return stats
-    """
     stats['Data do levantamento'] = now_atual
     total = gridfs_count(db, filtro)
     stats['Total de imagens'] = total
     stats['Imagens com info do Carga'] = total - \
         gridfs_count(db, dict(filtro, **carga.FALTANTES))
     stats['Imagens com info do XML'] = total - \
-        gridfs_count(db, dict(filtro, **xml.FALTANTES))
+        gridfs_count(db, dict(filtro, **xmli.FALTANTES))
     # DATAS
     datas = {'imagem': DATA,
-             'XML': xml.DATA,
+             'XML': xmli.DATA,
              'Carga': carga.DATA}
     for base, data in datas.items():
         # print(data)
@@ -126,19 +125,28 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         [{'$match': {'metadata.contentType': 'image/jpeg'}},
          {'$project':
             {'month': {'$month': '$metadata.dataescaneamento'},
-            'year':  {'$year':  '$metadata.dataescaneamento'},
-            'recinto': '$metadata.recinto'
-            }
-        },
-        {'$group':
+             'year': {'$year': '$metadata.dataescaneamento'},
+             'recinto': '$metadata.recinto'
+             }
+          },
+         {'$group':
             {'_id':
-                {'recinto': '$recinto', 'month': "$month", 'year': "$year"},
-            'count': {'$sum': 1}
-            }
-            }
-        ])
+                {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
+             'count': {'$sum': 1}
+             }
+          }
+         ])
+    recinto_mes = defaultdict(dict)
     for linha in cursor:
-        print(linha)
+        recinto = linha['_id']['recinto']
+        ano_mes = '%04d%02d' % (linha['_id']['year'],
+                                linha['_id']['month'])
+        recinto_mes[recinto][ano_mes] = linha['count']
+    for recinto, value in recinto_mes.items():
+        ordered = OrderedDict(
+            {key: value[key] for key in sorted(value)})
+        recinto_mes[recinto] = ordered
+    stats['recinto_mes'] = recinto_mes
     # pr.disable()
     # s = io.StringIO()
     # sortby = 'cumulative'
@@ -159,6 +167,18 @@ def plot_pie(values, labels):
     return png
 
 
+def plot_bar(values, labels):
+    """Gera gráfico de barras."""
+    fig1, ax1 = plt.subplots()
+    x = list(range(len(labels)))
+    plt.bar(x, values)
+    plt.xticks(x, labels)
+    canvas = FigureCanvas(fig1)
+    png = io.BytesIO()
+    canvas.print_png(png)
+    return png
+
+
 def stats_por(db):
     """soon."""
     pass
@@ -172,7 +192,7 @@ def datas_bases():
     """
     bases = {}
     bases['gridfs'] = DATA
-    bases['xml'] = xml.DATA
+    bases['xml'] = xmli.DATA
     bases['carga'] = carga.DATA
     return bases
 
@@ -258,4 +278,5 @@ def peso_container_balanca(db, numero: list):
 
 
 if __name__ == '__main__':
-    print(stats_resumo_imagens)
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    print(stats_resumo_imagens(db))

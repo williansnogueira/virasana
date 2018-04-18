@@ -14,7 +14,7 @@ from datetime import datetime
 import click
 from pymongo import MongoClient
 
-from virasana.integracao import create_indexes, gridfs_count, xml
+from virasana.integracao import create_indexes, gridfs_count, xmli
 
 batch_size = 50000
 today = datetime.today()
@@ -29,15 +29,15 @@ def update(year, month, batch_size):
     """Script de linha de comando para integração do arquivo XML."""
     db = MongoClient()['test']
     create_indexes(db)
-    xml.create_indexes(db)
+    xmli.create_indexes(db)
     print('Começando a procurar por dados de XML a inserir')
-    number = gridfs_count(db, xml.FALTANTES)
+    number = gridfs_count(db, xmli.FALTANTES)
     print(number, 'registros sem metadata de xml')
     print(year, month, batch_size)
     data_inicio = datetime(year, month, 1)
     print('Data início', data_inicio)
     tempo = time.time()
-    xml.dados_xml_grava_fsfiles(db, batch_size, data_inicio)
+    xmli.dados_xml_grava_fsfiles(db, batch_size, data_inicio)
     tempo = time.time() - tempo
     print(batch_size, 'dados XML do fs.files percorridos em ',
           tempo, 'segundos.',

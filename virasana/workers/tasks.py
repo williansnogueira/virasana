@@ -19,7 +19,7 @@ from pymongo import MongoClient
 from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
                                      MONGODB_URI, redisdb)
 from ajna_commons.models.bsonimage import BsonImageList
-from virasana.integracao import carga, xml
+from virasana.integracao import carga, xmli
 
 from .dir_monitor import despacha_dir
 
@@ -49,10 +49,10 @@ def processa_xml():
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         cincodias = datetime.now() - timedelta(days=5)
-        xml.dados_xml_grava_fsfiles(db, 10000, cincodias)
+        xmli.dados_xml_grava_fsfiles(db, 10000, cincodias)
         # Olhar o passado tbm...
         doisanos = datetime.now() - timedelta(days=730)
-        xml.dados_xml_grava_fsfiles(db, 10000, doisanos)
+        xmli.dados_xml_grava_fsfiles(db, 10000, doisanos)
 
 
 @celery.task

@@ -24,18 +24,28 @@
         </div>
     </form>
     <div id="stats" class="row">
-        <div class="col-md-6">
-            {% if stats %}
-            <img src="/pie" />
-            {% endif %}
+        <div class="row">
+            <hr>
+            <div class="col-md-6">
+                {% if stats %}
+                <img src="/pie" /> {% endif %}
+            </div>
+            <div class="col-md-6">
+                {% for key, value in stats.items() %} {% if value is not mapping %}
+                <li> {{ key }}: {{ value }}</li>
+                {% else %} {% for campo, valor in value.items() %} {% if valor is not mapping %}
+                <li> {{ campo }}: {{ valor }}</li>
+                {% endif %} {% endfor %} {% endif %} {% endfor %}
+            </div>
         </div>
-        <div class="col-md-6">
-
-            {% for key, value in stats.items() %} {% if value is not mapping %}
-            <li> {{ key }}: {{ value }}</li>
-            {% else %} {% for campo, valor in value.items() %}
-            <li> {{ campo }}: {{ valor }}</li>
-            {% endfor %} {% endif %} {% endfor %}
+        <div class="row">
+            <div class="col-md-12">
+                {% if stats['recinto'] %}
+                {% for key, value in stats['recinto'].items() %}
+                <h3>Imagens por mês do Recinto {{ key }}</h3>
+                <img src="/bars?recinto={{ key }}" />
+                {% endfor %}{% endif %}
+            </div>
         </div>
     </div>
     <div id="bottom" class="row">

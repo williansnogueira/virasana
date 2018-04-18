@@ -1,6 +1,6 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 from datetime import datetime
-from sys import platform
+import sys
 
 import chardet
 from gridfs import GridFS
@@ -9,9 +9,13 @@ from gridfs import GridFS
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import sanitizar, unicode_sanitizar
 
-if platform == 'win32':
+if sys.platform == 'win32':
     import lxml.etree as ET
 else:
+    # defusedxml under 5.0 pode ser incompatível com python3.6
+    # if int(sys.version_info[1]) > 5:
+    #    import lxml.etree as ET
+    # else:
     import defusedxml.ElementTree as ET
 
 

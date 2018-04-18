@@ -16,7 +16,7 @@ from pymongo import MongoClient
 
 from virasana.integracao import (DATA, carga, create_indexes, datas_bases,
                                  gridfs_count, peso_container_documento,
-                                 stats_resumo_imagens, volume_container, xml)
+                                 stats_resumo_imagens, volume_container, xmli)
 
 ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__), 'sample')
 
@@ -142,7 +142,7 @@ class TestCase(unittest.TestCase):
 
     def test_indexes(self):
         create_indexes(self.db)
-        xml.create_indexes(self.db)
+        xmli.create_indexes(self.db)
         carga.create_indexes(self.db)
 
     def test_count(self):
@@ -163,7 +163,7 @@ class TestCase(unittest.TestCase):
         assert datas is not None
         assert datas['gridfs'] == DATA
         assert datas['carga'] == carga.DATA
-        assert datas['xml'] == xml.DATA
+        assert datas['xml'] == xmli.DATA
 
     def test_busca_cheio(self):
         assert carga.busca_info_container(
@@ -211,11 +211,11 @@ class TestCase(unittest.TestCase):
         assert processados == 0
 
     def test_grava_fsfiles_xml(self):
-        processados = xml.dados_xml_grava_fsfiles(self.db)
+        processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 1
         semxml = self.db['fs.files'].find({'metadata.xml': None}).count()
         assert semxml == 5
-        processados = xml.dados_xml_grava_fsfiles(self.db)
+        processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 0
 
     def test_nlinhas_zip_dir(self):

@@ -25,7 +25,7 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
-from virasana.integracao import plot_pie, stats_resumo_imagens
+from virasana.integracao import plot_bar, plot_pie, stats_resumo_imagens
 from virasana.integracao.carga import CHAVES_CARGA
 from virasana.workers.tasks import raspa_dir, trata_bson
 
@@ -39,6 +39,7 @@ csrf = CSRFProtect(app)
 Bootstrap(app)
 nav = Nav()
 # logo = img(src='/static/css/images/logo.png')
+stats_cache = {}
 
 
 def allowed_file(filename):
@@ -303,24 +304,37 @@ class StatsForm(FlaskForm):
 @login_required
 def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
-    stats = {}
+    global stats_cache
     form = StatsForm(**request.form)
     if form.validate():
         start = datetime.combine(form.start.data, datetime.min.time())
         end = datetime.combine(form.end.data, datetime.max.time())
-        stats = stats_resumo_imagens(db, start, end)
+        stats_cache = stats_resumo_imagens(db, start, end)
     return render_template('stats.html',
-                           stats=stats,
+                           stats=stats_cache,
                            oform=form)
 
 
 @app.route('/pie')
-def plot():
+def pie():
     """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
-    stats = stats_resumo_imagens(db)
-    stats = stats['recinto']
-    output = plot_pie(stats.values(), stats.keys())
-    return Response(response=output.getvalue(), mimetype='image/png')
+    global stats_cache
+    if stats_cache:
+        stats = stats_cache['recinto']
+        output = plot_pie(stats.values(), stats.keys())
+        return Response(response=output.getvalue(), mimetype='image/png')
+
+
+@app.route('/bars')
+def bars():
+    """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
+    global stats_cache
+    if stats_cache:
+        recinto = request.args.get('recinto')
+        stats = stats_cache['recinto_mes'].get(recinto)
+        if stats:
+            output = plot_bar(stats.values(), stats.keys())
+            return Response(response=output.getvalue(), mimetype='image/png')
 
 
 @app.route('/padma_proxy/<image_id>')

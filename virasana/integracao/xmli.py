@@ -36,6 +36,7 @@ DATA = 'metadata.xml.date'
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração."""
     db['fs.files'].create_index('metadata.xml.container')
+    db['fs.files'].create_index('metadata.xml.alerta')
     for field in FIELDS:
         db['fs.files'].create_index('metadata.xml.' + field.lower())
 

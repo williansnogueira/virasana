@@ -92,13 +92,10 @@ def create_indexes(db):
          ('container', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
         unique=True)
-    db['fs.files'].create_index('metadata.carga.vazio', sparse=True)
-    db['fs.files'].create_index('metadata.carga.atracacao.escala')
-    db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
-    db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
-    db['fs.files'].create_index('metadata.carga.container.container')
-    db['fs.files'].create_index('metadata.carga.ncm.ncm')
-    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacao')
+    # Cria campos utilizados para pesquisa de imagens
+    for campo in CHAVES_CARGA:
+        db['fs.files'].create_index(campo, sparse=True)
+    # Cria campo data de atracacao no padrão ISODate
     cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
     for linha in cursor:
         dataatracacao = linha['dataatracacao']

@@ -1,0 +1,5 @@
+[run]
+# Arquivo abaixo são scripts de linha de comando, não há unit test
+omit =
+    virasana/integracao/xmlupdate.py
+    virasana/integracao/cargaupdate.py

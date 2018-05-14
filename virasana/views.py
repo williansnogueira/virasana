@@ -355,6 +355,20 @@ def padma_proxy(image_id):
         result = r.text
     return result
 
+def consulta_padma(image_id):
+    fs = GridFS(db)
+    _id = ObjectId(image_id)
+    if fs.exists(_id):
+        grid_out = fs.get(_id)
+        image = grid_out.read()
+        data = {}
+        data['file'] = image
+        headers = {}
+        r = requests.post(PADMA_URL + '/teste',
+                          files=data, headers=headers)
+        result = r.text
+    return result
+
 
 @nav.navigation()
 def mynavbar():

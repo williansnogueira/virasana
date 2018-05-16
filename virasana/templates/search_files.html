@@ -24,16 +24,22 @@
                     <div class="col-sm-3">
                         <input class="form-control" type="text" name="numero" value="{{oform.numero.data}}" />
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-2">
                         <input class="form-control" type="date" name="start" value="{{oform.start.data}}" />
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-2">
                         <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
                     </div>
                     <div class="col-sm-1">
                         <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
                     </div>
-                    <div class="col-sm-2">
+                    <div class="col-sm-1">
+                        <input class="form-control" type="text" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
+                    </div>
+                    <div class="col-sm-1">
+                        <button onclick="next_page()" id="btn_page" type="button" class="btn btn-default btn-info">Próxima</button>
+                    </div>
+                    <div class="col-sm-1">
                         <input class="btn btn-default btn-info" type="submit" value="Filtrar" />
                     </div>
                 </div>
@@ -102,7 +108,7 @@
             <tr>
                 <td>{{ myfile['numero'] }}</td>
                 <td>{{ myfile['filename'] }}</td>
-                <td>{{ myfile['upload_date'] }}</td>
+                <td>{{ myfile['dataescaneamento'] }}</td>
                 <td>
                     <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
                 </td>
@@ -132,6 +138,11 @@
 
     function exclui_campo(campo) {
         window.location.assign('/files?campo=' + campo)
+    }
+    function next_page(){
+        var page = Number($('#pagina_atual').val());
+        $('#pagina_atual').val(page + 1);
+        console.log(page + 1)
     }
 
 </script> {% endblock %}

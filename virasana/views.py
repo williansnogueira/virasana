@@ -19,7 +19,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from wtforms import BooleanField, DateField, StringField
+from wtforms import BooleanField, DateField, IntegerField, StringField
 from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
@@ -217,25 +217,13 @@ class FilesForm(FlaskForm):
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
+    pagina_atual = IntegerField('Pagina', default=1)
 
 
 filtros = dict()
 
 
-@app.route('/files', methods=['GET', 'POST'])
-@login_required
-def files(page=1):
-    """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
-    fs = GridFS(db)
-    lista_arquivos = []
-    global filtros
-    if filtros.get(current_user.id):
-        user_filtros = filtros[current_user.id]
-    else:
-        user_filtros = dict()
-        filtros[current_user.id] = user_filtros
-    form = FilesForm(**request.form)
-    filtro = {}
+def campos_carga():
     doc = db['fs.files'].find_one({'metadata.carga': {'$ne': None}})
     campos = []
     if doc:
@@ -246,11 +234,32 @@ def files(page=1):
                 campos.append('metadata.' + sub_key)
         for chave in CHAVES_CARGA:
             campos.append(chave)
+    return campos
+
+
+@app.route('/files', methods=['GET', 'POST'])
+@login_required
+def files():
+    """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
+    PAGE_ROWS = 50
+    fs = GridFS(db)
+    lista_arquivos = []
+    campos = campos_carga()
+    global filtros
+    if filtros.get(current_user.id):
+        user_filtros = filtros[current_user.id]
+    else:
+        user_filtros = dict()
+        filtros[current_user.id] = user_filtros
+    form = FilesForm(**request.form)
+    filtro = {}
+    pagina_atual = None
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
         end = form.end.data
         alerta = form.alerta.data
+        pagina_atual = form.pagina_atual.data
         if numero == 'None':
             numero = None
         if start and end:
@@ -277,11 +286,18 @@ def files(page=1):
 
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
-        for grid_data in fs.find(filtro).sort('uploadDate', -1).limit(50):
+        filtro['metadata.carga.vazio'] = True
+        filtro['metadata.predictions.vazio'] = False
+        if pagina_atual is None:
+            pagina_atual = 0
+        for grid_data in fs.find(filtro)\
+            .sort('dataescanamento', -1)\
+            .limit(PAGE_ROWS)\
+                .skip(pagina_atual * PAGE_ROWS + 1):
             linha = {}
             linha['_id'] = grid_data._id
             linha['filename'] = grid_data.filename
-            linha['upload_date'] = grid_data.metadata.get('dataescaneamento')
+            linha['dataescaneamento'] = grid_data.metadata.get('dataescaneamento')
             linha['numero'] = grid_data.metadata.get('numeroinformado')
             lista_arquivos.append(linha)
         # print(lista_arquivos)
@@ -350,20 +366,6 @@ def padma_proxy(image_id):
         data['file'] = image
         headers = {}
         # headers['Content-Type'] = 'image/jpeg'
-        r = requests.post(PADMA_URL + '/teste',
-                          files=data, headers=headers)
-        result = r.text
-    return result
-
-def consulta_padma(image_id):
-    fs = GridFS(db)
-    _id = ObjectId(image_id)
-    if fs.exists(_id):
-        grid_out = fs.get(_id)
-        image = grid_out.read()
-        data = {}
-        data['file'] = image
-        headers = {}
         r = requests.post(PADMA_URL + '/teste',
                           files=data, headers=headers)
         result = r.text

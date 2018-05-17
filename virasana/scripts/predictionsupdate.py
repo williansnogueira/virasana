@@ -26,10 +26,13 @@ MODEL = 'ssd'
 
 
 @click.command()
-@click.option('--model', help='Modelo de predição a ser consultado')
-@click.option('--batch_size', help='Tamanho do lote - padrão ')
-@click.option('--sovazios', default=False,
-              help='Processar somente vazios (True ou False) - padrão False')
+@click.option('--model', help='Modelo de predição a ser consultado',
+              required=True)
+@click.option('--batch_size',
+              help='Tamanho do lote (padrão ' + str(BATCH_SIZE) + ')',
+              default=BATCH_SIZE)
+@click.option('--sovazios', is_flag=True,
+              help='Processar somente vazios')
 def update(model, batch_size, sovazios):
     """Script de linha de comando para integração de predições do PADMA."""
     filtro = {}
@@ -42,7 +45,7 @@ def update(model, batch_size, sovazios):
         filtro['metadata.predictions.bbox'] = {'$exists': False}
     else:
         filtro['metadata.predictions.bbox'] = {'$exists': True}
-        filtro['metadata.predictions.' + model] = {'$eq': None}
+        # filtro['metadata.predictions.' + model] = {'$eq': None}
         filtro['metadata.predictions.' + model] = {'$exists': False}
 
     aprocessar = db['fs.files'].find(filtro).count()
@@ -67,26 +70,32 @@ def update(model, batch_size, sovazios):
                             'metadata.predictions': predictions}}
                     )
             else:
-                predictions = registro['metadata']['predictions']
-                for index, conteiner in enumerate(predictions):
-                    bbox = conteiner.get('bbox')
-                    if bbox:
-                        try:
-                            image = recorta_imagem(image, bbox)
-                            # image.save(os.path.join('.', str(_id) + '.jpg'),
-                            #  'JPEG', quality=100)
-                            pred = consulta_padma(image, model)
-                            print(model, pred)
-                            if pred and pred['success']:
-                                result = interpreta_pred(pred, model)
-                                predictions[index][model] = result
-                        except TypeError as err:
-                            print('Erro ao recortar imagem ', _id, str(err))
-                print('Gravando...', predictions, _id)
-                db['fs.files'].update(
-                    {'_id': _id},
-                    {'$set': {'metadata.predictions': predictions}}
-                )
+                predictions = registro['metadata'].get('predictions')
+                success = False
+                if predictions:
+                    for index, conteiner in enumerate(predictions):
+                        bbox = conteiner.get('bbox')
+                        if bbox:
+                            try:
+                                image_crop = recorta_imagem(image, bbox)
+                                # image.save(os.path.join('.', str(_id) + '.jpg'),
+                                #  'JPEG', quality=100)
+                                pred = consulta_padma(image_crop, model)
+                                print(model, pred)
+                                if pred and pred['success']:
+                                    result = interpreta_pred(pred, model)
+                                    predictions[index][model] = result
+                                    success = True
+                            except TypeError as err:
+                                print('Erro ao recortar imagem ', _id, str(err))
+                if predictions and success:
+                    print('Gravando...', predictions, _id)
+                    db['fs.files'].update(
+                        {'_id': _id},
+                        {'$set': {'metadata.predictions': predictions}}
+                    )
+                else:
+                    print('Consulta retornou vazia! (modelo existe?)')
 
 
 if __name__ == '__main__':

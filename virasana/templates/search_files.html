@@ -41,11 +41,17 @@
                     </div>
                     <div class="col-sm-2">
                         <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
-                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> < </button>
-                        <button onclick="next_page(-10)" id="btn_page" type="button" class="btn btn-default btn-info"> << </button>
-                        <button onclick="next_page(10)" id="btn_page" type="button" class="btn btn-default btn-info"> >> </button>
-                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> > </button>
+                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> -1 </button>
+                        <button onclick="next_page(-10)" id="btn_page" type="button" class="btn btn-default btn-info"> -10 </button>
+                        <button onclick="next_page(10)" id="btn_page" type="button" class="btn btn-default btn-info"> +10 </button>
+                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> +1 </button>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>Utilizar filtro especial de auditoria</h4>
+                    {{ oform.filtro_auditoria }}
                 </div>
             </div>
         </form>
@@ -106,6 +112,8 @@
                     <td>Número informado do Contêiner</td>
                     <td>Nome do Arquivo</td>
                     <td>Data de Escaneamento</td>
+                    <td>Imagens recortadas</td>
+                    <td>Ações</td>
                 </tr>
             </thead>
             {% for myfile in paginated_files %}
@@ -113,7 +121,8 @@
                 <td>{{ myfile['numero'] }}</td>
                 <td>{{ myfile['filename'] }}</td>
                 <td>{{ myfile['dataescaneamento'] }}</td>
-                <td><img src="/image/{{ myfile['_id'] }}" height="100" />
+                <td>
+                    <img src="/image/{{ myfile['_id'] }}" height="100" />
                     <img src="/image2/{{ myfile['_id'] }}" height="100" />
                 </td>
                 <td>
@@ -146,14 +155,14 @@
     function exclui_campo(campo) {
         window.location.assign('/files?campo=' + campo)
     }
-    function next_page(increment){
+    function next_page(increment) {
         var page = Number($('#pagina_atual').val());
         new_page = page + increment;
-        if (new_page <=0) new_page = 1;
-        if (new_page > {{npaginas}}) new_page = {{npaginas}};
-        $('#pagina_atual').val(new_page);
-        form = $('#formfiltro')
-        form.submit()
+        if (new_page <= 0) new_page = 1;
+        if (new_page > {{ npaginas }}) new_page = {{ npaginas }};
+    $('#pagina_atual').val(new_page);
+    form = $('#formfiltro')
+    form.submit()
     }
 
 </script> {% endblock %}

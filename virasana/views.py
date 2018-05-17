@@ -19,7 +19,8 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from wtforms import BooleanField, DateField, IntegerField, StringField
+from wtforms import (BooleanField, DateField, IntegerField, SelectField,
+                     StringField)
 from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
@@ -211,6 +212,7 @@ def image(_id, n=0):
             return Response(response=image, mimetype='image/jpeg')
     if n == 0:
         return Response(response=image, mimetype='image/jpeg')
+    return "Sem imagem"
 
 
 @app.route('/image2/<_id>')
@@ -250,6 +252,13 @@ def filtro():
             user_filtros.pop(campo)
 
 
+FILTROS_AUDITORIA = {
+    '1': {'filtro': {'metadata.carga.vazio': True,
+                     'metadata.predictions.vazio': False},
+          'order': [('metadata.predictions.peso', -1)]}
+}
+
+
 class FilesForm(FlaskForm):
     """Valida pesquisa de arquivos.
 
@@ -258,12 +267,18 @@ class FilesForm(FlaskForm):
 
     """
 
+    filtros = [
+        ('0', 'Selecione uma opção'),
+        ('1', 'Contêineres informados como vazios mas detectados ' +
+         'como não vazios (ordem de peso detectado)')
+    ]
     numero = StringField('Número', validators=[optional()])
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
+    filtro_auditoria = SelectField(u'Filtros de Auditoria', choices=filtros)
 
 
 @app.route('/files', methods=['GET', 'POST'])
@@ -289,6 +304,9 @@ def files():
         end = form.end.data
         alerta = form.alerta.data
         pagina_atual = form.pagina_atual.data
+        filtro_escolhido = form.filtro_auditoria.data
+        if filtro_escolhido:
+            filtro_auditoria = FILTROS_AUDITORIA.get(filtro_escolhido)
         if numero == 'None':
             numero = None
         if start and end:
@@ -307,8 +325,10 @@ def files():
 
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
-        filtro['metadata.carga.vazio'] = True
-        filtro['metadata.predictions.vazio'] = False
+        order = [('metadata.dataescaneamento', 1)]
+        if filtro_auditoria:
+            filtro.update(filtro_auditoria['filtro'])
+            order = filtro_auditoria['order']
         if pagina_atual is None:
             pagina_atual = 1
 
@@ -317,8 +337,6 @@ def files():
                       'metadata.numeroinformado': 1,
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
-        order = [('metadata.dataescaneamento', 1)]
-        order = [('metadata.predictions.peso', -1)]
         skip = (pagina_atual - 1) * PAGE_ROWS
         # print('**Página:', pagina_atual, skip, type(skip))
         npaginas = db['fs.files'].\

@@ -1,7 +1,7 @@
-
 import io
 import numpy as np
 import requests
+from json.decoder import JSONDecodeError
 
 from bson.objectid import ObjectId
 from gridfs import GridFS
@@ -50,7 +50,11 @@ def consulta_padma(image, model):
     headers = {}
     r = requests.post(PADMA_URL + '/predict?model=' + model,
                       files=data, headers=headers)
-    result = r.json()
+    try:
+        result = r.json()
+    except JSONDecodeError as err:
+        print(err)
+        return {'predictions': None, 'success': False}
     return result
 
 

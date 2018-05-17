@@ -69,6 +69,17 @@
                 </ul>
                 {% endif %}
             </div>
+            <h3>Dados do módulo PADMA - Predições por IA</h3>
+            <div id="padma">
+                {% if myfile['metadata']['predictions'] %}
+                <ul>{% for pred in myfile['metadata']['predictions'] %}
+                    {% for key, value in pred.items() %}
+                    <li> {{ key }}: {{ value }}</li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
             <h3>Dados do sistema CARGA</h3>
             <div id="carga">
                 {% if myfile['metadata']['carga'] %}

@@ -27,6 +27,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
 from ajna_commons.flask.log import logger
 from virasana.integracao import plot_bar, plot_pie, stats_resumo_imagens
 from virasana.integracao.carga import CHAVES_CARGA
+from virasana.integracao.padma import BBOX_MODELS, recorta_imagem
 from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
@@ -196,28 +197,24 @@ def file(_id=None):
 
 @app.route('/image/<_id>')
 @login_required
-def image(_id):
+def image(_id, n=0):
     """Serializa a imagem do banco para stream HTTP."""
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
-    return Response(response=image, mimetype='image/jpeg')
+    preds = grid_data.metadata.get('predictions')
+    bboxes = [pred.get('bbox') for pred in preds]
+    print('bboxes******', bboxes)
+    if bboxes[n]:
+        image = recorta_imagem(image, bboxes[n])
+        return Response(response=image, mimetype='image/jpeg')
+    if n == 0:
+        return Response(response=image, mimetype='image/jpeg')
 
-
-class FilesForm(FlaskForm):
-    """Valida pesquisa de arquivos.
-
-    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
-    search_files.html
-
-    """
-
-    numero = StringField('Número', validators=[optional()])
-    start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=90))
-    end = DateField('End', validators=[optional()], default=date.today())
-    alerta = BooleanField('Alerta', validators=[optional()], default=False)
-    pagina_atual = IntegerField('Pagina', default=1)
+@app.route('/image2/<_id>')
+@login_required
+def image2(_id):
+    return image(_id, 1)
 
 
 filtros = dict()
@@ -237,6 +234,36 @@ def campos_carga():
     return campos
 
 
+@app.route('/filtro', methods=['GET', 'POST'])
+@login_required
+def filtro():
+    """Configura filtro personalizado."""
+    user_filtros = filtros[current_user.id]
+    campo = request.args.get('campo')
+    if campo:
+        valor = request.args.get('valor')
+        if valor:   # valor existe, adiciona
+            user_filtros[campo] = valor
+        else:  # valor não existe, exclui chave
+            user_filtros.pop(campo)
+
+
+class FilesForm(FlaskForm):
+    """Valida pesquisa de arquivos.
+
+    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
+    search_files.html
+
+    """
+
+    numero = StringField('Número', validators=[optional()])
+    start = DateField('Start', validators=[optional()],
+                      default=date.today() - timedelta(days=90))
+    end = DateField('End', validators=[optional()], default=date.today())
+    alerta = BooleanField('Alerta', validators=[optional()], default=False)
+    pagina_atual = IntegerField('Pagina', default=1)
+
+
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files():
@@ -245,6 +272,9 @@ def files():
     fs = GridFS(db)
     lista_arquivos = []
     campos = campos_carga()
+    filtro = {}
+    pagina_atual = None
+    npaginas = 1
     global filtros
     if filtros.get(current_user.id):
         user_filtros = filtros[current_user.id]
@@ -252,8 +282,6 @@ def files():
         user_filtros = dict()
         filtros[current_user.id] = user_filtros
     form = FilesForm(**request.form)
-    filtro = {}
-    pagina_atual = None
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
@@ -264,22 +292,14 @@ def files():
             numero = None
         if start and end:
             start = datetime.combine(start, datetime.min.time())
-            end = datetime.combine(end, datetime.min.time())
+            end = datetime.combine(end, datetime.max.time())
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
             filtro['metadata.numeroinformado'] = {'$regex': numero}
         if alerta:
             filtro['metadata.xml.alerta'] = True
-
         # print(filtro)
-    # Configura filtro personalizado
-    campo = request.args.get('campo')
-    if campo:
-        valor = request.args.get('valor')
-        if valor:   # valor existe, adiciona
-            user_filtros[campo] = valor
-        else:  # valor não existe, exclui chave
-            user_filtros.pop(campo)
+
     if user_filtros:  # Adiciona filtro personalizado se houver
         for campo, valor in user_filtros.items():
             filtro[campo] = valor.lower()
@@ -289,23 +309,37 @@ def files():
         filtro['metadata.carga.vazio'] = True
         filtro['metadata.predictions.vazio'] = False
         if pagina_atual is None:
-            pagina_atual = 0
-        for grid_data in fs.find(filtro)\
-            .sort('dataescanamento', -1)\
-            .limit(PAGE_ROWS)\
-                .skip(pagina_atual * PAGE_ROWS + 1):
+            pagina_atual = 1
+
+        # print(filtro)
+        projection = {'_id': 1, 'filename': 1,
+                      'metadata.numeroinformado': 1,
+                      'metadata.predictions.bbox': 1,
+                      'metadata.dataescaneamento': 1}
+        order = [('metadata.dataescaneamento', 1)]
+        order = [('metadata.predictions.peso', -1)]
+        skip = (pagina_atual - 1) * PAGE_ROWS
+        # print('**Página:', pagina_atual, skip, type(skip))
+        npaginas = db['fs.files'].\
+            find(filtro, {'_id': 1}).count() // PAGE_ROWS + 1
+        for grid_data in db['fs.files']\
+            .find(filter=filtro, projection=projection)\
+            .sort(order)\
+                .limit(PAGE_ROWS).skip(skip):
             linha = {}
-            linha['_id'] = grid_data._id
-            linha['filename'] = grid_data.filename
-            linha['dataescaneamento'] = grid_data.metadata.get('dataescaneamento')
-            linha['numero'] = grid_data.metadata.get('numeroinformado')
+            linha['_id'] = grid_data['_id']
+            linha['filename'] = grid_data['filename']
+            linha['dataescaneamento'] = grid_data['metadata'].get(
+                'dataescaneamento')
+            linha['numero'] = grid_data['metadata'].get('numeroinformado')
             lista_arquivos.append(linha)
         # print(lista_arquivos)
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
                            oform=form,
                            campos=campos,
-                           filtros=user_filtros)
+                           filtros=user_filtros,
+                           npaginas=npaginas)
 
 
 class StatsForm(FlaskForm):

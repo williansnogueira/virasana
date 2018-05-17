@@ -15,70 +15,16 @@ Args:
     sovazios: selecionar contêineres declarados como vazio somente
 """
 import click
-import io
-import os
-import numpy as np
-import requests
 
 from bson.objectid import ObjectId
 from gridfs import GridFS
-from PIL import Image
 
 from virasana.views import db
 from ajna_commons.flask.conf import PADMA_URL
+from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
+                                       interpreta_pred, mongo_image,
+                                       recorta_imagem)
 
-
-def recorta_imagem(image, coords=None):
-    """Recebe uma imagem serializada em bytes, retorna PIL Image.
-    Params:
-        image: imagem em bytes (recebida via http ou via Banco de Dados)
-        coords: (x0,y0,x1,y1)
-    Returns:
-        Um recorte no formato Image em bytes
-    """
-    if coords:
-        PILimage = Image.open(io.BytesIO(image))
-        im = np.asarray(PILimage)
-        im = im[coords[0]:coords[2], coords[1]:coords[3]]
-        PILimage = Image.fromarray(im)
-        image_bytes = io.BytesIO()
-        PILimage.save(image_bytes, 'JPEG')
-        image_bytes.seek(0)
-    return image_bytes
-
-
-def mongo_image(image_id):
-    """Lê imagem do Banco MongoDB. Retorna None se ID não encontrado."""
-    fs = GridFS(db)
-    _id = ObjectId(image_id)
-    if fs.exists(_id):
-        grid_out = fs.get(_id)
-        image = grid_out.read()
-        return image
-    return None
-
-
-def consulta_padma(image, model):
-    """Monta e trata request para o PADMA.
-        Args: """
-    data = {}
-    data['image'] = image
-    headers = {}
-    r = requests.post(PADMA_URL + '/predict?model=' + model,
-                      files=data, headers=headers)
-    result = r.json()
-    return result
-
-
-def interpreta_pred(prediction, model):
-    if model == 'vazio':
-        return prediction['predictions'][0]['1'] < 0.5
-    if model == 'peso':
-        print(prediction)
-        return None
-
-
-BBOX_MODELS = ['ssd']
 BATCH_SIZE = 10000
 MODEL = 'ssd'
 
@@ -101,15 +47,17 @@ def update(model, batch_size, sovazios):
         filtro['metadata.predictions.bbox'] = {'$exists': False}
     else:
         filtro['metadata.predictions.bbox'] = {'$exists': True}
-        filtro['metadata.predictions.'+model] = {'$exists': False}
+        filtro['metadata.predictions.'+model] = {'$eq': None} 
+        filtro['metadata.predictions.'+model] = {'exists': False}
 
     aprocessar = db['fs.files'].find(filtro).count()
     print(aprocessar, ' arquivos sem predições com os parâmetros passados...')
-
-    cursor = db['fs.files'].find(filtro, {'metadata.predictions': 1}).limit(batch_size)
+    print(filtro)
+    cursor = db['fs.files'].find(
+        filtro, {'metadata.predictions': 1}).limit(batch_size)
     for registro in cursor:
         _id = registro['_id']
-        image = mongo_image(_id)
+        image = mongo_image(db, _id)
         if image:
             print('Consultando modelo:', model, 'para o ID', _id)
             if model in BBOX_MODELS:
@@ -124,17 +72,22 @@ def update(model, batch_size, sovazios):
                             'metadata.predictions': predictions}}
                     )
             else:
-                predictions = registro['metadata.predictions']
+                predictions = registro['metadata']['predictions']
                 for index, conteiner in enumerate(predictions):
                     bbox = conteiner.get('bbox')
                     if bbox:
-                        image = recorta_imagem(image, bbox)
-                        # image.save(os.path.join('.', str(_id) + '.jpg'), 'JPEG', quality=100)
-                        pred = consulta_padma(image, model)
-                        print(model, pred)
-                        if pred and pred['success'] == True:
-                            result = interpreta_pred(pred, model)
-                            predictions[index][model] = result
+                        try:
+                            image = recorta_imagem(image, bbox)
+                            # image.save(os.path.join('.', str(_id) + '.jpg'), 'JPEG', quality=100)
+                            pred = consulta_padma(image, model)
+                            print(model, pred)
+                            if pred and pred['success'] == True:
+                                result = interpreta_pred(pred, model)
+                                predictions[index][model] = result
+                        except TypeError:
+                            print('Erro ao recortar imagem ', _id)
+                            pass
+                print('Gravando...', predictions, _id)
                 db['fs.files'].update(
                     {'_id': _id},
                     {'$set': {'metadata.predictions': predictions}}

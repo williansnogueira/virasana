@@ -1,7 +1,7 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
 <div id="main" class="container-fluid">
     <div id="top" class="row">
-        <form method="POST" action="/files">
+        <form method="POST" id="formfiltro" action="/files">
             <div class="col-sm-12">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             </div>
@@ -12,11 +12,14 @@
                 <div class="col-sm-3">
                     <label for="numero">Número do contêiner</label>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <label for="date">Período de escaneamento da imagem</label>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-sm-2">
                     <label for="alerta">Com alerta?</label>
+                </div>
+                <div class="col-sm-3">
+                    Página {{oform.pagina_atual.data}} de {{ npaginas }}
                 </div>
             </div>
             <div class="row">
@@ -34,13 +37,14 @@
                         <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
                     </div>
                     <div class="col-sm-1">
-                        <input class="form-control" type="text" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
-                    </div>
-                    <div class="col-sm-1">
-                        <button onclick="next_page()" id="btn_page" type="button" class="btn btn-default btn-info">Próxima</button>
-                    </div>
-                    <div class="col-sm-1">
                         <input class="btn btn-default btn-info" type="submit" value="Filtrar" />
+                    </div>
+                    <div class="col-sm-2">
+                        <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
+                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> < </button>
+                        <button onclick="next_page(-10)" id="btn_page" type="button" class="btn btn-default btn-info"> << </button>
+                        <button onclick="next_page(10)" id="btn_page" type="button" class="btn btn-default btn-info"> >> </button>
+                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> > </button>
                     </div>
                 </div>
             </div>
@@ -109,6 +113,9 @@
                 <td>{{ myfile['numero'] }}</td>
                 <td>{{ myfile['filename'] }}</td>
                 <td>{{ myfile['dataescaneamento'] }}</td>
+                <td><img src="/image/{{ myfile['_id'] }}" height="100" />
+                    <img src="/image2/{{ myfile['_id'] }}" height="100" />
+                </td>
                 <td>
                     <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
                 </td>
@@ -139,10 +146,14 @@
     function exclui_campo(campo) {
         window.location.assign('/files?campo=' + campo)
     }
-    function next_page(){
+    function next_page(increment){
         var page = Number($('#pagina_atual').val());
-        $('#pagina_atual').val(page + 1);
-        console.log(page + 1)
+        new_page = page + increment;
+        if (new_page <=0) new_page = 1;
+        if (new_page > {{npaginas}}) new_page = {{npaginas}};
+        $('#pagina_atual').val(new_page);
+        form = $('#formfiltro')
+        form.submit()
     }
 
 </script> {% endblock %}

@@ -203,13 +203,15 @@ def image(_id, n=0):
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
     preds = grid_data.metadata.get('predictions')
-    bboxes = [pred.get('bbox') for pred in preds]
-    print('bboxes******', bboxes)
-    if bboxes[n]:
-        image = recorta_imagem(image, bboxes[n])
-        return Response(response=image, mimetype='image/jpeg')
+    if preds:
+        bboxes = [pred.get('bbox') for pred in preds]
+        print('bboxes******', bboxes)
+        if len(bboxes) >= n + 1 and bboxes[n]:
+            image = recorta_imagem(image, bboxes[n])
+            return Response(response=image, mimetype='image/jpeg')
     if n == 0:
         return Response(response=image, mimetype='image/jpeg')
+
 
 @app.route('/image2/<_id>')
 @login_required
@@ -269,7 +271,6 @@ class FilesForm(FlaskForm):
 def files():
     """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
     PAGE_ROWS = 50
-    fs = GridFS(db)
     lista_arquivos = []
     campos = campos_carga()
     filtro = {}

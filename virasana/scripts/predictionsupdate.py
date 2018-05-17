@@ -16,11 +16,7 @@ Args:
 """
 import click
 
-from bson.objectid import ObjectId
-from gridfs import GridFS
-
 from virasana.views import db
-from ajna_commons.flask.conf import PADMA_URL
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred, mongo_image,
                                        recorta_imagem)
@@ -30,13 +26,12 @@ MODEL = 'ssd'
 
 
 @click.command()
-@click.option('--model', default=MODEL, help='Modelo de predição a ser consultado')
-@click.option('--batch_size', default=BATCH_SIZE,
-              help='Tamanho do lote - padrão ' + str(BATCH_SIZE))
+@click.option('--model', help='Modelo de predição a ser consultado')
+@click.option('--batch_size', help='Tamanho do lote - padrão ')
 @click.option('--sovazios', default=False,
-              help='Processar somente vazios')
+              help='Processar somente vazios (True ou False) - padrão False')
 def update(model, batch_size, sovazios):
-    """Script de linha de comando para integração de predições do módulo PADMA."""
+    """Script de linha de comando para integração de predições do PADMA."""
     filtro = {}
     if sovazios:
         filtro['metadata.carga.vazio'] = True
@@ -47,8 +42,8 @@ def update(model, batch_size, sovazios):
         filtro['metadata.predictions.bbox'] = {'$exists': False}
     else:
         filtro['metadata.predictions.bbox'] = {'$exists': True}
-        filtro['metadata.predictions.'+model] = {'$eq': None} 
-        filtro['metadata.predictions.'+model] = {'exists': False}
+        filtro['metadata.predictions.' + model] = {'$eq': None}
+        filtro['metadata.predictions.' + model] = {'$exists': False}
 
     aprocessar = db['fs.files'].find(filtro).count()
     print(aprocessar, ' arquivos sem predições com os parâmetros passados...')
@@ -64,7 +59,7 @@ def update(model, batch_size, sovazios):
                 pred_bbox = consulta_padma(image, model)
                 print('Resultado da consulta:', pred_bbox)
                 predictions = pred_bbox['predictions']
-                if pred_bbox and pred_bbox['success'] == True and predictions:
+                if pred_bbox and pred_bbox['success'] and predictions:
                     print('Gravando...', predictions)
                     db['fs.files'].update(
                         {'_id': _id},
@@ -78,15 +73,15 @@ def update(model, batch_size, sovazios):
                     if bbox:
                         try:
                             image = recorta_imagem(image, bbox)
-                            # image.save(os.path.join('.', str(_id) + '.jpg'), 'JPEG', quality=100)
+                            # image.save(os.path.join('.', str(_id) + '.jpg'),
+                            #  'JPEG', quality=100)
                             pred = consulta_padma(image, model)
                             print(model, pred)
-                            if pred and pred['success'] == True:
+                            if pred and pred['success']:
                                 result = interpreta_pred(pred, model)
                                 predictions[index][model] = result
-                        except TypeError:
-                            print('Erro ao recortar imagem ', _id)
-                            pass
+                        except TypeError as err:
+                            print('Erro ao recortar imagem ', _id, str(err))
                 print('Gravando...', predictions, _id)
                 db['fs.files'].update(
                     {'_id': _id},

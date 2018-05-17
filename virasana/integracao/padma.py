@@ -41,6 +41,11 @@ def mongo_image(db, image_id):
         return image
     return None
 
+"""PILimage = Image.open(grid_out.read())
+image_bytes = io.BytesIO()
+PILimage.save(image_bytes, 'JPEG')
+image_bytes.seek(0)
+return image_bytes"""
 
 def consulta_padma(image, model):
     """Monta e trata request para o PADMA.

@@ -35,7 +35,7 @@ MODEL = 'ssd'
               help='Processar somente vazios')
 def update(model, batch_size, sovazios):
     """Script de linha de comando para integração de predições do PADMA."""
-    filtro = {}
+    filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
         filtro['metadata.carga.vazio'] = True
     # Modelo que cria uma caixa de coordenadas para recorte é pré requisito

@@ -27,7 +27,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
 from ajna_commons.flask.log import logger
 from virasana.integracao import plot_bar, plot_pie, stats_resumo_imagens
 from virasana.integracao.carga import CHAVES_CARGA
-from virasana.integracao.padma import BBOX_MODELS, recorta_imagem
+from virasana.integracao.padma import recorta_imagem
 from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')

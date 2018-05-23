@@ -78,8 +78,8 @@ def update(model, batch_size, sovazios):
                         if bbox:
                             try:
                                 image_crop = recorta_imagem(image, bbox)
-                                # image.save(os.path.join('.', str(_id) + '.jpg'),
-                                #  'JPEG', quality=100)
+                                # image.save(os.path.join('.', str(_id) +
+                                #  '.jpg'), 'JPEG', quality=100)
                                 pred = consulta_padma(image_crop, model)
                                 print(model, pred)
                                 if pred and pred['success']:
@@ -87,7 +87,7 @@ def update(model, batch_size, sovazios):
                                     predictions[index][model] = result
                                     success = True
                             except TypeError as err:
-                                print('Erro ao recortar imagem ', _id, str(err))
+                                print('Erro ao recortar imagem', _id, str(err))
                 if predictions and success:
                     print('Gravando...', predictions, _id)
                     db['fs.files'].update(

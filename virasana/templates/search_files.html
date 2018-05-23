@@ -37,14 +37,14 @@
                         <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
                     </div>
                     <div class="col-sm-1">
-                        <input class="btn btn-default btn-info" type="submit" value="Filtrar" />
+                        <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> Filtrar </button>
                     </div>
                     <div class="col-sm-2">
                         <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
-                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> -1 </button>
-                        <button onclick="next_page(-10)" id="btn_page" type="button" class="btn btn-default btn-info"> -10 </button>
-                        <button onclick="next_page(10)" id="btn_page" type="button" class="btn btn-default btn-info"> +10 </button>
-                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> +1 </button>
+                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> < </button>
+                        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_page" type="button" class="btn btn-default btn-info"> << </button>
+                        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page" type="button" class="btn btn-default btn-info"> >> </button>
+                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> > </button>
                     </div>
                 </div>
             </div>
@@ -73,14 +73,21 @@
                     <input id="valor" class="form-control" type="text" placeholder="Valor do parâmetro">
                 </div>
                 <div class="form-group col-sm-4">
-                    <button onclick="adicionar_campo()" id="btn_ok" type="button" class="btn btn-default btn-info">Filtrar</button>
+                    <button id="btnfiltropersonalizado" type="button" class="btn btn-default btn-info">Adicionar</button>
                 </div>
             </form>
         </div>
         <div id="list" class="row col-sm-6">
             <div class="table">
-                <table class="inlineTable table table-bordered table-hover table-responsive" id="filtros">
-                    {% if filtros %} {% for campo, valor in filtros.items() %}
+                <table class="inlineTable table table-bordered table-hover table-responsive" id="filtro_personalizado_table">
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for campo, valor in filtros.items() %}
                     <tr>
                         <td>{{campo}}</td>
                         <td>{{valor}}</td>
@@ -88,11 +95,8 @@
                             <input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo('{{campo}}')" />
                         </td>
                     </tr>
-                    {% endfor %} {% else %}
-                    <tr>
-                        <td>Sem filtros personalizados.</td>
-                    </tr>
-                    {% endif %}
+                    </tbody>
+                    {% endfor %}
                 </table>
             </div>
         </div>
@@ -112,7 +116,7 @@
                     <td>Número informado do Contêiner</td>
                     <td>Nome do Arquivo</td>
                     <td>Data de Escaneamento</td>
-                    <td>Imagens recortadas</td>
+                    <td>Imagens (recortadas se disponível)</td>
                     <td>Ações</td>
                 </tr>
             </thead>
@@ -122,8 +126,8 @@
                 <td>{{ myfile['filename'] }}</td>
                 <td>{{ myfile['dataescaneamento'] }}</td>
                 <td>
-                    <img src="/image/{{ myfile['_id'] }}" height="100" />
-                    <img src="/image2/{{ myfile['_id'] }}" height="100" />
+                    <img src="/image/{{ myfile['_id'] }}" alt="Sem imagem" height="60" />
+                    <img src="/image2/{{ myfile['_id'] }}" alt="Sem segundo contêiner" height="60" />
                 </td>
                 <td>
                     <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
@@ -159,10 +163,49 @@
         var page = Number($('#pagina_atual').val());
         new_page = page + increment;
         if (new_page <= 0) new_page = 1;
-        if (new_page > {{ npaginas }}) new_page = {{ npaginas }};
-    $('#pagina_atual').val(new_page);
-    form = $('#formfiltro')
-    form.submit()
+        if (new_page > {{ npaginas }}) {new_page = {{ npaginas }}};
+        $('#pagina_atual').val(new_page);
+        form = $('#formfiltro');
+        form.submit();
     }
+
+    function zeraeposta() {
+        $('#pagina_atual').val(1);
+        form = $('#formfiltro');
+        form.submit();
+    }
+    function table_filtros(filtros){
+        $('#filtro_personalizado_table tbody tr').remove();
+        $.each(filtros, function(i, filtro) {
+            $('<tr>').append(
+            $('<td>').text(filtro.campo),
+            $('<td>').text(filtro.valor),
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo("'+ filtro.campo + '")" />')
+            ).appendTo('#filtro_personalizado_table');
+        });
+    
+    }
+
+    function exclui_campo(campo) {
+            $.getJSON('/filtro_personalizado', {
+              campo: campo,
+            }, function(filtros) {
+              table_filtros(filtros);
+            });
+    }
+
+    $(function() {
+        var filtro_personalizado = function(e) {
+          $.getJSON('/filtro_personalizado', {
+            campo: $('#campos').val(),
+            valor: $('#valor').val(),
+          }, function(filtros) {
+            table_filtros(filtros);
+            $('#campos').focus().select();
+          });
+          return false;
+        };
+        $('button#btnfiltropersonalizado').bind('click', filtro_personalizado);
+      });
 
 </script> {% endblock %}

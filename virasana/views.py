@@ -212,7 +212,7 @@ def image(_id, n=0):
             return Response(response=image, mimetype='image/jpeg')
     if n == 0:
         return Response(response=image, mimetype='image/jpeg')
-    return "Sem imagem"
+    return 'Sem imagem'
 
 
 @app.route('/image2/<_id>')
@@ -238,11 +238,13 @@ def campos_carga():
     return campos
 
 
-@app.route('/filtro', methods=['GET', 'POST'])
-@login_required
+@app.route('/filtro_personalizado', methods=['GET', 'POST'])
+# @login_required
 def filtro():
     """Configura filtro personalizado."""
     user_filtros = filtros[current_user.id]
+    print(request.form)
+    print(request.args)
     campo = request.args.get('campo')
     if campo:
         valor = request.args.get('valor')
@@ -250,6 +252,8 @@ def filtro():
             user_filtros[campo] = valor
         else:  # valor não existe, exclui chave
             user_filtros.pop(campo)
+    result = [{'campo': k, 'valor': v} for k, v in user_filtros.items()]
+    return jsonify(result)
 
 
 FILTROS_AUDITORIA = {
@@ -278,7 +282,8 @@ class FilesForm(FlaskForm):
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
-    filtro_auditoria = SelectField(u'Filtros de Auditoria', choices=filtros)
+    filtro_auditoria = SelectField(u'Filtros de Auditoria', choices=filtros,
+                                   default=0)
 
 
 @app.route('/files', methods=['GET', 'POST'])
@@ -291,6 +296,7 @@ def files():
     filtro = {}
     pagina_atual = None
     npaginas = 1
+    filtro_auditoria = None
     global filtros
     if filtros.get(current_user.id):
         user_filtros = filtros[current_user.id]
@@ -314,7 +320,7 @@ def files():
             end = datetime.combine(end, datetime.max.time())
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
-            filtro['metadata.numeroinformado'] = {'$regex': numero}
+            filtro['metadata.numeroinformado'] = {'$regex': '^' + numero}
         if alerta:
             filtro['metadata.xml.alerta'] = True
         # print(filtro)
@@ -332,15 +338,16 @@ def files():
         if pagina_atual is None:
             pagina_atual = 1
 
-        # print(filtro)
+        print(filtro)
         projection = {'_id': 1, 'filename': 1,
                       'metadata.numeroinformado': 1,
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
         # print('**Página:', pagina_atual, skip, type(skip))
-        npaginas = db['fs.files'].\
-            find(filtro, {'_id': 1}).count() // PAGE_ROWS + 1
+        count = db['fs.files'].find(filtro).count()
+        print(count, skip)
+        npaginas = count // PAGE_ROWS + 1
         for grid_data in db['fs.files']\
             .find(filter=filtro, projection=projection)\
             .sort(order)\

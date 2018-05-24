@@ -10,7 +10,7 @@ recorte, a menos que o modelo selecionado seja um dos modelos próprios para
 detecção do objeto contêiner.
 
 Args:
-    
+
     model: modelos a consultar
 
     batch_size: tamanho do lote de atualização/limite de registros da consulta

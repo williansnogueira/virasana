@@ -4,10 +4,15 @@ Script de linha de comando para fazer atualização 'manual'
 dos metadados do Sistema CARGA nas imagens.
 Faz um loop, a cada "interval" dias, pesquisa o Banco de Dados de
 imagens no mês (Ex. interval = 10, pesquisará iniciando dias 1, 10 e 20)
+
 Args:
+
     year: ano a pesquisar
+
     month: mês a pesquisar
+
     interval: intervalo de dias
+
     batch_size: tamanho do lote de atualização/limite de registros da consulta
 
 """

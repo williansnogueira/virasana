@@ -2,9 +2,13 @@
 
 Script de linha de comando para fazer atualização 'manual'
 dos metadados do arquivo XML nas imagens.
+
 Args:
+
     year: ano de início da pesquisa
+
     month: mês de início da pesquisa
+
     batch_size: tamanho do lote de atualização/limite de registros da consulta
 
 """

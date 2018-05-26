@@ -10,7 +10,6 @@ setup(
     author_email='brasilico.ivan@gmail.com',
     packages=find_packages(),
     install_requires=[
-        'ajna_commons==0.0.1',
         'Celery',
         'defusedxml',
         'Flask',
@@ -23,10 +22,10 @@ setup(
         'matplotlib',
         'pymongo',
         'pandas',
+        'pillow',
         'raven',
         'redis',
         'requests'
-      
     ],
     dependency_links=[
         'git+https://github.com/IvanBrasilico/ajna_commons.git#egg=ajna_commons-0.0.1'

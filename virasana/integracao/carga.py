@@ -284,14 +284,20 @@ def busca_info_container(db, numero: str,
     conhecimentos, _ = mongo_find_in(
         db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos_set)
     # Busca CE Exportação
-    manifestos, escalas, atracacoes, index_atracacao = get_escalas(db, conhecimentos,
-                                                          data_escaneamento,
-                                                          days,
-                                                          exportacao=True)
+    manifestos, escalas, atracacoes, index_atracacao = get_escalas(
+        db,
+        conhecimentos,
+        data_escaneamento,
+        days,
+        exportacao=True
+    )
     if index_atracacao is None:
-        manifestos, escalas, atracacoes, index_atracacao = get_escalas(db, conhecimentos,
-                                                              data_escaneamento,
-                                                              days)
+        manifestos, escalas, atracacoes, index_atracacao = get_escalas(
+            db,
+            conhecimentos,
+            data_escaneamento,
+            days
+        )
     if index_atracacao is not None:
         # Agora sabemos o número do(s) CE(s) corretos do contêiner
         # Basta montar uma estrutura de dados com as informações

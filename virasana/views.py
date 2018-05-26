@@ -26,7 +26,8 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
-from virasana.integracao import plot_bar, plot_pie, stats_resumo_imagens
+from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
+                                 stats_resumo_imagens)
 from virasana.integracao.carga import CHAVES_CARGA
 from virasana.integracao.padma import recorta_imagem
 from virasana.workers.tasks import raspa_dir, trata_bson
@@ -218,24 +219,16 @@ def image(_id, n=0):
 @app.route('/image2/<_id>')
 @login_required
 def image2(_id):
+    """Link para imagem do segundo contêiner, se houver."""
     return image(_id, 1)
 
 
 filtros = dict()
 
 
-def campos_carga():
-    doc = db['fs.files'].find_one({'metadata.carga': {'$ne': None}})
-    campos = []
-    if doc:
-        for key in doc:
-            campos.append(key)
-        for sub_key in doc.get('metadata'):
-            if sub_key not in ('carga', 'xml'):
-                campos.append('metadata.' + sub_key)
-        for chave in CHAVES_CARGA:
-            campos.append(chave)
-    return campos
+def campos_chave():
+    """Retorna campos chave para montagem de filtro."""
+    return CHAVES_GRIDFS + CHAVES_CARGA
 
 
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])
@@ -292,7 +285,7 @@ def files():
     """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
     PAGE_ROWS = 50
     lista_arquivos = []
-    campos = campos_carga()
+    campos = campos_chave()
     filtro = {}
     pagina_atual = None
     npaginas = 1

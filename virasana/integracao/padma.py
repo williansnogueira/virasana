@@ -1,3 +1,9 @@
+"""Módulo com funcões de gravar um cache no fs.files.
+
+Funções para consultar PADMA e gravar predições no metadata
+do GridFS.
+
+"""
 import io
 import numpy as np
 import requests
@@ -14,11 +20,14 @@ BBOX_MODELS = ['ssd']
 
 def recorta_imagem(image, coords=None):
     """Recebe uma imagem serializada em bytes, retorna Imagem cortada.
+
     Params:
         image: imagem em bytes (recebida via http ou via Banco de Dados)
         coords: (x0,y0,x1,y1)
+
     Returns:
         Um recorte no formato Image em bytes
+
     """
     if coords:
         PILimage = Image.open(io.BytesIO(image))
@@ -42,16 +51,17 @@ def mongo_image(db, image_id):
     return None
 
 
-"""PILimage = Image.open(grid_out.read())
-image_bytes = io.BytesIO()
-PILimage.save(image_bytes, 'JPEG')
-image_bytes.seek(0)
-return image_bytes"""
-
-
 def consulta_padma(image, model):
-    """Monta e trata request para o PADMA.
-        Args: """
+    """Monta request para o PADMA. Trata JSON resposta.
+
+    Args:
+        image: bytes image
+        model: nome do modelo a consultar
+
+    Returns:
+        dict com as predições
+
+    """
     data = {}
     data['image'] = image
     headers = {}
@@ -66,6 +76,7 @@ def consulta_padma(image, model):
 
 
 def interpreta_pred(prediction, model):
+    """Resume predições se necessário."""
     if model == 'vazio':
         return prediction['predictions'][0]['1'] < 0.5
     if model == 'peso':

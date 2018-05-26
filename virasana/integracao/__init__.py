@@ -35,6 +35,13 @@ DATA = 'metadata.dataescaneamento'
 STATS_LIVE = 30  # Tempo em minutos para manter cache de stats
 stats = {}
 
+CHAVES_GRIDFS = [
+    'uploadDate',
+    'metadata.recintoid',
+    'metadata.recinto',
+    'filename'
+]
+
 
 def create_indexes(db):
     """Cria índices necessários no GridFS."""

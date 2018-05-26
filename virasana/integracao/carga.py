@@ -1,4 +1,4 @@
-"""Funçãoes para importar os dados do formulário CARGA do Bhadrasana."""
+"""Funçãoes para importar os dados da base CARGA do Bhadrasana."""
 
 import csv
 import io
@@ -183,7 +183,7 @@ def busca_info_container(db, numero: str,
 
     A busca é baseada na data de escaneamento. O parâmetro dias é um
     "threshold" (diferença aceita entre a data de atracação e escaneamento),
-    por padrão, é de 4 dias.
+    por padrão, é de 4 dias na importação e 10 dias na importação.
 
     Dentro destes 4 dias, será considerado o CE/Manifesto/Escala com menor
     diferença de data como o pertencente a este contêiner.

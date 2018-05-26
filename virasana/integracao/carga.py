@@ -111,7 +111,8 @@ def create_indexes(db):
 
 
 def mongo_find_in(db, collection: str, field: str, in_set,
-                  set_field: str=None) -> typing.Tuple[list, set]:
+                  set_field: str=None,
+                  filtros: dict=None) -> typing.Tuple[list, set]:
     """Realiza um find $in in_set no db.collection.
 
     Args:
@@ -123,7 +124,9 @@ def mongo_find_in(db, collection: str, field: str, in_set,
 
         in_set: lista ou conjunto de valores a passar para o operador "$in"
 
-        result_field: campo para obter valores únicos (opcional)
+        set_field: campo para obter valores únicos (opcional)
+
+        filtros: filtros adicionais a aplicar
 
     Returns:
         Dicionário de resultados formatado key:value(Somente campos não nulos)
@@ -133,6 +136,8 @@ def mongo_find_in(db, collection: str, field: str, in_set,
     result = []
     field_set = set()
     filtro = {field: {'$in': list(in_set)}}
+    if filtros:
+        filtro.update(filtros)
     # print(filtro)
     cursor = db[collection].find(filtro)
     for linha in cursor:
@@ -147,16 +152,17 @@ def mongo_find_in(db, collection: str, field: str, in_set,
 
 
 def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
-                         days=4) -> int:
+                         days) -> int:
     """Pega da lista de atracações a atracação com a data mais próxima.
 
     Args:
         atracacoes: lista de dict contendo os registros das atracacoes
 
+        scan_datetime: data de partida
+
         data: data buscada
 
-        days: "threshold"  máxima diferença entre as datas - default definido
-        no começo da função
+        days: "threshold"  máxima diferença entre as datas
 
     Returns:
         Índice da atracação, None se atracação não existe ou não está no
@@ -177,15 +183,49 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
     return index
 
 
+def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
+                days: int, exportacao=False)-> typing.Tuple[list, list, int]:
+    """Dada uma lista de conhecimentos, retorna a lista de escalas.
+
+    Retorna a lista de escalas vinculadas, com datadeatracao entre
+    scan_datetime e scan_datetime + days
+
+    Args:
+        conhecimentos: lista de dict contendo os registros das atracacoes
+
+        scan_datetime: data de partida
+
+        days: "threshold"  máxima diferença entre as datas
+
+    Returns:
+        (manifestos, escalas)
+
+    """
+    if exportacao:
+        days = days * -2
+        filtros = {'tipomanifesto': 'lce'}
+    else:
+        filtros = {'tipomanifesto': {'$in': ['lci', 'bce']}}
+    manifestos, manifestos_set = mongo_find_in(
+        db, 'CARGA.ManifestoConhecimento', 'conhecimento',
+        conhecimentos_set, 'manifesto', filtros)
+    escalas, escalas_set = mongo_find_in(
+        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
+    atracacoes, _ = mongo_find_in(
+        db, 'CARGA.AtracDesatracEscala', 'escala', escalas_set)
+    index_atracacao = busca_atracacao_data(atracacoes, scan_datetime, days)
+    return manifestos, escalas, atracacoes, index_atracacao
+
+
 def busca_info_container(db, numero: str,
-                         data_escaneamento: datetime, days=4) -> dict:
+                         data_escaneamento: datetime, days=-5) -> dict:
     """Busca heurística na base CARGA MongoDB de dados sobre o Contêiner.
 
     A busca é baseada na data de escaneamento. O parâmetro dias é um
     "threshold" (diferença aceita entre a data de atracação e escaneamento),
-    por padrão, é de 4 dias na importação e 10 dias na importação.
+    por padrão, é de -5 dias na importação e +10 dias na importação.
 
-    Dentro destes 4 dias, será considerado o CE/Manifesto/Escala com menor
+    Dentro destes 5 dias, será considerado o CE/Manifesto/Escala com menor
     diferença de data como o pertencente a este contêiner.
     Note-se que o resultado não é garantido, podendo trazer um CE incorreto.
 
@@ -193,7 +233,7 @@ def busca_info_container(db, numero: str,
     mas espera-se um acerto próximo de 100%, já que a frequência de cada
     contêiner em cada porto tem um intervalo típico de semanas e até meses,
     sendo extremamente incomum um contêiner ter duas "viagens" no mesmo
-    porto em menos de 4 dias +/-.
+    porto em menos de 5 dias +/-.
 
     Args:
         numero: número completo do contêiner
@@ -211,6 +251,7 @@ def busca_info_container(db, numero: str,
 
     """
     json_dict = {}
+    json_dict_vazio = {}
     numero = numero.casefold()
     # Primeiro busca por contêiner vazio (dez vezes mais rápido)
     containeres_vazios, manifestos_vazios_set = mongo_find_in(
@@ -223,37 +264,34 @@ def busca_info_container(db, numero: str,
     atracacoes_vazios, _ = mongo_find_in(
         db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
     # print('atracacoes', atracacoes_vazios)
-    index_atracacao = busca_atracacao_data(
+    index_atracacao_vazio = busca_atracacao_data(
         atracacoes_vazios, data_escaneamento, days)
     # print('INDEX', index_atracacao)
-    if index_atracacao is not None:
-        atracacao = atracacoes_vazios[index_atracacao]
-        json_dict['atracacao'] = atracacao
-        json_dict['vazio'] = True
+    if index_atracacao_vazio is not None:
+        atracacao = atracacoes_vazios[index_atracacao_vazio]
+        json_dict_vazio['atracacao'] = atracacao
+        json_dict_vazio['vazio'] = True
         manifesto = [linha['manifesto'] for linha in escalas_vazios
                      if linha['escala'] == atracacao['escala']]
 
-        json_dict['manifesto'], _ = mongo_find_in(
+        json_dict_vazio['manifesto'], _ = mongo_find_in(
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
-        json_dict['container'] = [linha for linha in containeres_vazios
-                                  if linha['manifesto'] == manifesto[0]]
-        # print(json_dict)
-        return json_dict
-    # else:
-    # Não achou atracacao vazio do Contêiner. Verificar se Contêiner é cheio
+        json_dict_vazio['container'] = [linha for linha in containeres_vazios
+                                        if linha['manifesto'] == manifesto[0]]
+    # Verificar se tem CE. Priorizar CE se tiver
     containeres, conhecimentos_set = mongo_find_in(
         db, 'CARGA.Container', 'container', set([numero]), 'conhecimento')
     conhecimentos, _ = mongo_find_in(
         db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos_set)
-    manifestos, manifestos_set = mongo_find_in(
-        db, 'CARGA.ManifestoConhecimento', 'conhecimento',
-        conhecimentos_set, 'manifesto')
-    # manifestos_set= set([manifesto['manifesto'] for manifesto in manifestos])
-    escalas, escalas_set = mongo_find_in(
-        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
-    atracacoes, _ = mongo_find_in(
-        db, 'CARGA.AtracDesatracEscala', 'escala', escalas_set)
-    index_atracacao = busca_atracacao_data(atracacoes, data_escaneamento)
+    # Busca CE Exportação
+    manifestos, escalas, atracacoes, index_atracacao = get_escalas(db, conhecimentos,
+                                                          data_escaneamento,
+                                                          days,
+                                                          exportacao=True)
+    if index_atracacao is None:
+        manifestos, escalas, atracacoes, index_atracacao = get_escalas(db, conhecimentos,
+                                                              data_escaneamento,
+                                                              days)
     if index_atracacao is not None:
         # Agora sabemos o número do(s) CE(s) corretos do contêiner
         # Basta montar uma estrutura de dados com as informações
@@ -280,7 +318,7 @@ def busca_info_container(db, numero: str,
         json_dict['container'] = [linha for linha in containeres
                                   if linha['conhecimento'] in conhecimentos]
         return json_dict
-    return {}
+    return json_dict_vazio
 
 
 def dados_carga_grava_fsfiles(db, batch_size=1000,

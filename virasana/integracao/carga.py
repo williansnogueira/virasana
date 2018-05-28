@@ -138,7 +138,7 @@ def mongo_find_in(db, collection: str, field: str, in_set,
     filtro = {field: {'$in': list(in_set)}}
     if filtros:
         filtro.update(filtros)
-    # print(filtro)
+    print(filtro)
     cursor = db[collection].find(filtro)
     for linha in cursor:
         result.append(
@@ -175,6 +175,7 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
         data = atracacao['dataatracacao']
         hora = atracacao['horaatracacao']
         datahora = datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
+        print(threshold, datahora)
         datetimedelta = abs(datahora - scan_datetime)
         # print(datetimedelta, threshold)
         if datetimedelta < threshold:
@@ -201,24 +202,76 @@ def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
         (manifestos, escalas)
 
     """
+    escalas = []
+    atracacoes = []
+    index_atracacao = None
+    manifestosc, manifestosc_set = mongo_find_in(
+        db, 'CARGA.ManifestoConhecimento', 'conhecimento',
+        conhecimentos_set, 'manifesto')
+    print('MANIFESTOS CONHECIMENTO', manifestosc_set)
     if exportacao:
         days = days * -2
         filtros = {'tipomanifesto': 'lce'}
     else:
         filtros = {'tipomanifesto': {'$in': ['lci', 'bce']}}
     manifestos, manifestos_set = mongo_find_in(
-        db, 'CARGA.ManifestoConhecimento', 'conhecimento',
-        conhecimentos_set, 'manifesto', filtros)
-    escalas, escalas_set = mongo_find_in(
-        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
-    atracacoes, _ = mongo_find_in(
-        db, 'CARGA.AtracDesatracEscala', 'escala', escalas_set)
-    index_atracacao = busca_atracacao_data(atracacoes, scan_datetime, days)
-    return manifestos, escalas, atracacoes, index_atracacao
+        db, 'CARGA.Manifesto', 'manifesto',
+        manifestosc_set, 'manifesto', filtros)
+    print('MANIFESTOS', manifestos_set)
+    if manifestos_set:
+        escalas, escalas_set = mongo_find_in(
+            db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
+        atracacoes, _ = mongo_find_in(
+            db, 'CARGA.AtracDesatracEscala', 'escala', escalas_set)
+        index_atracacao = busca_atracacao_data(atracacoes, scan_datetime, days)
+    return manifestosc, escalas, atracacoes, index_atracacao
 
+
+def busca_vazios(db, numero: str, data_escaneamento, days):
+    """Heurística para buscar manifesto de vazio.
+    
+    Args:
+        db: conexão com MongoDB
+        numero: número do contâiner
+        dataescaneamento: data de busca
+
+    Returns:
+        dict com informações do CARGA, se manifesto de vazio encontrado
+    
+    """
+    json_dict_vazio = {}
+    index_atracacao_vazio = None
+    containeres_vazios, manifestos_vazios_set = mongo_find_in(
+        db, 'CARGA.ContainerVazio', 'container', set([numero]), 'manifesto')
+    # print(containeres_vazios)
+    escalas_vazios_set = {}
+    if manifestos_vazios_set:
+        escalas_vazios, escalas_vazios_set = mongo_find_in(
+            db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_vazios_set,
+            'escala')
+    # print('escalas', escalas_vazios)
+    if escalas_vazios_set:
+        atracacoes_vazios, _ = mongo_find_in(
+            db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
+        # print('atracacoes', atracacoes_vazios)
+        index_atracacao_vazio = busca_atracacao_data(
+            atracacoes_vazios, data_escaneamento, days)
+    # print('INDEX', index_atracacao)
+    if index_atracacao_vazio is not None:
+        atracacao = atracacoes_vazios[index_atracacao_vazio]
+        json_dict_vazio['atracacao'] = atracacao
+        json_dict_vazio['vazio'] = True
+        manifesto = [linha['manifesto'] for linha in escalas_vazios
+                     if linha['escala'] == atracacao['escala']]
+
+        json_dict_vazio['manifesto'], _ = mongo_find_in(
+            db, 'CARGA.Manifesto', 'manifesto', manifesto)
+        json_dict_vazio['container'] = [linha for linha in containeres_vazios
+                                        if linha['manifesto'] == manifesto[0]]
+    return json_dict_vazio
 
 def busca_info_container(db, numero: str,
-                         data_escaneamento: datetime, days=-5) -> dict:
+                         data_escaneamento: datetime, days=5) -> dict:
     """Busca heurística na base CARGA MongoDB de dados sobre o Contêiner.
 
     A busca é baseada na data de escaneamento. O parâmetro dias é um
@@ -253,51 +306,35 @@ def busca_info_container(db, numero: str,
     json_dict = {}
     json_dict_vazio = {}
     numero = numero.casefold()
-    # Primeiro busca por contêiner vazio (dez vezes mais rápido)
-    containeres_vazios, manifestos_vazios_set = mongo_find_in(
-        db, 'CARGA.ContainerVazio', 'container', set([numero]), 'manifesto')
-    # print(containeres_vazios)
-    escalas_vazios, escalas_vazios_set = mongo_find_in(
-        db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_vazios_set,
-        'escala')
-    # print('escalas', escalas_vazios)
-    atracacoes_vazios, _ = mongo_find_in(
-        db, 'CARGA.AtracDesatracEscala', 'escala', escalas_vazios_set)
-    # print('atracacoes', atracacoes_vazios)
-    index_atracacao_vazio = busca_atracacao_data(
-        atracacoes_vazios, data_escaneamento, days)
-    # print('INDEX', index_atracacao)
-    if index_atracacao_vazio is not None:
-        atracacao = atracacoes_vazios[index_atracacao_vazio]
-        json_dict_vazio['atracacao'] = atracacao
-        json_dict_vazio['vazio'] = True
-        manifesto = [linha['manifesto'] for linha in escalas_vazios
-                     if linha['escala'] == atracacao['escala']]
-
-        json_dict_vazio['manifesto'], _ = mongo_find_in(
-            db, 'CARGA.Manifesto', 'manifesto', manifesto)
-        json_dict_vazio['container'] = [linha for linha in containeres_vazios
-                                        if linha['manifesto'] == manifesto[0]]
-    # Verificar se tem CE. Priorizar CE se tiver
+    # Primeiro busca por contêiner vazio
+    json_dict_vazio = busca_vazios(db, numero, data_escaneamento, days)
+    # Vazio procurado. Agora verificar se tem CE. Se tiver,
+    # verificar se é de importação, exportação, e se atende restrições
+    # de data
+    index_atracacao = None
     containeres, conhecimentos_set = mongo_find_in(
         db, 'CARGA.Container', 'container', set([numero]), 'conhecimento')
-    conhecimentos, _ = mongo_find_in(
-        db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos_set)
-    # Busca CE Exportação
-    manifestos, escalas, atracacoes, index_atracacao = get_escalas(
-        db,
-        conhecimentos,
-        data_escaneamento,
-        days,
-        exportacao=True
-    )
-    if index_atracacao is None:
-        manifestos, escalas, atracacoes, index_atracacao = get_escalas(
+    if conhecimentos_set:
+        # Busca CE Exportação
+        manifestosc, escalas, atracacoes, index_atracacao = get_escalas(
             db,
-            conhecimentos,
+            conhecimentos_set,
             data_escaneamento,
-            days
+            days,
+            exportacao=True
         )
+        # Busca CE Importação se Exportação não encontrado
+        if index_atracacao is None:
+            manifestosc, escalas, atracacoes, index_atracacao = get_escalas(
+                db,
+                conhecimentos_set,
+                data_escaneamento,
+                days
+            )
+    """    
+        conhecimentos, _ = mongo_find_in(
+            db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos_set)
+    """
     if index_atracacao is not None:
         # Agora sabemos o número do(s) CE(s) corretos do contêiner
         # Basta montar uma estrutura de dados com as informações
@@ -308,7 +345,7 @@ def busca_info_container(db, numero: str,
                      if linha['escala'] == atracacao['escala']]
         json_dict['manifesto'], _ = mongo_find_in(
             db, 'CARGA.Manifesto', 'manifesto', manifesto)
-        conhecimentos = [linha['conhecimento'] for linha in manifestos
+        conhecimentos = [linha['conhecimento'] for linha in manifestosc
                          if linha['manifesto'] == manifesto[0]]
 
         # Separar APENAS os Conhecimentos BL ou MBL
@@ -323,6 +360,9 @@ def busca_info_container(db, numero: str,
             db, 'CARGA.NCM', 'conhecimento', conhecimentos)
         json_dict['container'] = [linha for linha in containeres
                                   if linha['conhecimento'] in conhecimentos]
+    # Priorizar CE se tiver ambos e já houver
+    # passagem de vazio próxima e anterior
+    if json_dict: # TODO: fazer testes no fs.files
         return json_dict
     return json_dict_vazio
 

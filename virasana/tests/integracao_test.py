@@ -27,12 +27,17 @@ class TestCase(unittest.TestCase):
         self.db = db
         # Cria data para testes
         data_escaneamento = datetime(2017, 1, 6)
-        data_escalas = '05/01/2017'   # dois dias a menos
-        data_escala_4 = '01/01/2017'  # cinco dias a menos
-        data_escaneamento_false = datetime(2017, 1, 1)
+        data_escaneamento_menos2 = '05/01/2017'   # dois dias a menos
+        data_escaneamento_menos6 = '01/01/2017'  # quatro dias a menos
+        data_escaneamento_mais8 = '13/01/2017'  # quatro dias a menos
+        data_escaneamento_false = datetime(2016, 12, 1)
         self.data_escaneamento = data_escaneamento
         self.data_escaneamento_false = data_escaneamento_false
         # Cria documentos fs.files simulando imagens para testes
+        # São dois contêineres cheios de importação
+        # Um manifesto de vazio
+        # Um contêiner cheio de exportação que TAMBÈM
+        # passou num manifesto de vazio dois dias antes
         db['fs.files'].insert(
             {'metadata': {'numeroinformado': 'cheio',
                           'contentType': 'image/jpeg',
@@ -56,6 +61,18 @@ class TestCase(unittest.TestCase):
                           'contentType': 'image/jpeg',
                           'recinto': 'B',
                           'dataescaneamento': data_escaneamento}})
+        db['fs.files'].insert(
+            {'metadata': {'numeroinformado': 'cheioe',
+                          'contentType': 'image/jpeg',
+                          'recinto': 'A',
+                          'dataescaneamento': data_escaneamento,
+                          }})
+        db['fs.files'].insert(
+            {'metadata': {'numeroinformado': 'cheioe',
+                          'contentType': 'image/jpeg',
+                          'recinto': 'A',
+                          'dataescaneamento': data_escaneamento,
+                          }})
         db['fs.files'].insert(
             {'filename': 'semxmlS_stamp.jpg',
              'metadata': {'contentType': 'image/jpeg',
@@ -86,6 +103,11 @@ class TestCase(unittest.TestCase):
              'pesobrutoitem': '10,00',
              'volumeitem': '1,00'})
         db['CARGA.Container'].insert(
+            {'container': 'cheioe',
+             'conhecimento': 21,
+             'pesobrutoitem': '10,00',
+             'volumeitem': '1,00'})
+        db['CARGA.Container'].insert(
             {'container': 'semconhecimento', 'conhecimento': 9})
         db['CARGA.Container'].insert(
             {'container': 'semescala', 'conhecimento': 3})
@@ -93,10 +115,15 @@ class TestCase(unittest.TestCase):
             {'container': 'escalaforadoprazo', 'conhecimento': 4})
         db['CARGA.ContainerVazio'].insert(
             {'container': 'vazio', 'manifesto': 2})
+        # Aqui contêiner de exportação entrou!!!!
+        db['CARGA.ContainerVazio'].insert(
+            {'container': 'cheioe', 'manifesto': 22})
         db['CARGA.Conhecimento'].insert({'conhecimento': 1, 'tipo': 'mbl'})
         db['CARGA.Conhecimento'].insert({'conhecimento': 2, 'tipo': 'bl'})
         db['CARGA.Conhecimento'].insert({'conhecimento': 3, 'tipo': 'bl'})
         db['CARGA.Conhecimento'].insert({'conhecimento': 4, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert({'conhecimentoe': 5, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert({'conhecimento': 21, 'tipo': 'mbl'})
         db['CARGA.ManifestoConhecimento'].insert(
             {'conhecimento': 1, 'manifesto': 1})
         db['CARGA.ManifestoConhecimento'].insert(
@@ -107,23 +134,38 @@ class TestCase(unittest.TestCase):
             {'conhecimento': 4, 'manifesto': 4})
         db['CARGA.ManifestoConhecimento'].insert(
             {'conhecimento': 3, 'manifesto': 32})
+        db['CARGA.ManifestoConhecimento'].insert(
+            {'conhecimento': 21, 'manifesto': 21})
         db['CARGA.Manifesto'].insert(
-            {'manifesto': 1})
+            {'manifesto': 1, 'tipomanifesto': 'lci'})
         db['CARGA.Manifesto'].insert(
-            {'manifesto': 2})
+            {'manifesto': 2, 'tipomanifesto': 'lci'})
+        db['CARGA.Manifesto'].insert(
+            {'manifesto': 21, 'tipomanifesto': 'lce'})
+        db['CARGA.Manifesto'].insert(
+            {'manifesto': 22, 'tipomanifesto': 'bce'})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 1, 'escala': 1})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 2, 'escala': 2})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 3, 'escala': 3})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 4, 'escala': 4})
+        db['CARGA.EscalaManifesto'].insert({'manifesto': 21, 'escala': 21})
+        db['CARGA.EscalaManifesto'].insert({'manifesto': 22, 'escala': 22})
         db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 4,
-             'dataatracacao': data_escala_4,
+             'dataatracacao': data_escaneamento_menos6,
              'horaatracacao': '00:00:01'})
         db['CARGA.AtracDesatracEscala'].insert(
-            {'escala': 1, 'dataatracacao': data_escalas,
+            {'escala': 1, 'dataatracacao': data_escaneamento_menos2,
              'horaatracacao': '00:00:01'})
         db['CARGA.AtracDesatracEscala'].insert(
-            {'escala': 2, 'dataatracacao': data_escalas,
+            {'escala': 2, 'dataatracacao': data_escaneamento_menos2,
+             'horaatracacao': '00:00:01'})
+        db['CARGA.AtracDesatracEscala'].insert(
+            {'escala': 22, 'dataatracacao': data_escaneamento_menos2,
+             'horaatracacao': '00:00:01'})
+        # Exportação
+        db['CARGA.AtracDesatracEscala'].insert(
+            {'escala': 21, 'dataatracacao': data_escaneamento_mais8,
              'horaatracacao': '00:00:01'})
         # carga.create_indexes(db)
 
@@ -146,15 +188,15 @@ class TestCase(unittest.TestCase):
         carga.create_indexes(self.db)
 
     def test_count(self):
-        assert gridfs_count(self.db) == 6
+        assert gridfs_count(self.db) == 8
 
     def test_stats(self):
         stats = stats_resumo_imagens(self.db)
         assert stats is not None
-        assert stats['Total de imagens'] == 5
+        assert stats['Total de imagens'] == 7
         assert stats['Imagens com info do Carga'] == 0
         assert stats['Imagens com info do XML'] == 0
-        assert stats['recinto']['A'] == 3
+        assert stats['recinto']['A'] == 5
         assert stats['recinto']['B'] == 1
         assert stats['recinto']['C'] == 1
 
@@ -186,6 +228,26 @@ class TestCase(unittest.TestCase):
         assert vazio['atracacao']['escala'] == 2
         assert vazio['container'][0]['manifesto'] == 2
 
+
+    def test_busca_vazioe(self):
+        vazio = carga.busca_info_container(
+            self.db, 'cheioe', self.data_escaneamento)
+        assert vazio != {}
+        assert vazio['vazio'] is True
+        assert vazio['atracacao']['escala'] == 2
+        assert vazio['container'][0]['manifesto'] == 2
+
+    def test_busca_cheioe(self):
+        assert carga.busca_info_container(
+            self.db, 'cheioe', self.data_escaneamento_false) == {}
+        cheioe = carga.busca_info_container(
+            self.db, 'cheioe', self.data_escaneamento)
+        print('CHEIO EXP', cheioe)
+        assert cheioe != {}
+        assert cheioe['vazio'] is False
+        assert cheioe['atracacao']['escala'] == 1
+        assert cheioe['container'][0]['conhecimento'] == 1
+
     def test_busca_semescala(self):
         assert carga.busca_info_container(
             self.db, 'semescala', self.data_escaneamento) == {}
@@ -202,7 +264,7 @@ class TestCase(unittest.TestCase):
         processados = carga.dados_carga_grava_fsfiles(
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
-        assert processados == 3
+        assert processados == 5
         semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
         assert semcarga == 3
         processados = carga.dados_carga_grava_fsfiles(
@@ -214,7 +276,7 @@ class TestCase(unittest.TestCase):
         processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 1
         semxml = self.db['fs.files'].find({'metadata.xml': None}).count()
-        assert semxml == 5
+        assert semxml == 7
         processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 0
 

@@ -335,15 +335,17 @@ def busca_info_container(db, numero: str,
     """
     json_dict = {}
     json_dict_vazio = {}
-    numero = numero.casefold()
+    numero_lower = numero.lower()
     # Primeiro busca por contêiner vazio
-    json_dict_vazio = busca_vazios(db, numero, data_escaneamento, days)
+    json_dict_vazio = busca_vazios(db, numero_lower, data_escaneamento, days)
     # Vazio procurado. Agora verificar se tem CE. Se tiver,
     # verificar se é de importação, exportação, e se atende restrições
     # de data
     index_atracacao = None
     conteineres, conhecimentos_set = mongo_find_in(
-        db, 'CARGA.Container', 'container', set([numero]), 'conhecimento')
+        db, 'CARGA.Container', 'container',
+        set([numero_lower]), 'conhecimento'
+    )
     if conhecimentos_set:
         # Busca CE Exportação
         manifestosc, escalas, atracacoes, index_atracacao = get_escalas(
@@ -367,7 +369,7 @@ def busca_info_container(db, numero: str,
         json_dict = monta_info_cheio(db, index_atracacao, atracacoes,
                                      escalas, manifestosc, conteineres)
 
-    if json_dict_vazio:  # TODO: fazer testes no fs.files
+    if json_dict_vazio:
         file_cursor = None
         if json_dict:
             print('ENTROU AQUI!!!!')
@@ -388,7 +390,7 @@ def busca_info_container(db, numero: str,
 
 def dados_carga_grava_fsfiles(db, batch_size=1000,
                               data_inicio=datetime(1900, 1, 1),
-                              days=4,
+                              days=5,
                               update=True, force_update=False):
     """Busca por registros no GridFS sem info do CARGA.
 
@@ -432,8 +434,6 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     end = start - timedelta(days=10000)
     for linha in file_cursor.limit(batch_size):
         container = linha.get('metadata').get('numeroinformado')
-        if container:  # Lembrar que está tudo minusculo no BD!
-            container = container.lower()
         data = linha.get('metadata').get('dataescaneamento')
         # print(container, data)
         if data and container:

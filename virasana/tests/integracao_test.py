@@ -27,11 +27,18 @@ class TestCase(unittest.TestCase):
         self.db = db
         # Cria data para testes
         data_escaneamento = datetime(2017, 1, 6)
+        # Data de escaneamento do contêiner de exportação
+        # Dois dias depois da entrada do manifesto de vazio
+        # O contêiner de exportação entra como vazio, dois dias
+        # após é escaneado novamente, e oito dias depois sai
+        # em CE de exportação
+        data_escaneamento_cheioe = datetime(2017, 1, 8)
         data_escaneamento_menos2 = '05/01/2017'   # dois dias a menos
         data_escaneamento_menos6 = '01/01/2017'  # quatro dias a menos
-        data_escaneamento_mais8 = '13/01/2017'  # quatro dias a menos
+        data_escaneamento_mais8 = '16/01/2017'  # oito dias a mais
         data_escaneamento_false = datetime(2016, 12, 1)
         self.data_escaneamento = data_escaneamento
+        self.data_escaneamento_cheioe = data_escaneamento_cheioe
         self.data_escaneamento_false = data_escaneamento_false
         # Cria documentos fs.files simulando imagens para testes
         # São dois contêineres cheios de importação
@@ -228,25 +235,32 @@ class TestCase(unittest.TestCase):
         assert vazio['atracacao']['escala'] == 2
         assert vazio['container'][0]['manifesto'] == 2
 
-
-    def test_busca_vazioe(self):
+    def test_busca_cheioe(self):
+        # O caso de exportação é um caso especial,
+        # pois ocorrem dois escaneamentos em poucos dias.
+        # Neste teste, um contêiner chega em manifesto de vazio
+        # e é escaneado.
+        # Dois dias depois, é escaneado novamente
+        # Oito dias depois, sai como exportação
+        # Portanto é preciso primeiro achar o vazio e GRAVAR
         vazio = carga.busca_info_container(
             self.db, 'cheioe', self.data_escaneamento)
         assert vazio != {}
         assert vazio['vazio'] is True
-        assert vazio['atracacao']['escala'] == 2
-        assert vazio['container'][0]['manifesto'] == 2
-
-    def test_busca_cheioe(self):
-        assert carga.busca_info_container(
-            self.db, 'cheioe', self.data_escaneamento_false) == {}
+        assert vazio['atracacao']['escala'] == 22
+        assert vazio['container'][0]['manifesto'] == 22
+        self.db['fs.files'].update(
+            {'metadata.numeroinformado': 'cheioe',
+             'metadata.dataescaneamento': self.data_escaneamento},
+            {'$set': {'metadata.carga': vazio}}
+        )
         cheioe = carga.busca_info_container(
-            self.db, 'cheioe', self.data_escaneamento)
+            self.db, 'cheioe', self.data_escaneamento_cheioe)
         print('CHEIO EXP', cheioe)
         assert cheioe != {}
         assert cheioe['vazio'] is False
-        assert cheioe['atracacao']['escala'] == 1
-        assert cheioe['container'][0]['conhecimento'] == 1
+        assert cheioe['atracacao']['escala'] == 21
+        assert cheioe['container'][0]['conhecimento'] == 21
 
     def test_busca_semescala(self):
         assert carga.busca_info_container(

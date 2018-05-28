@@ -169,15 +169,15 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
         intervalo threshold
 
     """
+    # TODO: Ver se é melhor utilizar sinais de acordo com EXP ou IMP
     index = None
-    threshold = timedelta(days=days)
+    threshold = timedelta(days=abs(days))
     for ind, atracacao in enumerate(atracacoes):
         data = atracacao['dataatracacao']
         hora = atracacao['horaatracacao']
         datahora = datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
-        print(threshold, datahora)
-        datetimedelta = abs(datahora - scan_datetime)
-        # print(datetimedelta, threshold)
+        datetimedelta = abs(scan_datetime - datahora)
+        print('times', scan_datetime, datahora, datetimedelta, threshold)
         if datetimedelta < threshold:
             threshold = datetimedelta
             index = ind
@@ -229,7 +229,7 @@ def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
 
 def busca_vazios(db, numero: str, data_escaneamento, days):
     """Heurística para buscar manifesto de vazio.
-    
+
     Args:
         db: conexão com MongoDB
         numero: número do contâiner
@@ -237,7 +237,7 @@ def busca_vazios(db, numero: str, data_escaneamento, days):
 
     Returns:
         dict com informações do CARGA, se manifesto de vazio encontrado
-    
+
     """
     json_dict_vazio = {}
     index_atracacao_vazio = None
@@ -269,6 +269,36 @@ def busca_vazios(db, numero: str, data_escaneamento, days):
         json_dict_vazio['container'] = [linha for linha in containeres_vazios
                                         if linha['manifesto'] == manifesto[0]]
     return json_dict_vazio
+
+
+def monta_info_cheio(db, index_atracacao, atracacoes,
+                     escalas, manifestosc, conteineres):
+    """Apenas faz montagem do dicionário se encontrado CE."""
+    json_dict = {}
+    atracacao = atracacoes[index_atracacao]
+    json_dict['vazio'] = False
+    json_dict['atracacao'] = atracacao
+    manifesto = [linha['manifesto'] for linha in escalas
+                 if linha['escala'] == atracacao['escala']]
+    json_dict['manifesto'], _ = mongo_find_in(
+        db, 'CARGA.Manifesto', 'manifesto', manifesto)
+    conhecimentos = [linha['conhecimento'] for linha in manifestosc
+                     if linha['manifesto'] == manifesto[0]]
+
+    # Separar APENAS os Conhecimentos BL ou MBL
+    filtro = {'conhecimento': {'$in': list(conhecimentos)},
+              'tipo': {'$in': ['bl', 'mbl']}}
+    cursor = db['CARGA.Conhecimento'].find(filtro, {'conhecimento': 1})
+    conhecimentos = [linha['conhecimento'] for linha in cursor]
+
+    json_dict['conhecimento'], _ = mongo_find_in(
+        db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos)
+    json_dict['ncm'], _ = mongo_find_in(
+        db, 'CARGA.NCM', 'conhecimento', conhecimentos)
+    json_dict['container'] = [linha for linha in conteineres
+                              if linha['conhecimento'] in conhecimentos]
+    return json_dict
+
 
 def busca_info_container(db, numero: str,
                          data_escaneamento: datetime, days=5) -> dict:
@@ -312,7 +342,7 @@ def busca_info_container(db, numero: str,
     # verificar se é de importação, exportação, e se atende restrições
     # de data
     index_atracacao = None
-    containeres, conhecimentos_set = mongo_find_in(
+    conteineres, conhecimentos_set = mongo_find_in(
         db, 'CARGA.Container', 'container', set([numero]), 'conhecimento')
     if conhecimentos_set:
         # Busca CE Exportação
@@ -331,40 +361,29 @@ def busca_info_container(db, numero: str,
                 data_escaneamento,
                 days
             )
-    """    
-        conhecimentos, _ = mongo_find_in(
-            db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos_set)
-    """
     if index_atracacao is not None:
-        # Agora sabemos o número do(s) CE(s) corretos do contêiner
+        # Agora sabemos se há número do(s) CE(s) corretos do contêiner
         # Basta montar uma estrutura de dados com as informações
-        atracacao = atracacoes[index_atracacao]
-        json_dict['vazio'] = False
-        json_dict['atracacao'] = atracacao
-        manifesto = [linha['manifesto'] for linha in escalas
-                     if linha['escala'] == atracacao['escala']]
-        json_dict['manifesto'], _ = mongo_find_in(
-            db, 'CARGA.Manifesto', 'manifesto', manifesto)
-        conhecimentos = [linha['conhecimento'] for linha in manifestosc
-                         if linha['manifesto'] == manifesto[0]]
+        json_dict = monta_info_cheio(db, index_atracacao, atracacoes,
+                                     escalas, manifestosc, conteineres)
 
-        # Separar APENAS os Conhecimentos BL ou MBL
-        filtro = {'conhecimento': {'$in': list(conhecimentos)},
-                  'tipo': {'$in': ['bl', 'mbl']}}
-        cursor = db['CARGA.Conhecimento'].find(filtro, {'conhecimento': 1})
-        conhecimentos = [linha['conhecimento'] for linha in cursor]
-
-        json_dict['conhecimento'], _ = mongo_find_in(
-            db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos)
-        json_dict['ncm'], _ = mongo_find_in(
-            db, 'CARGA.NCM', 'conhecimento', conhecimentos)
-        json_dict['container'] = [linha for linha in containeres
-                                  if linha['conhecimento'] in conhecimentos]
-    # Priorizar CE se tiver ambos e já houver
-    # passagem de vazio próxima e anterior
-    if json_dict: # TODO: fazer testes no fs.files
-        return json_dict
-    return json_dict_vazio
+    if json_dict_vazio:  # TODO: fazer testes no fs.files
+        file_cursor = None
+        if json_dict:
+            print('ENTROU AQUI!!!!')
+            filtro = {'metadata.numeroinformado': numero,
+                      'metadata.dataescaneamento':
+                      {'$lt': data_escaneamento,
+                       '$gt': data_escaneamento - timedelta(days=4)
+                       },
+                      'metadata.carga.vazio': True}
+            print(filtro)
+            file_cursor = db['fs.files'].find_one(filtro)
+        # Priorizar CE se tiver ambos e já houver
+        # escaneamento de vazio próximo e anterior encontrado
+        if not file_cursor:
+            return json_dict_vazio
+    return json_dict
 
 
 def dados_carga_grava_fsfiles(db, batch_size=1000,

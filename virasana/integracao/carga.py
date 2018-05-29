@@ -40,6 +40,17 @@ CHAVES_CARGA = [
 ]
 
 
+def converte_datahora_atracacao(atracacao: dict)-> datetime:
+    """Tansforma data e hora de atracação em objeto datetime.
+
+    Args:
+        atracacao: dict contendo chaves dataatracacao e horaaatracacao
+    """
+    data = atracacao['dataatracacao']
+    hora = atracacao['horaatracacao']
+    return datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
+
+
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração.
 
@@ -101,10 +112,7 @@ def create_indexes(db):
     # Cria campo data de atracacao no padrão ISODate
     cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
     for linha in cursor:
-        dataatracacao = linha['dataatracacao']
-        horaatracacao = linha['horaatracacao']
-        dataatracacaoiso = datetime.strptime(dataatracacao + horaatracacao,
-                                             '%d/%m/%Y%H:%M:%S')
+        dataatracacaoiso = converte_datahora_atracacao(linha)
         # print(linha['_id'], dataatracacao, dataatracacaoiso)
         db['CARGA.AtracDesatracEscala'].update(
             {'_id': linha['_id']}, {
@@ -176,9 +184,7 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
     index = None
     threshold = timedelta(days=abs(days))
     for ind, atracacao in enumerate(atracacoes):
-        data = atracacao['dataatracacao']
-        hora = atracacao['horaatracacao']
-        datahora = datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
+        datahora = converte_datahora_atracacao(atracacao)
         datetimedelta = abs(scan_datetime - datahora)
         # print('times', scan_datetime, datahora, datetimedelta, threshold)
         if datetimedelta < threshold:
@@ -373,20 +379,31 @@ def busca_info_container(db, numero: str,
                                      escalas, manifestosc, conteineres)
 
     if json_dict_vazio:
-        file_cursor = None
         if json_dict:
-            # print('ENTROU AQUI!!!!')
+            # Priorizar CE(json_dict) se tiver ambos CASO seja encontrado
+            # escaneamento de vazio próximo e anterior (find->cursor)
+            # Senão, pegar vazio ou CE, o que tiver a data mais próxima
             filtro = {'metadata.numeroinformado': numero,
                       'metadata.dataescaneamento':
                       {'$lt': data_escaneamento,
-                       '$gt': data_escaneamento - timedelta(days=4)
+                       '$gt': data_escaneamento - timedelta(days=days)
                        },
                       'metadata.carga.vazio': True}
-            # print(filtro)
-            file_cursor = db['fs.files'].find_one(filtro)
-        # Priorizar CE se tiver ambos e já houver
-        # escaneamento de vazio próximo e anterior encontrado
-        if not file_cursor:
+            cursor = db['fs.files'].find_one(filtro)
+            if cursor is not None:
+                return json_dict
+            else:
+                print('VAZIO', json_dict_vazio, 'CHEIO', json_dict)
+                datahora_vazio = converte_datahora_atracacao(
+                    json_dict_vazio['atracacao'])
+                datahora_naovazio = converte_datahora_atracacao(
+                    json_dict['atracacao'])
+                vaziodelta = abs(data_escaneamento - datahora_vazio)
+                naovaziodelta = abs(data_escaneamento - datahora_naovazio)
+                print(vaziodelta, naovaziodelta)
+                if (vaziodelta < naovaziodelta):
+                    return json_dict_vazio
+        else:
             return json_dict_vazio
     return json_dict
 

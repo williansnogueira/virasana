@@ -29,6 +29,30 @@ BATCH_SIZE = 10000
 MODEL = 'ssd'
 
 
+def predict_cropped_images(predictions, image, model, _id):
+    """Recorta imagens de acordo com bbox passada e consulta modelo.
+
+    Para acessar algumas predições, é necessário recortar as imagens antes.
+    Esta função combina as duas ações.
+
+    """
+    success = False
+    for index, conteiner in enumerate(predictions):
+        bbox = conteiner.get('bbox')
+        if bbox:
+            try:
+                image_crop = recorta_imagem(image, bbox)
+                pred = consulta_padma(image_crop, model)
+                print(model, pred)
+                if pred and pred['success']:
+                    result = interpreta_pred(pred, model)
+                    predictions[index][model] = result
+                    success = True
+            except TypeError as err:
+                print('Erro ao recortar imagem', _id, str(err))
+    return success, predictions
+
+
 @click.command()
 @click.option('--model', help='Modelo de predição a ser consultado',
               required=True)
@@ -44,7 +68,7 @@ def update(model, batch_size, sovazios):
         filtro['metadata.carga.vazio'] = True
     # Modelo que cria uma caixa de coordenadas para recorte é pré requisito
     # para os outros modelos. Assim, outros modelos só podem rodar em registros
-    # que já possuam o campo bbox
+    # que já possuam o campo bbox (bbox: exists: True)
     if model in BBOX_MODELS:
         filtro['metadata.predictions.bbox'] = {'$exists': False}
     else:
@@ -65,41 +89,25 @@ def update(model, batch_size, sovazios):
             if model in BBOX_MODELS:
                 pred_bbox = consulta_padma(image, model)
                 print('Resultado da consulta:', pred_bbox)
-                predictions = pred_bbox['predictions']
-                if pred_bbox and pred_bbox['success'] and predictions:
-                    print('Gravando...', predictions)
-                    db['fs.files'].update(
-                        {'_id': _id},
-                        {'$set': {
-                            'metadata.predictions': predictions}}
-                    )
+                new_predictions = pred_bbox['predictions']
+                success = pred_bbox and pred_bbox['success']
             else:
                 predictions = registro['metadata'].get('predictions')
                 success = False
                 if predictions:
-                    for index, conteiner in enumerate(predictions):
-                        bbox = conteiner.get('bbox')
-                        if bbox:
-                            try:
-                                image_crop = recorta_imagem(image, bbox)
-                                # image.save(os.path.join('.', str(_id) +
-                                #  '.jpg'), 'JPEG', quality=100)
-                                pred = consulta_padma(image_crop, model)
-                                print(model, pred)
-                                if pred and pred['success']:
-                                    result = interpreta_pred(pred, model)
-                                    predictions[index][model] = result
-                                    success = True
-                            except TypeError as err:
-                                print('Erro ao recortar imagem', _id, str(err))
-                if predictions and success:
-                    print('Gravando...', predictions, _id)
-                    db['fs.files'].update(
-                        {'_id': _id},
-                        {'$set': {'metadata.predictions': predictions}}
+                    success, new_predictions = predict_cropped_images(
+                        predictions,
+                        image, model,
+                        _id
                     )
                 else:
                     print('Consulta retornou vazia! (modelo existe?)')
+            if new_predictions and success:
+                print('Gravando...', new_predictions, _id)
+                db['fs.files'].update(
+                    {'_id': _id},
+                    {'$set': {'metadata.predictions': new_predictions}}
+                )
 
 
 if __name__ == '__main__':

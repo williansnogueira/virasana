@@ -34,7 +34,8 @@ class TestCase(unittest.TestCase):
         # em CE de exportação
         data_escaneamento_cheioe = datetime(2017, 1, 8)
         data_escaneamento_menos2 = '05/01/2017'   # dois dias a menos
-        data_escaneamento_menos6 = '01/01/2017'  # quatro dias a menos
+        data_escaneamento_menos4 = '03/01/2017'   # quatro dias a menos
+        data_escaneamento_menos6 = '01/01/2017'  # seis dias a menos
         data_escaneamento_mais8 = '16/01/2017'  # oito dias a mais
         data_escaneamento_false = datetime(2016, 12, 1)
         self.data_escaneamento = data_escaneamento
@@ -122,6 +123,10 @@ class TestCase(unittest.TestCase):
             {'container': 'escalaforadoprazo', 'conhecimento': 4})
         db['CARGA.ContainerVazio'].insert(
             {'container': 'vazio', 'manifesto': 2})
+        # Condição em que existe tanto manifesto de vazio quanto
+        # CE de cheio - sistema deve buscar data mais próxima
+        db['CARGA.ContainerVazio'].insert(
+            {'container': 'cheio', 'manifesto': 41})
         # Aqui contêiner de exportação entrou!!!!
         db['CARGA.ContainerVazio'].insert(
             {'container': 'cheioe', 'manifesto': 22})
@@ -155,6 +160,7 @@ class TestCase(unittest.TestCase):
         db['CARGA.EscalaManifesto'].insert({'manifesto': 2, 'escala': 2})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 3, 'escala': 3})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 4, 'escala': 4})
+        db['CARGA.EscalaManifesto'].insert({'manifesto': 41, 'escala': 41})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 21, 'escala': 21})
         db['CARGA.EscalaManifesto'].insert({'manifesto': 22, 'escala': 22})
         db['CARGA.AtracDesatracEscala'].insert(
@@ -162,10 +168,14 @@ class TestCase(unittest.TestCase):
              'dataatracacao': data_escaneamento_menos6,
              'horaatracacao': '00:00:01'})
         db['CARGA.AtracDesatracEscala'].insert(
+            {'escala': 41,
+             'dataatracacao': data_escaneamento_menos2,
+             'horaatracacao': '00:00:01'})
+        db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 1, 'dataatracacao': data_escaneamento_menos2,
              'horaatracacao': '00:00:01'})
         db['CARGA.AtracDesatracEscala'].insert(
-            {'escala': 2, 'dataatracacao': data_escaneamento_menos2,
+            {'escala': 2, 'dataatracacao': data_escaneamento_menos4,
              'horaatracacao': '00:00:01'})
         db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 22, 'dataatracacao': data_escaneamento_menos2,

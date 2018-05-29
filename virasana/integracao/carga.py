@@ -393,14 +393,14 @@ def busca_info_container(db, numero: str,
             if cursor is not None:
                 return json_dict
             else:
-                print('VAZIO', json_dict_vazio, 'CHEIO', json_dict)
+                # print('VAZIO', json_dict_vazio, 'CHEIO', json_dict)
                 datahora_vazio = converte_datahora_atracacao(
                     json_dict_vazio['atracacao'])
                 datahora_naovazio = converte_datahora_atracacao(
                     json_dict['atracacao'])
                 vaziodelta = abs(data_escaneamento - datahora_vazio)
                 naovaziodelta = abs(data_escaneamento - datahora_naovazio)
-                print(vaziodelta, naovaziodelta)
+                # print(vaziodelta, naovaziodelta)
                 if (vaziodelta < naovaziodelta):
                     return json_dict_vazio
         else:
@@ -446,13 +446,12 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     file_cursor = db['fs.files'].find(filtro).sort(
         'metadata.dataescaneamento', 1)
     acum = 0
-    total = min(file_cursor.count(), batch_size)
+    total = 0
+    # total = min(file_cursor.count(), batch_size)
     start = datetime.utcnow()
-    if total == 0:
-        logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
-        return 0
     end = start - timedelta(days=10000)
     for linha in file_cursor.limit(batch_size):
+        total += 1
         container = linha.get('metadata').get('numeroinformado')
         data = linha.get('metadata').get('dataescaneamento')
         # print(container, data)
@@ -476,6 +475,9 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': 'NA'}}
                     )
+    if total == 0:
+        logger.info('dados_carga_grava_fsfiles sem arquivos para processar')
+        return 0
     logger.info(' '.join([
         ' Resultado dados_carga_grava_fsfiles',
         ' Pesquisados', str(total),

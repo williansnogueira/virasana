@@ -279,24 +279,25 @@ class FilesForm(FlaskForm):
                                    default=0)
 
 
-@app.route('/files', methods=['GET', 'POST'])
-@login_required
-def files():
-    """Recebe um filtro, aplica no GridFS, retorna a lista de arquivos."""
-    PAGE_ROWS = 50
-    lista_arquivos = []
-    campos = campos_chave()
-    filtro = {}
-    pagina_atual = None
-    npaginas = 1
-    filtro_auditoria = None
+def recupera_user_filtros():
+    """Usa variável global para guardar filtros personalizados entre posts."""
     global filtros
+    filtro = {}
     if filtros.get(current_user.id):
         user_filtros = filtros[current_user.id]
     else:
         user_filtros = dict()
         filtros[current_user.id] = user_filtros
-    form = FilesForm(**request.form)
+    if user_filtros:  # Adiciona filtro personalizado se houver
+        for campo, valor in user_filtros.items():
+            filtro[campo] = valor.lower()
+    return filtro, user_filtros
+
+
+def valida_form_files(form, filtro):
+    """Lê formulário e adiciona campos ao filtro se necessário."""
+    order = None
+    pagina_atual = None
     if form.validate():  # configura filtro básico
         numero = form.numero.data
         start = form.start.data
@@ -306,6 +307,9 @@ def files():
         filtro_escolhido = form.filtro_auditoria.data
         if filtro_escolhido:
             filtro_auditoria = FILTROS_AUDITORIA.get(filtro_escolhido)
+            if filtro_auditoria:
+                filtro.update(filtro_auditoria['filtro'])
+                order = filtro_auditoria['order']
         if numero == 'None':
             numero = None
         if start and end:
@@ -317,17 +321,34 @@ def files():
         if alerta:
             filtro['metadata.xml.alerta'] = True
         # print(filtro)
+    return filtro, pagina_atual, order
 
-    if user_filtros:  # Adiciona filtro personalizado se houver
-        for campo, valor in user_filtros.items():
-            filtro[campo] = valor.lower()
 
+@app.route('/files', methods=['GET', 'POST'])
+@login_required
+def files():
+    """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
+    PAGE_ROWS = 50
+    lista_arquivos = []
+    campos = campos_chave()
+    filtro = {}
+    npaginas = 1
+    pagina_atual = 1
+    order = None
+    form_files = FilesForm()
+    filtro, user_filtros = recupera_user_filtros()
+    if request.method == 'POST':
+        form_files = FilesForm(**request.form)
+        filtro, pagina_atual, order = valida_form_files(form_files, filtro)
+    else:
+        numero = request.args.get('numero')
+        if numero:
+            form_files = FilesForm(numero=numero)
+            filtro['metadata.numeroinformado'] = {'$regex': '^' + numero}
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
-        order = [('metadata.dataescaneamento', 1)]
-        if filtro_auditoria:
-            filtro.update(filtro_auditoria['filtro'])
-            order = filtro_auditoria['order']
+        if order is None:
+            order = [('metadata.dataescaneamento', 1)]
         if pagina_atual is None:
             pagina_atual = 1
 
@@ -337,10 +358,14 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        # print('**Página:', pagina_atual, skip, type(skip))
-        count = db['fs.files'].find(filtro).count()
-        print(count, skip)
+        # TODO: pesquisar workaround para problema de lentidão do count()
+        # Enquanto isso, count fica comentado.
+        # count = db['fs.files'].find(filtro).count()
+        # Máximo de 40 páginas... porque count() do MongoDB é muito lento.
+        count = 40 * PAGE_ROWS - 1
         npaginas = count // PAGE_ROWS + 1
+        # print('**Página:', pagina_atual, skip, type(skip))
+        # print(count, skip)
         for grid_data in db['fs.files']\
             .find(filter=filtro, projection=projection)\
             .sort(order)\
@@ -353,9 +378,11 @@ def files():
             linha['numero'] = grid_data['metadata'].get('numeroinformado')
             lista_arquivos.append(linha)
         # print(lista_arquivos)
+        if len(lista_arquivos) < 50:
+            npaginas = pagina_atual
     return render_template('search_files.html',
                            paginated_files=lista_arquivos,
-                           oform=form,
+                           oform=form_files,
                            campos=campos,
                            filtros=user_filtros,
                            npaginas=npaginas)

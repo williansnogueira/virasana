@@ -94,7 +94,10 @@ def create_indexes(db):
         unique=True)
     # Cria campos utilizados para pesquisa de imagens
     for campo in CHAVES_CARGA:
-        db['fs.files'].create_index(campo, sparse=True)
+        try:
+            db['fs.files'].create_index(campo, sparse=True)
+        except pymongo.errors.OperationFailure:
+            pass
     # Cria campo data de atracacao no padrão ISODate
     cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
     for linha in cursor:
@@ -138,7 +141,7 @@ def mongo_find_in(db, collection: str, field: str, in_set,
     filtro = {field: {'$in': list(in_set)}}
     if filtros:
         filtro.update(filtros)
-    print(filtro)
+    # print(filtro)
     cursor = db[collection].find(filtro)
     for linha in cursor:
         result.append(
@@ -177,7 +180,7 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
         hora = atracacao['horaatracacao']
         datahora = datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
         datetimedelta = abs(scan_datetime - datahora)
-        print('times', scan_datetime, datahora, datetimedelta, threshold)
+        # print('times', scan_datetime, datahora, datetimedelta, threshold)
         if datetimedelta < threshold:
             threshold = datetimedelta
             index = ind
@@ -208,7 +211,7 @@ def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
     manifestosc, manifestosc_set = mongo_find_in(
         db, 'CARGA.ManifestoConhecimento', 'conhecimento',
         conhecimentos_set, 'manifesto')
-    print('MANIFESTOS CONHECIMENTO', manifestosc_set)
+    # print('MANIFESTOS CONHECIMENTO', manifestosc_set)
     if exportacao:
         days = days * -2
         filtros = {'tipomanifesto': 'lce'}
@@ -217,7 +220,7 @@ def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
     manifestos, manifestos_set = mongo_find_in(
         db, 'CARGA.Manifesto', 'manifesto',
         manifestosc_set, 'manifesto', filtros)
-    print('MANIFESTOS', manifestos_set)
+    # print('MANIFESTOS', manifestos_set)
     if manifestos_set:
         escalas, escalas_set = mongo_find_in(
             db, 'CARGA.EscalaManifesto', 'manifesto', manifestos_set, 'escala')
@@ -372,14 +375,14 @@ def busca_info_container(db, numero: str,
     if json_dict_vazio:
         file_cursor = None
         if json_dict:
-            print('ENTROU AQUI!!!!')
+            # print('ENTROU AQUI!!!!')
             filtro = {'metadata.numeroinformado': numero,
                       'metadata.dataescaneamento':
                       {'$lt': data_escaneamento,
                        '$gt': data_escaneamento - timedelta(days=4)
                        },
                       'metadata.carga.vazio': True}
-            print(filtro)
+            # print(filtro)
             file_cursor = db['fs.files'].find_one(filtro)
         # Priorizar CE se tiver ambos e já houver
         # escaneamento de vazio próximo e anterior encontrado
@@ -500,8 +503,8 @@ def nlinhas_zip_dir(path):
                         )
                         reader = csv.reader(txt_io, delimiter='\t')
                         linha = next(reader)
-                        print(info.filename)
-                        print(linha)
+                        # print(info.filename)
+                        # print(linha)
                         tabela = linha[0]
                         nlines = sum(1 for linha in reader)
                     contador[tabela + ' - ' + zip_file] = nlines

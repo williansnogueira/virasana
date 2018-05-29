@@ -16,6 +16,9 @@
                 </div>
                 <div class="col-md-6">
                     Container: {{ myfile['metadata']['numeroinformado'] }}
+                    <a href="/files?numero={{ myfile['metadata']['numeroinformado'] }}">
+                        Ver todos os escaneamentos do contêiner
+                    </a>
                     <br> IMPORTAÇAO
                     <br> Data de escaneamento: {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
                     <br> {% if myfile['metadata']['carga'] %} Data de atracação: {{ myfile['metadata']['carga']['atracacao']['dataatracacao']

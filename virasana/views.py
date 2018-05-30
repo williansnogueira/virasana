@@ -8,7 +8,7 @@ from sys import platform
 import requests
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
-                   request, url_for)
+                   request, send_file, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -418,7 +418,17 @@ def pie():
     if stats_cache:
         stats = stats_cache['recinto']
         output = plot_pie(stats.values(), stats.keys())
-        return Response(response=output.getvalue(), mimetype='image/png')
+    return Response(response=output.getvalue(), mimetype='image/png')
+
+    """
+        import plotly
+        import plotly.graph_objs as go
+        plot = plotly.offline.plot({
+            "data": [go.Bar(x=stats.values(), y=stats.keys())],
+            "layout": go.Layout(title="hello world")
+        })
+    return send_file(plot)
+    """
 
 
 @app.route('/bars')

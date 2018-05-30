@@ -7,7 +7,7 @@ Importante: todos os modelos precisam atuar sobre um recorte da imagem
 orginal, EXCETO os modelos treinados justamente para detectar este recorte
 Assim, serão filtrados apenas os registros que possuam a chave bbox para
 recorte, a menos que o modelo selecionado seja um dos modelos próprios para
-detecção do objeto contêiner.
+detecção do objeto contêiner (lista BBOX_MODELS do integracao.padma).
 
 Args:
 

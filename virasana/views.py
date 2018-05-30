@@ -414,21 +414,13 @@ def stats():
 @app.route('/pie')
 def pie():
     """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
+    # TODO: matplotlib está falhando no multithread. Fazer dashboard
+    # dash do AJNA e passar stats para lá.
     global stats_cache
     if stats_cache:
         stats = stats_cache['recinto']
         output = plot_pie(stats.values(), stats.keys())
     return Response(response=output.getvalue(), mimetype='image/png')
-
-    """
-        import plotly
-        import plotly.graph_objs as go
-        plot = plotly.offline.plot({
-            "data": [go.Bar(x=stats.values(), y=stats.keys())],
-            "layout": go.Layout(title="hello world")
-        })
-    return send_file(plot)
-    """
 
 
 @app.route('/bars')

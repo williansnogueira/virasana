@@ -7,7 +7,6 @@ Para gerar arquivos para treinamento de algoritmos de aprendizagem de máquina.
 Usage:
     python img_data_export.py --start 2017-07-01 --end 2017-07-10  --out imgs
 
-
 """
 import csv
 import os
@@ -55,7 +54,8 @@ def export(start, end, out, batch_size, cache):
 
     end: data final
 
-    out: diretório de destino. Se omitido, cria arquivo csv no diretório corrente.
+    out: diretório de destino. Se omitido, cria arquivo csv no diretório
+    corrente.
 
     cache: Flag(True or false). Se fornecido, cria diretório imgs com gravação
     das imagens de contêiner recortadas.

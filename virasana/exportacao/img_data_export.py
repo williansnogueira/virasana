@@ -18,20 +18,21 @@ Usage:
 
 """
 import csv
-import io
 import os
-import time
 from datetime import datetime, timedelta
 from PIL import Image
 
 import click
+from pymongo import MongoClient
+
 from ajna_commons.conf import ENCODE
-from virasana.integracao import carga, create_indexes, CHAVES_GRIDFS
-from virasana.exportacao.utils import (campos_mongo_para_lista,
-                                       get_imagens_recortadas)
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from ajna_commons.utils.images import get_imagens_recortadas
+from virasana.integracao import carga, CHAVES_GRIDFS
+from virasana.exportacao.utils import campos_mongo_para_lista
 
 
-BATCH_SIZE = 100
+BATCH_SIZE = 1000
 today = datetime.today()
 tendaysbefore = today - timedelta(days=10)
 start = tendaysbefore.strftime('%Y-%m-%d')
@@ -58,6 +59,7 @@ def export(start, end, batch_size, cache):
 
     """
     print('iniciando consulta')
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
     filtro = carga.ENCONTRADOS
     filtro['metadata.predictions.bbox'] = {'$exists': True, '$ne': None}
     filtro['metadata.dataescaneamento'] = {
@@ -65,10 +67,11 @@ def export(start, end, batch_size, cache):
         '$lt': datetime.strptime(end, '%Y-%m-%d')
     }
     chaves = ['_id'] + CHAVES_GRIDFS + carga.CHAVES_CARGA
-    lista = campos_mongo_para_lista(filtro, chaves)
+    lista = campos_mongo_para_lista(db, filtro, chaves, batch_size)
     with open(filename, 'w', encoding=ENCODE, newline='') as out:
         writer = csv.writer(out, quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writerows(lista)
+    # Gera diretório com imagens
     if cache:
         try:
             os.mkdir('imgs')
@@ -77,10 +80,10 @@ def export(start, end, batch_size, cache):
         for linha in lista[1:]:
             print(linha[0])
             _id = linha[0]
-            images = get_imagens_recortadas(_id)
+            images = get_imagens_recortadas(db, _id)
             for index, im in enumerate(images):
                 im.save(os.path.join('imgs', str(_id) + '_' + str(index)),
-                              'JPEG')
+                        'JPEG')
 
 
 if __name__ == '__main__':

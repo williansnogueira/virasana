@@ -8,7 +8,7 @@ from sys import platform
 import requests
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
-                   request, send_file, url_for)
+                   request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -26,10 +26,10 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
+from ajna_commons.utils.images import recorta_imagem
 from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
                                  stats_resumo_imagens)
 from virasana.integracao.carga import CHAVES_CARGA
-from virasana.integracao.padma import recorta_imagem
 from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')

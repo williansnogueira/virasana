@@ -20,6 +20,7 @@ Args:
 """
 import click
 
+
 from virasana.views import db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred, mongo_image,
@@ -81,13 +82,14 @@ def update(model, batch_size, sovazios):
     print(filtro)
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)
-    index = 0 
+    index = 0
     for registro in cursor:
         index += 1
         _id = registro['_id']
         image = mongo_image(db, _id)
         if image:
-            print('Consultando modelo:', model, 'para o ID', _id, 'sequência', index)
+            print('Consultando modelo:', model,
+                  'para o ID', _id, 'sequência', index)
             if model in BBOX_MODELS:
                 pred_bbox = consulta_padma(image, model)
                 print('Resultado da consulta:', pred_bbox)

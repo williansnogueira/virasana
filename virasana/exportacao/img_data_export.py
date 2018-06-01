@@ -5,22 +5,13 @@ Exporta csv com campos chave da imagem.
 Para gerar arquivos para treinamento de algoritmos de aprendizagem de máquina.
 
 Usage:
-    python exporta-img&data.py --start 2017-07-01 --end 2017-07-10  --out imgs
+    python img_data_export.py --start 2017-07-01 --end 2017-07-10  --out imgs
 
-    start: data inicial
-
-    end: data final
-
-    out: diretório de destino. Se omitido, cria arquivo csv no diretório corrente.
-
-    cache: Flag(True or false). Se fornecido, cria diretório imgs com gravação
-    das imagens de contêiner recortadas.
 
 """
 import csv
 import os
 from datetime import datetime, timedelta
-from PIL import Image
 
 import click
 from pymongo import MongoClient
@@ -37,7 +28,8 @@ today = datetime.today()
 tendaysbefore = today - timedelta(days=10)
 start = tendaysbefore.strftime('%Y-%m-%d')
 end = today.strftime('%Y-%m-%d')
-filename = 'teste.csv'
+out_dir = 'imgs'
+filename = 'img_data.csv'
 
 
 @click.command()
@@ -45,10 +37,12 @@ filename = 'teste.csv'
               'Padrão: ' + start)
 @click.option('--end', default=end, help='Data final do filtro. ' +
               'Padrão: ' + end)
+@click.option('--out', default=out_dir,
+              help='Diretório de destino. Padrão: ' + str(out_dir))
 @click.option('--batch_size', default=BATCH_SIZE,
               help='Tamanho do lote. Padrão: ' + str(BATCH_SIZE))
 @click.option('--cache', is_flag=True, help='Gerar diretório de imagens')
-def export(start, end, batch_size, cache):
+def export(start, end, out, batch_size, cache):
     """Exporta csv com campos chave da imagem.
 
     Para gerar arquivos para facilitar treinamento de algoritmos
@@ -57,8 +51,17 @@ def export(start, end, batch_size, cache):
     Filtra apenas imagens que já contenham predições da localização do
     contêiner e dentro das datas especificadas no formato (ano/mês/dia)
 
+    start: data inicial
+
+    end: data final
+
+    out: diretório de destino. Se omitido, cria arquivo csv no diretório corrente.
+
+    cache: Flag(True or false). Se fornecido, cria diretório imgs com gravação
+    das imagens de contêiner recortadas.
+
     """
-    print('iniciando consulta')
+    print('Iniciando consulta')
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     filtro = carga.ENCONTRADOS
     filtro['metadata.predictions.bbox'] = {'$exists': True, '$ne': None}
@@ -68,15 +71,17 @@ def export(start, end, batch_size, cache):
     }
     chaves = ['_id'] + CHAVES_GRIDFS + carga.CHAVES_CARGA
     lista = campos_mongo_para_lista(db, filtro, chaves, batch_size)
-    with open(filename, 'w', encoding=ENCODE, newline='') as out:
+    try:
+        os.mkdir(out_dir)
+    except FileExistsError:
+        pass
+    print(lista)
+    with open(os.path.join(out_dir, filename),
+              'w', encoding=ENCODE, newline='') as out:
         writer = csv.writer(out, quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writerows(lista)
     # Gera diretório com imagens
     if cache:
-        try:
-            os.mkdir('imgs')
-        except FileExistsError:
-            pass
         for linha in lista[1:]:
             print(linha[0])
             _id = linha[0]

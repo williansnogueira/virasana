@@ -1,6 +1,4 @@
-"""Funções utilitárias para exportação e montagem de training sets.
-
-"""
+"""Funções utilitárias para exportação e montagem de training sets."""
 
 
 def campos_mongo_para_lista(db, filtro: dict,

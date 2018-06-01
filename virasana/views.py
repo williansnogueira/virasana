@@ -26,7 +26,7 @@ from wtforms.validators import optional
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
-from ajna_commons.utils.images import recorta_imagem
+from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
                                  stats_resumo_imagens)
 from virasana.integracao.carga import CHAVES_CARGA
@@ -59,11 +59,6 @@ def index():
         return render_template('index.html')
     else:
         return redirect(url_for('login'))
-
-
-@app.route('/ola/<nome>')
-def ola(nome):
-    return '<hr><h1>Bom dia, ' + nome + '<h1>'
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
@@ -207,26 +202,26 @@ def file(_id=None):
 def image():
     """Serializa a imagem do banco para stream HTTP."""
     filtro = {key: value for key, value in request.args.items()}
-    _id = db['fs.files'].find_one(filtro, {'_id': 1})
-    if _id:
-        return image_id(_id)
+    linha = db['fs.files'].find_one(filtro, {'_id': 1})
+    if linha:
+        return image_id(linha['_id'])
     return ''
 
 
 @app.route('/image/<_id>')
 @login_required
 def image_id(_id):
-    """Serializa a imagem do banco para stream HTTP."""
-    fs = GridFS(db)
-    grid_data = fs.get(ObjectId(_id))
-    image = grid_data.read()
-    return Response(response=image, mimetype='image/jpeg')
+    """Recorta a imagem do banco e serializa para stream HTTP."""
+    image = mongo_image(db, _id)
+    if image:
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem Imagem'
 
 
 @app.route('/mini1/<_id>')
 @login_required
 def mini(_id, n=0):
-    """Serializa a imagem do banco para stream HTTP."""
+    """Recorta a imagem do banco e serializa para stream HTTP."""
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()

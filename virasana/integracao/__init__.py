@@ -37,9 +37,16 @@ stats = {}
 
 CHAVES_GRIDFS = [
     'uploadDate',
+    'md5',
+    'filename',
+    'metadata.id',
+    'metadata.idcov',
     'metadata.recintoid',
     'metadata.recinto',
-    'filename'
+    'metadata.imagem',
+    'metadata.numeroinformado',
+    'metadata.dataescaneamento',
+    'metadata.contentType'
 ]
 
 

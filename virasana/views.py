@@ -61,6 +61,11 @@ def index():
         return redirect(url_for('login'))
 
 
+@app.route('/ola/<nome>')
+def ola(nome):
+    return '<hr><h1>Bom dia, ' + nome + '<h1>'
+
+
 @app.route('/uploadbson', methods=['GET', 'POST'])
 @login_required
 def upload_bson():
@@ -197,9 +202,30 @@ def file(_id=None):
     return render_template('view_file.html', myfile=grid_data)
 
 
+@app.route('/image')
+@login_required
+def image():
+    """Serializa a imagem do banco para stream HTTP."""
+    filtro = {key: value for key, value in request.args.items()}
+    _id = db['fs.files'].find_one(filtro, {'_id': 1})
+    if _id:
+        return image_id(_id)
+    return ''
+
+
 @app.route('/image/<_id>')
 @login_required
-def image(_id, n=0):
+def image_id(_id):
+    """Serializa a imagem do banco para stream HTTP."""
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    image = grid_data.read()
+    return Response(response=image, mimetype='image/jpeg')
+
+
+@app.route('/mini1/<_id>')
+@login_required
+def mini(_id, n=0):
     """Serializa a imagem do banco para stream HTTP."""
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
@@ -207,20 +233,17 @@ def image(_id, n=0):
     preds = grid_data.metadata.get('predictions')
     if preds:
         bboxes = [pred.get('bbox') for pred in preds]
-        print('bboxes******', bboxes)
         if len(bboxes) >= n + 1 and bboxes[n]:
             image = recorta_imagem(image, bboxes[n])
             return Response(response=image, mimetype='image/jpeg')
-    if n == 0:
-        return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
 
 
-@app.route('/image2/<_id>')
+@app.route('/mini2/<_id>')
 @login_required
-def image2(_id):
+def mini2(_id):
     """Link para imagem do segundo contêiner, se houver."""
-    return image(_id, 1)
+    return mini(_id, 1)
 
 
 filtros = dict()

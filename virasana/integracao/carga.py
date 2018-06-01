@@ -35,8 +35,13 @@ CHAVES_CARGA = [
     'metadata.carga.conhecimento.conhecimento',
     'metadata.carga.conhecimento.cpfcnpjconsignatario',
     'metadata.carga.container.container',
+    'metadata.carga.container.container',
+    'metadata.carga.container.taracontainer',
+    'metadata.carga.container.pesobrutoitem',
+    'metadata.carga.container.volumeitem',
     'metadata.carga.ncm.ncm',
     'metadata.carga.atracacao.dataatracacao',
+    'metadata.carga.atracacao.horaatracacao',
 ]
 
 

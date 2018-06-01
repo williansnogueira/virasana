@@ -18,7 +18,7 @@ from ajna_commons.flask.conf import PADMA_URL
 BBOX_MODELS = ['ssd']
 
 
-def recorta_imagem(image, coords=None):
+def recorta_imagem(image, coords=None, PIL=False):
     """Recebe uma imagem serializada em bytes, retorna Imagem cortada.
 
     Params:
@@ -34,6 +34,8 @@ def recorta_imagem(image, coords=None):
         im = np.asarray(PILimage)
         im = im[coords[0]:coords[2], coords[1]:coords[3]]
         PILimage = Image.fromarray(im)
+        if PIL:
+            return PILimage
         image_bytes = io.BytesIO()
         PILimage.save(image_bytes, 'JPEG')
         image_bytes.seek(0)

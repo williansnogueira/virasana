@@ -143,3 +143,5 @@ celerybeat-schedule.dat
 celerybeat-schedule.bak
 celerybeat-schedule.*
 celerybeat-schedule.dat
+imgs/
+teste.csv

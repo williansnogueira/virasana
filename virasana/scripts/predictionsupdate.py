@@ -76,16 +76,18 @@ def update(model, batch_size, sovazios):
         # filtro['metadata.predictions.' + model] = {'$eq': None}
         filtro['metadata.predictions.' + model] = {'$exists': False}
 
-    aprocessar = db['fs.files'].find(filtro).count()
+    aprocessar = 0  # db['fs.files'].find(filtro).count()
     print(aprocessar, ' arquivos sem predições com os parâmetros passados...')
     print(filtro)
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)
+    index = 0 
     for registro in cursor:
+        index += 1
         _id = registro['_id']
         image = mongo_image(db, _id)
         if image:
-            print('Consultando modelo:', model, 'para o ID', _id)
+            print('Consultando modelo:', model, 'para o ID', _id, 'sequência', index)
             if model in BBOX_MODELS:
                 pred_bbox = consulta_padma(image, model)
                 print('Resultado da consulta:', pred_bbox)
@@ -102,7 +104,7 @@ def update(model, batch_size, sovazios):
                     )
                 else:
                     print('Consulta retornou vazia! (modelo existe?)')
-            if new_predictions and success:
+            if success:
                 print('Gravando...', new_predictions, _id)
                 db['fs.files'].update(
                     {'_id': _id},

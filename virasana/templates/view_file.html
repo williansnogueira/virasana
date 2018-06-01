@@ -13,13 +13,22 @@
                     <p>
                         <img src="/image/{{ myfile['_id'] }}" />
                     </p>
+                    <div class="col-md-6">
+                        <img src="/mini1/{{ myfile['_id'] }}" width ="200" alt="Sem miniatura" />
+                    </div>
+                    <div class="col-md-6">
+                        <img src="/mini2/{{ myfile['_id'] }}" width ="200" alt="Sem segundo contêiner"  />
+                    </div>
                 </div>
                 <div class="col-md-6">
                     Container: {{ myfile['metadata']['numeroinformado'] }}
                     &nbsp;<a href="/files?numero={{ myfile['metadata']['numeroinformado'] }}">
                         LISTAR TODOS AS PASSAGENS POR SCANNERS
                     </a>
-                    <br> IMPORTAÇAO
+                    &nbsp;<a href="/similares/{{ myfile['_id'] }}">
+                        LISTAR IMAGENS SIMILARES
+                    </a>
+                    <br> SISTEMA CARGA
                     <br> Data de escaneamento: {{ myfile['metadata']['dataescaneamento'].strftime('%d/%m/%Y %H:%M:%S') }}
                     <br> {% if myfile['metadata']['carga'] %} Data de atracação: {{ myfile['metadata']['carga']['atracacao']['dataatracacao']
                     }} {{ myfile['metadata']['carga']['atracacao']['horaatracacao'] }}

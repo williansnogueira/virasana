@@ -207,6 +207,22 @@ def image():
         return image_id(linha['_id'])
     return ''
 
+@app.route('/grid_data')
+@login_required
+def grid_data():
+    """Serializa os dados do banco para stream JSON HTTP."""
+    filtro = {key: value for key, value in request.args.items()}
+    linha = db['fs.files'].find_one(filtro)
+    class BSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, ObjectId):
+                return str(o)
+            if isinstance(o, datetime):
+                return datetime.strftime(o, '%x %X')
+            return json.JSONEncoder.default(self, o)
+    if linha:
+        return BSONEncoder().encode(linha)
+
 
 @app.route('/image/<_id>')
 @login_required

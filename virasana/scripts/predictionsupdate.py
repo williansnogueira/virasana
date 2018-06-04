@@ -18,13 +18,19 @@ Args:
     sovazios: selecionar contêineres declarados como vazio somente
 
 """
+import asyncio
+import concurrent.futures
+import time
+import requests
+
 import click
 
 
 from virasana.views import db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
-                                       interpreta_pred, mongo_image,
-                                       recorta_imagem)
+                                       interpreta_pred)
+
+from ajna_commons.utils.images import mongo_image, recorta_imagem
 
 BATCH_SIZE = 10000
 MODEL = 'ssd'
@@ -83,6 +89,7 @@ def update(model, batch_size, sovazios):
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)
     index = 0
+    s0 = time.time()
     for registro in cursor:
         index += 1
         _id = registro['_id']
@@ -112,7 +119,88 @@ def update(model, batch_size, sovazios):
                     {'_id': _id},
                     {'$set': {'metadata.predictions': new_predictions}}
                 )
+    s1 = time.time()
+    print('{0:.2f}'.format(s1 - s0))
+
+
+def consulta_padma_retorna_id(_id, image, model):
+    predictions = consulta_padma(image, model)
+    return _id, predictions
+
+
+def async_test():
+    batch = 5
+
+    async def main(images):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=batch) as executor:
+            loop = asyncio.get_event_loop()
+            futures = [
+                loop.run_in_executor(
+                    executor,
+                    consulta_padma_retorna_id,
+                    image[0], image[1], 'ssd'
+                )
+                for image in images
+            ]
+        index = 0
+        for _id, response in await asyncio.gather(*futures):
+            print(response)
+            print('Consultou modelo:', 'ssd',
+                  'image', _id,
+                  'sequência', index)
+            index += 1
+            new_predictions = response['predictions']
+            success = response and response['success']
+            if success:
+                print('Gravando...', new_predictions, _id)
+                db['fs.files'].update(
+                    {'_id': _id},
+                    {'$set': {'metadata.predictions': new_predictions}}
+                )
+
+    filtro = {'metadata.contentType': 'image/jpeg'}
+    filtro['metadata.predictions.bbox'] = {'$exists': False}
+    batch_size = 50000
+    print(batch_size, ' arquivos sem predições com os parâmetros passados...')
+    cursor = db['fs.files'].find(
+        filtro, {'metadata.predictions': 1}).limit(batch_size)
+    print('Consulta ao banco efetuada, iniciando conexões ao Padma')
+    index = 0
+    images = []
+    registros_vazios = 0
+    s = time.time()
+    for registro in cursor:
+        pred_gravado = registro.get('metadata').get('predictions')
+        if pred_gravado == []:
+            registros_vazios += 1
+            print('Pulando registros com anterior insucesso (vazios: []).',
+                  'Registro ', registros_vazios)
+            continue
+        index += 1
+        _id = registro['_id']
+        image = mongo_image(db, _id)
+        images.append((_id, image))
+        if index % batch == 0:
+            s0 = time.time()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(main(images))
+            images = []
+            s1 = time.time()
+            print('Sequência real ..............  ', index,
+                  '{0:.2f}'.format(s1 - s0), 'segundos')
+    s1 = time.time()
+    elapsed = s1 - s
+    horas = elapsed // 3600
+    minutos = (elapsed % 3600) / 60
+    print('%d horas' % horas,
+          '{0:02.2f}'.format(minutos), 'minutos',
+          'registros vazios', registros_vazios,
+          'registros processados', index)
 
 
 if __name__ == '__main__':
-    update()
+    s0 = time.time()
+    async_test()
+    s1 = time.time()
+    print('Tempo total de execução em segundos: {0:.2f}'.format(s1 - s0))
+    # update()

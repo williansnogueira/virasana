@@ -39,7 +39,6 @@ def consulta_padma(image, model):
 def interpreta_pred(prediction, model):
     """Resume predições se necessário."""
     if model == 'vazio':
-        return prediction['predictions'][0]['1'] < 0.5
+        return prediction['1'] < 0.5
     if model == 'peso':
-        print(prediction)
-        return prediction['predictions']['peso']
+        return prediction['peso']

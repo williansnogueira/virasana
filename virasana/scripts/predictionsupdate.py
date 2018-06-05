@@ -29,15 +29,13 @@ Args:
 import asyncio
 import concurrent.futures
 import time
-import requests
-import os
 from collections import namedtuple
 
 import click
 from bson import ObjectId
 
-os.environ['DEBUG'] = '1'
-from ajna_commons.flask.log import logger
+# os.environ['DEBUG'] = '1'
+# from ajna_commons.flask.log import logger
 
 from virasana.views import db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
@@ -214,8 +212,8 @@ def async_update(modelo, t, q, sovazios, force):
                 continue
         registros_processados += 1
         image = mongo_image(db, _id)
-        images = append_images(
-            model=modelo, _id=_id, image=image, predictions=pred_gravado, images=images)
+        images = append_images(model=modelo, _id=_id, image=image,
+                               predictions=pred_gravado, images=images)
         if registros_processados % threads == 0:
             s0 = time.time()
             loop = asyncio.get_event_loop()

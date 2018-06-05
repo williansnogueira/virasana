@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pymongo import MongoClient
 
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
@@ -175,7 +175,7 @@ def plot_pie(values, labels):
     fig1, ax1 = plt.subplots()
     ax1.pie(values, labels=labels, shadow=True)
     ax1.axis('equal')
-    canvas = FigureCanvas(fig1)
+    canvas = FigureCanvasAgg(fig1)
     png = io.BytesIO()
     canvas.print_png(png)
     return png
@@ -187,7 +187,7 @@ def plot_bar(values, labels):
     x = list(range(len(labels)))
     plt.bar(x, values)
     plt.xticks(x, labels)
-    canvas = FigureCanvas(fig1)
+    canvas = FigureCanvasAgg(fig1)
     png = io.BytesIO()
     canvas.print_png(png)
     return png

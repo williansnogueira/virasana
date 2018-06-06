@@ -32,6 +32,12 @@ DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
 
 DATA = 'metadata.xml.date'
 
+CHAVES_XML = [
+    'metadata.xml.container',
+    'metadata.xml.alerta',
+]
+for field in FIELDS:
+    CHAVES_XML.append('metadata.xml.' + field.lower())
 
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração."""

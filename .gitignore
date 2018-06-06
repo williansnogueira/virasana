@@ -143,5 +143,8 @@ celerybeat-schedule.dat
 celerybeat-schedule.bak
 celerybeat-schedule.*
 celerybeat-schedule.dat
-imgs/
+*imgs/
 teste.csv
+imgs.tar.gz
+original_imgs/
+original_imgs.tar.gz

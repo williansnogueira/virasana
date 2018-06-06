@@ -68,7 +68,7 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         bsonimagelist.addBsonImage(self._bsonimage)
         bsonimagelist.addBsonImage(self._bsonimage2)
         bsonimagelist.tofile(TEST_BSON)
-        self._db = MongoClient().test
+        self._db = MongoClient().unit_test
         self._fs = gridfs.GridFS(self._db)
 
     def tearDown(self):

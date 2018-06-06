@@ -39,6 +39,7 @@ CHAVES_XML = [
 for field in FIELDS:
     CHAVES_XML.append('metadata.xml.' + field.lower())
 
+
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração."""
     db['fs.files'].create_index('metadata.xml.container')

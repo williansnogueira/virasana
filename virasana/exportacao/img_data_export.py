@@ -35,13 +35,14 @@ filename = 'img_data.csv'
 
 def get_original(db, _id):
     """Chama mongo_image e joga em uma lista.
-    
+
     Apenas para retirar um if de dentro do for, permitindo atribuir
     ponteiro de função antes.
     """
     image = mongo_image(db, _id)
     PILimage = Image.open(io.BytesIO(image))
     return [PILimage]
+
 
 @click.command()
 @click.option('--start', default=start, help='Data início do filtro. ' +
@@ -71,8 +72,8 @@ def export(start, end, out, filename, batch_size, cache, original):
         end: data final
         out: diretório de destino. Se omitido, cria arquivo csv no diretório
         corrente.
-        cache: Flag(True or false). Se fornecido, cria diretório imgs com gravação
-        das imagens de contêiner recortadas.
+        cache: Flag(True or false). Se fornecido, cria diretório imgs
+        com gravação das imagens de contêiner recortadas.
         original: imagens originais e arquivo com bboxes
 
     """

@@ -3,14 +3,12 @@ Definição dos códigos que serão rodados pelo Celery.
 
 Background tasks do sistema AJNA-virasana
 Gerenciados por celery.sh
-Aqui ficam as rotinas que serão chamadas periodicamente e
-aquelas que rodam tarefas custosas/demoradas em background.
+Aqui ficam as que rodam tarefas custosas/demoradas em background.
 
 """
 # Código dos celery tasks
 import json
 from base64 import decodebytes
-from datetime import datetime, timedelta
 
 import gridfs
 from celery import Celery, states
@@ -19,74 +17,29 @@ from pymongo import MongoClient
 from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
                                      MONGODB_URI, redisdb)
 from ajna_commons.models.bsonimage import BsonImageList
-from virasana.integracao import carga, xmli
-
-from .dir_monitor import despacha_dir
-
-# from datetime import datetime
 
 
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)
 
-
-@celery.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    """Agenda tarefas que serão executadas com frequência fixa."""
-    sender.add_periodic_task(15 * 61.0, processa_carga.s())
-    sender.add_periodic_task(11 * 60.0, processa_xml.s())
-    sender.add_periodic_task(4 * 57.0, processa_bson.s())
+# Tasks que respondem a ações da VIEW
 
 
-@celery.task
-def processa_xml():
-    """Verifica se há arquivos XML a carregar no GridFS.
-
-    Verifica se há novas imagens no Banco de Dados que ainda estão
-    sem a integração com XML. Havendo, grava dados XML disponíveis,
-    se encontrados, no GridFS
-    """
-    with MongoClient(host=MONGODB_URI) as conn:
-        db = conn[DATABASE]
-        cincodias = datetime.now() - timedelta(days=5)
-        xmli.dados_xml_grava_fsfiles(db, 10000, cincodias)
-        # Olhar o passado tbm...
-        doisanos = datetime.now() - timedelta(days=730)
-        xmli.dados_xml_grava_fsfiles(db, 10000, doisanos)
-
-
-@celery.task
-def processa_carga():
-    """Verifica se há dados do Sistema CARGA a carregar no GridFS.
-
-    Verifica se há novas imagens no Banco de Dados que ainda estão
-    sem a integração com o sistema CARGA. Havendo, grava dados disponíveis,
-    se encontrados, no GridFS
-    """
-    with MongoClient(host=MONGODB_URI) as conn:
-        db = conn[DATABASE]
-        doisdias = datetime.now() - timedelta(days=2)
-        carga.dados_carga_grava_fsfiles(db, 5000, doisdias)
-
-
-@celery.task
-def processa_bson():
-    """Chama função do módulo dir_monitor.
-
-    Neste módulo pode ser configurado o endereço de um diretório
-    e o endereço do virasana. A função a seguir varre o diretório e,
-    havendo arquivos, envia por request POST para o URL do virasana.
-    Se obtiver sucesso, exclui o arquivo enviado do diretório
-    """
-    despacha_dir()
+def trata_bson(bson_file: str, db: MongoClient) -> list:
+    """Recebe o nome de um arquivo bson e o insere no MongoDB."""
+    # .get_default_database()
+    fs = gridfs.GridFS(db)
+    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
+    files_ids = bsonimagelist.tomongo(fs)
+    return files_ids
 
 
 @celery.task(bind=True)
 def raspa_dir(self):
-    """De base em arquivos para mongoDB.
+    """Carrega arquivos do REDIS para mongoDB.
 
-    Background task that go to redis DB of incoming files
-    AND load then to mongodb
+    Tarefa de background que recebe arquivos da view via REDIS
+    e os carrega para o MongoDB.
     """
     self.update_state(state=states.STARTED,
                       meta={'current': '',
@@ -102,12 +55,3 @@ def raspa_dir(self):
         trata_bson(file, db)
     return {'current': '',
             'status': 'Todos os arquivos processados'}
-
-
-def trata_bson(bson_file: str, db: MongoClient) -> list:
-    """Recebe o nome de um arquivo bson e o insere no MongoDB."""
-    # .get_default_database()
-    fs = gridfs.GridFS(db)
-    bsonimagelist = BsonImageList.fromfile(abson=bson_file)
-    files_ids = bsonimagelist.tomongo(fs)
-    return files_ids

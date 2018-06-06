@@ -72,6 +72,7 @@ def cropped_images(predictions: dict, image: bytes, _id: int)-> list:
 
     Returns:
         lista de imagem(ns) recortada[s]
+
     """
     images = []
     for prediction in predictions:
@@ -120,6 +121,7 @@ def mostra_tempo_final(s_inicial, registros_vazios, registros_processados):
 
 
 def consulta_padma_retorna_image(image: ImageID, model: str):
+    """Realiza request no padma. Retorna response e ImageID da consulta."""
     response = {'success': False}
     if model in BBOX_MODELS:
         response = consulta_padma(image.content[0], model)
@@ -137,7 +139,16 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
     return image, response
 
 
-async def fazconsulta(images, model):
+async def fazconsulta(images: list, model: str):
+    """Recebe lista de ImageID, monta uma ThreadPool.
+
+    Monta ThreadPool do tamanho da lista recebida, chama consulta ao padma.
+    Recebe retorno de cada Thread e grava no BD.
+
+    Args:
+        images: lista de NamedTuple tipo ImageID
+        model: nome do modelo
+    """
     with concurrent.futures.ThreadPoolExecutor() as executor:
         loop = asyncio.get_event_loop()
         futures = []

@@ -396,9 +396,11 @@ def files():
         skip = (pagina_atual - 1) * PAGE_ROWS
         # TODO: pesquisar workaround para problema de lentidão do count()
         # Enquanto isso, count fica comentado.
-        # count = db['fs.files'].find(filtro).count()
+        count = db['fs.files'].find(filtro, {'_id'}
+                                    ).limit(40 * PAGE_ROWS
+                                            ).count({'applySkipLimit': True})
         # Máximo de 40 páginas... porque count() do MongoDB é muito lento.
-        count = 40 * PAGE_ROWS - 1
+        # count = 40 * PAGE_ROWS - 1
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)

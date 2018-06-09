@@ -537,6 +537,8 @@ def nlinhas_zip_dir(path):
 
 
 if __name__ == '__main__':
-    ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__),
-                                '..', '..', '..', '..', 'files', 'CARGA')
-    pprint.pprint(nlinhas_zip_dir(ZIP_DIR_TEST))
+    from pymongo import MongoClient
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    create_indexes(db)

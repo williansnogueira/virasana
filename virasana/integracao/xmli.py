@@ -190,3 +190,11 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         'Encontrados', str(acum)
     ]))
     return acum
+
+
+if __name__ == '__main__':
+    from pymongo import MongoClient
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    create_indexes(db)

@@ -7,9 +7,26 @@ do GridFS.
 import requests
 from json.decoder import JSONDecodeError
 
+import pymongo
+
 from ajna_commons.flask.conf import PADMA_URL
 
 BBOX_MODELS = ['ssd']
+
+CHAVES_PADMA = [
+    'metadata.predictions.vazio',
+    'metadata.predictions.peso',
+    'metadata.predictions.bbox'
+]
+
+
+def create_indexes(db):
+    """Utilitário. Cria índices relacionados à integração."""
+    for chave in CHAVES_PADMA:
+        try:
+            db['fs.files'].create_index(chave, sparse=True)
+        except pymongo.errors.OperationFailure:
+            pass
 
 
 def consulta_padma(image, model):
@@ -42,3 +59,10 @@ def interpreta_pred(prediction, model):
         return prediction['1'] < 0.5
     if model == 'peso':
         return prediction['peso']
+
+
+if __name__ == '__main__':
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
+    db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
+    create_indexes(db)

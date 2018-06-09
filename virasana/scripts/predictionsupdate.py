@@ -44,7 +44,7 @@ from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 
 
-def monta_filtro(model: str, sovazios: bool)-> dict:
+def monta_filtro(model: str, sovazios: bool, update: bool)-> dict:
     """Retorna filtro para MongoDB."""
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
@@ -56,7 +56,8 @@ def monta_filtro(model: str, sovazios: bool)-> dict:
         filtro['metadata.predictions.bbox'] = {'$exists': False}
     else:
         filtro['metadata.predictions.bbox'] = {'$exists': True}
-        filtro['metadata.predictions.' + model] = {'$exists': False}
+        if not update:
+            filtro['metadata.predictions.' + model] = {'$exists': False}
     return filtro
 
 
@@ -131,7 +132,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
             # print(prediction, '************')
-            # print(predictions, '************')
+            print(predictions, '************')
             predictions[ind][model] = interpreta_pred(
                 prediction['predictions'][0], model)
         response['success'] = prediction['success']
@@ -198,9 +199,11 @@ THREADS = 4
               help='Processar somente vazios')
 @click.option('--force', is_flag=True,
               help='Tentar mesmo se consulta anterior a este registro falhou.')
-def async_update(modelo, t, q, sovazios, force):
+@click.option('--update', is_flag=True,
+              help='Reescrever dados existentes.')
+def async_update(modelo, t, q, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
-    filtro = monta_filtro(modelo, sovazios)
+    filtro = monta_filtro(modelo, sovazios, update)
     batch_size = t
     threads = q
     print(

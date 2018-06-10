@@ -394,13 +394,9 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        # TODO: pesquisar workaround para problema de lentidão do count()
-        # Enquanto isso, count fica comentado.
         count = db['fs.files'].find(filtro, {'_id'}
                                     ).limit(40 * PAGE_ROWS
                                             ).count(with_limit_and_skip=True)
-        # Máximo de 40 páginas... porque count() do MongoDB é muito lento.
-        # count = 40 * PAGE_ROWS - 1
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)

@@ -5,9 +5,8 @@ Testes de desempenho do Servidor em diferentes cenários
 """
 import asyncio
 import time
-import timeit
 
-from ajna_commons.utils.images import mongo_image, recorta_imagem
+from ajna_commons.utils.images import mongo_image
 from virasana.views import db
 
 from predictionsupdate import (fazconsulta,

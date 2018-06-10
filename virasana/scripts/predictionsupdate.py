@@ -133,7 +133,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
             # print(prediction, '************')
-            print(predictions, '************')
+            # print(predictions, '************')
             predictions[ind][model] = interpreta_pred(
                 prediction['predictions'][0], model)
         response['success'] = prediction['success']
@@ -231,7 +231,8 @@ def async_update(modelo, t, q, sovazios, force, update):
                       ' (vazios:[]). Registro % d ' % registros_vazios)
                 continue
         registros_processados += 1
-        print('Registro número %d ' % registros_processados)
+        if registros_processados == 1:
+            print('Iniciando varredura de registros')
         image = mongo_image(db, _id)
         images.extend(get_images(model=modelo, _id=_id, image=image,
                                  predictions=pred_gravado))

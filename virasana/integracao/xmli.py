@@ -48,7 +48,7 @@ def create_indexes(db):
         if field == 'Login':
             # TODO: Delete and see why:
             # pymongo.errors.OperationFailure: Btree::insert: key too large
-            #  to index, failing test.fs.files.$metadata.xml.login_1 31720 
+            #  to index, failing test.fs.files.$metadata.xml.login_1 31720
             # { : "rafael gonꟃ愀氀瘀攀猀㰀⼀䰀漀最椀渀㸀㰀圀漀爀欀猀琀愀琀椀漀渀㸀䐀䄀圀
             #  ㄀㰀⼀圀漀爀欀猀琀愀琀椀漀渀㸀㰀�..." }
             continue

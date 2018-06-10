@@ -16,6 +16,12 @@ BBOX_MODELS = ['ssd']
 CHAVES_PADMA = [
     'metadata.predictions.vazio',
     'metadata.predictions.peso',
+    'metadata.predictions.volume',
+    'metadata.predictions.ncms',
+    'metadata.predictions.embalagens',
+    'metadata.predictions.hash_linear',
+    'metadata.predictions.hash_semantic',
+    'metadata.predictions.ameacas',
     'metadata.predictions.bbox'
 ]
 
@@ -24,7 +30,7 @@ def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração."""
     for chave in CHAVES_PADMA:
         try:
-            db['fs.files'].create_index(chave, sparse=True)
+            db['fs.files'].create_index(chave)
         except pymongo.errors.OperationFailure:
             pass
 
@@ -48,7 +54,7 @@ def consulta_padma(image, model):
     try:
         result = r.json()
     except JSONDecodeError as err:
-        print(err)
+        print('Erro em consulta_padma %s' % err)
         return {'predictions': None, 'success': False}
     return result
 
@@ -65,4 +71,5 @@ if __name__ == '__main__':
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
+    print('Criando índices para predicitions')
     create_indexes(db)

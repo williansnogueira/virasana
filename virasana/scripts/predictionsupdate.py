@@ -90,23 +90,24 @@ def cropped_images(predictions: dict, image: bytes, _id: int)-> list:
 ImageID = namedtuple('ImageID', ['id', 'content', 'predictions'])
 
 
-def append_images(model: str, _id: ObjectId, image: bytes,
-                  predictions: dict, images: list)-> list:
-    """Anexa(append) image e _id em lista(images) fornecida e retorna lista.
+def get_images(model: str, _id: ObjectId, image: bytes,
+               predictions: dict)-> list:
+    """Retorna ImagemID.
 
     Se model for BBOX, simplesmente anexa imagem original.
     Se model for outro tipo, recorta BBOX antes utilizando predictions BBOX
     já vinculadas à imagem _id e anexa uma ou duas imagens resultantes.
     """
+    result = []
     if model in BBOX_MODELS:
-        images.append(ImageID(_id, [image], None))
+        result.append(ImageID(_id, [image], None))
     else:
         # print('original', predictions, _id)
         if predictions:
             content = cropped_images(predictions, image, _id)
-            images.append(ImageID(_id, content, predictions))
+            result.append(ImageID(_id, content, predictions))
 
-    return images
+    return result
 
 
 def mostra_tempo_final(s_inicial, registros_vazios, registros_processados):
@@ -206,8 +207,12 @@ def async_update(modelo, t, q, sovazios, force, update):
     filtro = monta_filtro(modelo, sovazios, update)
     batch_size = t
     threads = q
+    print('Estimando número de registros a processar...')
+    count = db['fs.files'].find(
+        filtro, {'metadata.predictions': 1}
+    ).limit(batch_size).count(with_limit_and_skip=True)
     print(
-        batch_size, ' arquivos sem predições com os parâmetros passados...')
+        count, ' arquivos sem predições com os parâmetros passados...')
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)
     print('Consulta ao banco efetuada, iniciando conexões ao Padma')
@@ -215,22 +220,23 @@ def async_update(modelo, t, q, sovazios, force, update):
     registros_vazios = 0
     s_inicio = time.time()
     images = []
+    loop = asyncio.get_event_loop()
     for registro in cursor:
         _id = registro['_id']
         pred_gravado = registro.get('metadata').get('predictions')
         if not force:
             if pred_gravado == []:
                 registros_vazios += 1
-                print('Pulando registros com anterior insucesso (vazios: []).',
-                      'Registro ', registros_vazios)
+                print('Pulando registros com anterior insucesso ' +
+                      ' (vazios:[]). Registro % d ' % registros_vazios)
                 continue
         registros_processados += 1
+        print('Registro número %d ' % registros_processados)
         image = mongo_image(db, _id)
-        images = append_images(model=modelo, _id=_id, image=image,
-                               predictions=pred_gravado, images=images)
+        images.extend(get_images(model=modelo, _id=_id, image=image,
+                                 predictions=pred_gravado))
         if registros_processados % threads == 0:
             s0 = time.time()
-            loop = asyncio.get_event_loop()
             loop.run_until_complete(fazconsulta(images, modelo))
             images = []
             s1 = time.time()

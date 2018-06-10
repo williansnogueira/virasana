@@ -45,6 +45,13 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.xml.container')
     db['fs.files'].create_index('metadata.xml.alerta')
     for field in FIELDS:
+        if field == 'Login':
+            # TODO: Delete and see why:
+            # pymongo.errors.OperationFailure: Btree::insert: key too large
+            #  to index, failing test.fs.files.$metadata.xml.login_1 31720 
+            # { : "rafael gonꟃ愀氀瘀攀猀㰀⼀䰀漀最椀渀㸀㰀圀漀爀欀猀琀愀琀椀漀渀㸀䐀䄀圀
+            #  ㄀㰀⼀圀漀爀欀猀琀愀琀椀漀渀㸀㰀�..." }
+            continue
         db['fs.files'].create_index('metadata.xml.' + field.lower())
 
 
@@ -197,4 +204,5 @@ if __name__ == '__main__':
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = MongoClient(host=MONGODB_URI)[DATABASE]
+    print('Criando índices para XML')
     create_indexes(db)

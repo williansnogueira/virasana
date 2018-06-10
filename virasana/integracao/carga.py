@@ -110,7 +110,7 @@ def create_indexes(db):
     # Cria campos utilizados para pesquisa de imagens
     for campo in CHAVES_CARGA:
         try:
-            db['fs.files'].create_index(campo, sparse=True)
+            db['fs.files'].create_index(campo)
         except pymongo.errors.OperationFailure:
             pass
     # Cria campo data de atracacao no padrão ISODate
@@ -540,4 +540,5 @@ if __name__ == '__main__':
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = MongoClient(host=MONGODB_URI)[DATABASE]
+    print('Criando índices para CARGA')
     create_indexes(db)

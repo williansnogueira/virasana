@@ -293,4 +293,6 @@ def peso_container_balanca(db, numero: list):
 
 if __name__ == '__main__':
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    print(stats_resumo_imagens(db))
+    print('Criando índices para metadata')
+    create_indexes(db)
+    # print(stats_resumo_imagens(db))

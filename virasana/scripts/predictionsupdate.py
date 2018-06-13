@@ -132,10 +132,11 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
         predictions = image.predictions
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
-            # print(prediction, '************')
-            # print(predictions, '************')
-            predictions[ind][model] = interpreta_pred(
-                prediction['predictions'][0], model)
+            if prediction and prediction.get('success'):
+                # print(prediction, '************')
+                # print(predictions, '************')
+                predictions[ind][model] = interpreta_pred(
+                    prediction['predictions'][0], model)
         response['success'] = prediction['success']
         response['predictions'] = predictions
     return image, response
@@ -244,7 +245,6 @@ def async_update(modelo, t, q, sovazios, force, update):
             print('Sequência real ..............  ', registros_processados,
                   '{0:.2f}'.format(s1 - s0), 'segundos')
     # Processa pilha restante...
-    loop = asyncio.get_event_loop()
     loop.run_until_complete(fazconsulta(images, modelo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
 

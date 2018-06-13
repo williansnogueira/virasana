@@ -65,7 +65,9 @@ def interpreta_pred(prediction, model):
         return prediction['1'] < 0.5
     if model == 'peso':
         return prediction['peso']
-
+    if model == 'index':
+        return prediction['code']
+    raise NotImplementedError('Modelo %s não implementado!' % model)
 
 if __name__ == '__main__':
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI

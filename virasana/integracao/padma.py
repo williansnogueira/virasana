@@ -19,7 +19,7 @@ CHAVES_PADMA = [
     'metadata.predictions.volume',
     'metadata.predictions.ncms',
     'metadata.predictions.embalagens',
-    'metadata.predictions.hash_linear',
+    'metadata.predictions.index',  # hash_linear
     'metadata.predictions.hash_semantic',
     'metadata.predictions.ameacas',
     'metadata.predictions.bbox'

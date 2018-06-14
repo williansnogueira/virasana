@@ -275,9 +275,17 @@ def get_distances(search_index):
     return sequence.reshape(-1)
 
 
+@app.route('/similar')
+@login_required
+def similar_():
+    _id = request.args.get('_id', '')
+    offset = int(request.args.get('offset', 0))
+    return similar(_id, offset)
+
+
 @app.route('/similar/<_id>')
 @login_required
-def similar(_id):
+def similar(_id, offset=0):
     """Retorna índice de imagens similares."""
     global image_indexes
     global ids_indexes
@@ -298,10 +306,16 @@ def similar(_id):
         search_index = np.asarray(preds['predictions'][0]['code'])
         seq = get_distances(search_index)
         print(seq.shape)
-        seq = seq[:100]
+        start = offset * 100
+        print(type(start))
+        end = start + 100
+        seq = seq[start:end]
         print(seq.shape)
         most_similar = [str(ids_indexes[ind]) for ind in seq]
-        return render_template('similar_files.html', ids=most_similar)
+        return render_template('similar_files.html',
+                               ids=most_similar,
+                               _id=_id,
+                               offset=offset)
     return '404'
 
 

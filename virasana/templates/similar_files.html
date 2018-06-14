@@ -1,38 +1,61 @@
-{% extends "layout.html" %} {% block content %}{{super()}}
+{% if offset == 0 %}
+{% extends "layout.html" %} 
+{% endif %}
+{% block content %}
+{% if offset == 0 %}
+{{super()}}
 <div id="main" class="container-fluid">
-    <div id="top" class="row">
+{% endif %}
+  <div id="top" class="row">
+        <h2>Página nº {{ offset + 1 }}</h2>
     </div>
     <div id="list" class="row">
-        &nbsp;
-        <div class="col-sm-1">
-            &nbsp;
+        <input type="hidden" id="_id" value="{{ _id }}" /> {% for i in range(0, 25) %}
+        <div class="row">
+            {% for i2 in range(0, 4) %}
+            <div class="col-sm-3">
+                <a href="/file/{{ ids[i * 4 + i2] }}">
+                    <img src="/mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura" width="300" height="160" />
+                    <p>Imagem {{ ids[i * 4 + i2] }}.
+                        <br> Índice {{ offset * 100 + (i * 4 + i2) }} de semelhança</p>
+                </a>
+            </div>
+            {% endfor %}
         </div>
-        <div class="table table-responsive col-sm-10">
-            {# Display a page of todos #}
-            <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <td>Imagens</td>
-                    </tr>
-                </thead>
-                {% for myfile in ids %}
-                <tr>
-                    <td>
-                        <img src="/mini1/{{ myfile }}" alt="Sem miniatura" height="60" />
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-        <div class="col-sm-1">
-            &nbsp;
-        </div>
+        {% endfor %}
+{% if offset == 0 %}
     </div>
     <div id="bottom" class="row">
         AJNA - Receita Federal do Brasil 2017
     </div>
 </div>
-<!-- /#main -->
-{% endblock %} {% block scripts %} {{super()}}
+{% endif %}
+{% endblock %}
+{% if offset == 0 %}
+ {% block scripts %} {{super()}}
+<script>
+    var offset = 0;
 
+    $(window).scroll(function () {
+        if ($(window).scrollTop() == $(document).height() - $(window).height()) {
+            _id = $('#_id').val();
+            if (_id) {
+                ++offset;
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4) {
+                        if (this.status == 200) {
+                            $("#list").append(this.responseText);
+                        }
+                    }
+                }
+                xhttp.open("GET", "/similar?_id=" + _id + "&offset=" + offset, false);
+                xhttp.send();
+                /*exit the function:*/
+                return;
+            }
+
+        }
+    });
 </script> {% endblock %}
+{% endif %}

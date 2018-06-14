@@ -148,3 +148,4 @@ teste.csv
 imgs.tar.gz
 original_imgs/
 original_imgs.tar.gz
+*.npy

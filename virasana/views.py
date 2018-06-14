@@ -5,6 +5,9 @@ from base64 import b64encode
 from datetime import date, datetime, timedelta
 from sys import platform
 
+import numpy as np
+from sklearn.metrics.pairwise import euclidean_distances
+
 import requests
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
@@ -31,7 +34,10 @@ from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
                                  stats_resumo_imagens)
 from virasana.integracao.carga import CHAVES_CARGA
 from virasana.workers.tasks import raspa_dir, trata_bson
+from virasana.integracao.padma import consulta_padma
 
+IMAGE_INDEXES = os.path.join(os.path.dirname(__file__), 'indexes.npy')
+IDS_INDEXES = os.path.join(os.path.dirname(__file__), '_ids.npy')
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
@@ -259,6 +265,46 @@ def mini2(_id):
     return mini(_id, 1)
 
 
+image_indexes = None
+ids_indexes = None
+
+
+def get_distances(search_index):
+    distances = euclidean_distances([search_index], image_indexes)
+    sequence = np.argsort(distances)
+    return sequence.reshape(-1)
+
+
+@app.route('/similar/<_id>')
+@login_required
+def similar(_id):
+    """Retorna índice de imagens similares."""
+    global image_indexes
+    global ids_indexes
+    if image_indexes is None:
+        image_indexes = np.load(IMAGE_INDEXES)
+        ids_indexes = np.load(IDS_INDEXES)
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    image = grid_data.read()
+    preds = grid_data.metadata.get('predictions')
+    if preds:
+        bboxes = [pred.get('bbox') for pred in preds]
+        if len(bboxes) > 0 and bboxes[0]:
+            image = recorta_imagem(image, bboxes[0])
+
+    preds = consulta_padma(image, 'index')
+    if preds.get('success'):
+        search_index = np.asarray(preds['predictions'][0]['code'])
+        seq = get_distances(search_index)
+        print(seq.shape)
+        seq = seq[:100]
+        print(seq.shape)
+        most_similar = [str(ids_indexes[ind]) for ind in seq]
+        return render_template('similar_files.html', ids=most_similar)
+    return '404'
+
+
 filtros = dict()
 
 
@@ -289,6 +335,8 @@ FILTROS_AUDITORIA = {
     '1': {'filtro': {'metadata.carga.vazio': True,
                      'metadata.predictions.vazio': False},
           'order': [('metadata.predictions.peso', -1)]}
+
+
 }
 
 

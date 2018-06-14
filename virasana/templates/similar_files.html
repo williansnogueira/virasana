@@ -1,0 +1,38 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+<div id="main" class="container-fluid">
+    <div id="top" class="row">
+    </div>
+    <div id="list" class="row">
+        &nbsp;
+        <div class="col-sm-1">
+            &nbsp;
+        </div>
+        <div class="table table-responsive col-sm-10">
+            {# Display a page of todos #}
+            <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
+                <thead>
+                    <tr>
+                        <td>Imagens</td>
+                    </tr>
+                </thead>
+                {% for myfile in ids %}
+                <tr>
+                    <td>
+                        <img src="/mini1/{{ myfile }}" alt="Sem miniatura" height="60" />
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="col-sm-1">
+            &nbsp;
+        </div>
+    </div>
+    <div id="bottom" class="row">
+        AJNA - Receita Federal do Brasil 2017
+    </div>
+</div>
+<!-- /#main -->
+{% endblock %} {% block scripts %} {{super()}}
+
+</script> {% endblock %}

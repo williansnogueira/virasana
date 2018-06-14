@@ -31,6 +31,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
+                                 plot_bar_plotly, plot_pie_plotly,
                                  stats_resumo_imagens)
 from virasana.integracao.carga import CHAVES_CARGA
 from virasana.workers.tasks import raspa_dir, trata_bson
@@ -510,13 +511,11 @@ def stats():
 @app.route('/pie')
 def pie():
     """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
-    # TODO: matplotlib está falhando no multithread. Fazer dashboard
-    # dash do AJNA e passar stats para lá.
     global stats_cache
     if stats_cache:
         stats = stats_cache['recinto']
         output = plot_pie(stats.values(), stats.keys())
-    return Response(response=output.getvalue(), mimetype='image/png')
+        return Response(response=output.getvalue(), mimetype='image/png')
 
 
 @app.route('/bars')
@@ -529,6 +528,28 @@ def bars():
         if stats:
             output = plot_bar(stats.values(), stats.keys())
             return Response(response=output.getvalue(), mimetype='image/png')
+
+
+@app.route('/pie_plotly')
+def pie_plotly():
+    """Renderiza HTML no pyplot e serializa via HTTP/HTML."""
+    global stats_cache
+    if stats_cache:
+        stats = stats_cache['recinto']
+        output = plot_pie_plotly(list(stats.values()), list(stats.keys()))
+        return output
+
+
+@app.route('/bar_plotly')
+def bar_plotly():
+    """Renderiza gráfico no plotly e serializa via HTTP/HTML."""
+    global stats_cache
+    if stats_cache:
+        recinto = request.args.get('recinto')
+        stats = stats_cache['recinto_mes'].get(recinto)
+        if stats:
+            output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
+            return output
 
 
 @app.route('/padma_proxy/<image_id>')

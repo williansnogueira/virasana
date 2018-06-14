@@ -27,8 +27,8 @@
         <div class="row">
             <hr>
             <div class="col-md-6">
-                {% if stats %}
-                <img src="/pie" /> {% endif %}
+                <div id="pie">
+                </div>
             </div>
             <div class="col-md-6">
                 {% for key, value in stats.items() %} {% if value is not mapping %}
@@ -39,11 +39,11 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                {% if stats['recinto'] %}
-                {% for key, value in stats['recinto'].items() %}
+            <div class="col-md-6">
+                {% if stats['recinto'] %} {% for key, value in stats['recinto'].items() %}
                 <h3>Imagens por mês do Recinto {{ key }}</h3>
-                <img src="/bars?recinto={{ key }}" />
+                <div class="bar" id="{{ key }}">
+                </div>
                 {% endfor %}{% endif %}
             </div>
         </div>
@@ -52,4 +52,31 @@
         AJNA - Receita Federal do Brasil 2017
     </div>
 </div>
-{% endblock %}
+{% endblock %} {% block scripts %} {{super()}}
+<script>
+    $(document).ready(function () {
+
+        function includeHTML(id_div, url_origem) {
+            xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {
+                        // console.log(this.responseText);
+                        $(id_div).append(this.responseText);
+                    }
+                }
+            }
+            console.log(id_div, url_origem)
+            xhttp.open("GET", url_origem, true);
+            xhttp.send();
+            /*exit the function:*/
+            return;
+        }
+        includeHTML("#pie", "/pie_plotly");
+        $('.bar').each(function (i, obj) {
+            id = obj.getAttribute("id")
+            console.log(name);
+            includeHTML('#' + id, "/bar_plotly?recinto=" + id);
+        });
+    });
+</script> {% endblock %}

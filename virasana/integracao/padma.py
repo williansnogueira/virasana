@@ -69,9 +69,9 @@ def interpreta_pred(prediction, model):
         return prediction['code']
     raise NotImplementedError('Modelo %s não implementado!' % model)
 
+
 if __name__ == '__main__':
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
-
     db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
     print('Criando índices para predicitions')
     create_indexes(db)

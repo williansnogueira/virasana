@@ -16,6 +16,8 @@ sobre a base para informar os usuários.
 """
 import io
 import matplotlib.pyplot as plt
+import plotly
+import plotly.graph_objs as go
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime
@@ -180,6 +182,7 @@ def plot_pie(values, labels):
     canvas.print_png(png)
     return png
 
+
 def plot_bar(values, labels):
     """Gera gráfico de barras."""
     fig1, ax1 = plt.subplots()
@@ -191,10 +194,9 @@ def plot_bar(values, labels):
     canvas.print_png(png)
     return png
 
+
 def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""
-    import plotly
-    import plotly.graph_objs as go
     # labels = ['1', '2', '3']
     # values =  [10, 20, 30]
     print(values, labels)
@@ -207,22 +209,20 @@ def plot_pie_plotly(values, labels):
     return plot
 
 
-
 def plot_bar_plotly(values, labels):
     """Gera gráfico de barras."""
-    import plotly
-    import plotly.graph_objs as go
-    x = list(range(len(labels)))
+    # x = list(range(len(labels)))
     print(labels, values)
     plot = plotly.offline.plot({
         'data': [go.Bar(x=labels, y=values)],
         'layout': go.Layout(title='',
-        xaxis=go.XAxis(type='category'))
+                            xaxis=go.XAxis(type='category'))
     },
         show_link=False,
         output_type='div',
         image_width=400)
     return plot
+
 
 def stats_por(db):
     """soon."""

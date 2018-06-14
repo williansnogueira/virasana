@@ -21,11 +21,15 @@ setup(
         'Flask-wtf',
         'matplotlib',
         'pymongo',
+        'plotly',
         'pandas',
         'pillow',
+        'pymongo',
         'raven',
         'redis',
-        'requests'
+        'requests',
+        'scipy',
+        'sklearn'
     ],
     dependency_links=[
         'git+https://github.com/IvanBrasilico/ajna_commons.git#egg=ajna_commons-0.0.1'

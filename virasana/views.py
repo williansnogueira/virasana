@@ -1,5 +1,6 @@
 """Coleção de views da interface web do módulo virasana."""
 import json
+import html
 import os
 from base64 import b64encode
 from datetime import date, datetime, timedelta
@@ -307,9 +308,9 @@ def similar(_id, offset=0):
         search_index = np.asarray(preds['predictions'][0]['code'])
         seq = get_distances(search_index)
         print(seq.shape)
-        start = offset * 100
+        start = offset * 40
         print(type(start))
-        end = start + 100
+        end = start + 40
         seq = seq[start:end]
         print(seq.shape)
         most_similar = [str(ids_indexes[ind]) for ind in seq]
@@ -317,7 +318,7 @@ def similar(_id, offset=0):
                                ids=most_similar,
                                _id=_id,
                                offset=offset)
-    return '404'
+    return 'Imagem não encontrada', 404
 
 
 filtros = dict()
@@ -524,6 +525,7 @@ def bars():
     global stats_cache
     if stats_cache:
         recinto = request.args.get('recinto')
+        recinto = html.unescape(recinto)
         stats = stats_cache['recinto_mes'].get(recinto)
         if stats:
             output = plot_bar(stats.values(), stats.keys())
@@ -538,6 +540,7 @@ def pie_plotly():
         stats = stats_cache['recinto']
         output = plot_pie_plotly(list(stats.values()), list(stats.keys()))
         return output
+    return ''
 
 
 @app.route('/bar_plotly')
@@ -546,11 +549,15 @@ def bar_plotly():
     global stats_cache
     if stats_cache:
         recinto = request.args.get('recinto')
+        print(recinto)
         stats = stats_cache['recinto_mes'].get(recinto)
+        print(recinto)
+        print(stats)
+        print(stats_cache)
         if stats:
             output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
             return output
-
+    return ''
 
 @app.route('/padma_proxy/<image_id>')
 def padma_proxy(image_id):

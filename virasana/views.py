@@ -27,12 +27,12 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
-from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
+from virasana.integracao import (carga, CHAVES_GRIDFS,
+                                 dict_to_html, dict_to_text,
+                                 plot_bar, plot_pie,
                                  plot_bar_plotly, plot_pie_plotly,
-                                 stats_resumo_imagens)
-from virasana.integracao.carga import CHAVES_CARGA
+                                 stats_resumo_imagens, summary)
 from virasana.workers.tasks import raspa_dir, trata_bson
-from virasana.integracao.padma import consulta_padma
 from virasana.utils.image_search import ImageSearch
 
 
@@ -186,14 +186,28 @@ def list_files():
 
 
 @app.route('/summary/<_id>')
-def summary(_id=None):
+def summarytext(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
     Exibe os metadados associados a ele.
     """
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
-    return str(grid_data.metadata)
+    result = dict_to_text(summary(grid_data=grid_data)) +  '\n' + \
+        dict_to_text(carga.summary(grid_data=grid_data))
+    return result
+
+
+@app.route('/summaryhtml/<_id>')
+def summaryhtml(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe os metadados associados a ele.
+    """
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    result = dict_to_html(summary(grid_data=grid_data))
+    return result
 
 
 @app.route('/file/<_id>')
@@ -278,6 +292,12 @@ def mini2(_id):
 @app.route('/similar')
 @login_required
 def similar_():
+    """Chama view de índice de imagens similares por GET.
+
+    Recebe _id e offset(página atual).
+    Para possibilitar rolagem de página.
+
+    """
     _id = request.args.get('_id', '')
     offset = int(request.args.get('offset', 0))
     return similar(_id, offset)
@@ -300,7 +320,7 @@ filtros = dict()
 
 def campos_chave():
     """Retorna campos chave para montagem de filtro."""
-    return CHAVES_GRIDFS + CHAVES_CARGA
+    return CHAVES_GRIDFS + carga.CHAVES_CARGA
 
 
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])

@@ -72,11 +72,76 @@ def gridfs_count(db, filtro={}):
     return db['fs.files'].find(filtro).count(with_limit_and_skip=True)
 
 
+def tag(word: str, tags: list):
+    """Coloca tags em torno de word."""
+    open_tags = ['<'+tag+'>' for tag in tags]
+    close_tags = ['<'+tag+'>' for tag in reversed(tags)]
+    print('***************', word)
+    return ''.join(open_tags) + word + ''.join(close_tags)
+
+
+def dict_to_html(adict: dict):
+    """Retorna HTML."""
+    lista = []
+    LABEL = ['span', 'b']
+    TEXT = ['span']
+    for key, value in adict.items():
+        lista.append(tag(key, LABEL))
+        lista.append(tag(value, TEXT))
+    return '\n'.join(lista)
+
+
+def dict_to_text(adict: dict):
+    """Retorna key\nvalue\n."""
+    lista = []
+    for key, value in adict.items():
+        lista.append(key)
+        if isinstance(value, str):
+            lista.append(value)
+        elif isinstance(value, list):
+            lista.append('\n'.join(value))
+        else:
+            lista.append('Linha tipo ' + type(value) + ' não suportada.')
+    return '\n'.join(lista)
+
+
+def summary(grid_data=None, registro=None):
+    """Selecionar campos mais importantes para exibição.
+
+    Args:
+        grid_data: Registro GridData do Gridfs.get
+        registro: registro (dict) lido de cursor do MongoDB
+
+    Returns:
+        dict com descrição e valor de campos. (str: str)
+
+    """
+    result = {}
+    if grid_data:
+        meta = grid_data.metadata
+        upload = grid_data.uploadDate.strftime('%Y-%m-%d %H:%M')
+    else:
+        meta = registro.get('metadata')
+        upload = meta.get('uploadDate')
+    if not meta:
+        raise TypeError('Não foi passado registro válido' +
+                        'para a função integracao.__init__.summary')
+    result['Número contêiner informado pelo recinto'] = meta.get(
+        'numeroinformado')
+    result['Data de escaneamento'] = meta.get(
+        'dataescaneamento').strftime('%Y-%m-%d %H:%M')
+    result['Data de Carregamento da imagem no sistema'] = upload
+    result['Nome Recinto'] = meta.get('recinto')
+    return result
+
+
 def stats_resumo_imagens(db, datainicio=None, datafim=None):
     """Números gerais do Banco de Dados e suas integrações.
 
     Estatísticas gerais sobre as imagens
     """
+    # TODO: Extremamente lento, guardar estatísticas em tabelas à parte
+    # e rodar de forma batch ou criar counters
     # import cProfile, pstats, io
     # pr = cProfile.Profile()
     # pr.enable()

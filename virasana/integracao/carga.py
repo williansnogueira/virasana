@@ -34,7 +34,6 @@ CHAVES_CARGA = [
     'metadata.carga.conhecimento.conhecimento',
     'metadata.carga.conhecimento.cpfcnpjconsignatario',
     'metadata.carga.container.container',
-    'metadata.carga.container.container',
     'metadata.carga.container.taracontainer',
     'metadata.carga.container.pesobrutoitem',
     'metadata.carga.container.volumeitem',
@@ -42,6 +41,57 @@ CHAVES_CARGA = [
     'metadata.carga.atracacao.dataatracacao',
     'metadata.carga.atracacao.horaatracacao',
 ]
+
+
+def summary(grid_data=None, registro=None):
+    """Selecionar campos mais importantes para exibição.
+
+    Args:
+        grid_data: Registro GridData do Gridfs.get
+        registro: registro (dict) lido de cursor do MongoDB
+
+    Returns:
+        dict com descrição e valor de campos. (str: str)
+
+    """
+    result = {}
+    if grid_data:
+        print(grid_data)
+        meta = grid_data.metadata.get('carga')
+    elif registro:
+        meta = registro.get('metadata').get('carga')
+    try:
+        if not meta:
+            raise TypeError('Não foi encontrado registro do CARGA' +
+                            ' na função integracao.carga.summary')
+        tipo = meta.get('manifesto')[0].get('tipomanifesto')
+        tipos = {'lci': 'Importação'}
+        result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
+        if meta.get('vazio'):
+            result['CONTÊINER VAZIO'] = ''
+            result['Manifesto - Escala'] = '%s - %s' % \
+                (meta.get('manifesto')[0].get('manifesto'),
+                 meta.get('atracacao').get('escala'))
+        else:
+            result['CONTÊINER COM CARGA'] = ''
+            result['Conhecimento - Manifesto - Escala'] = 'CE %s - %s - %s' % \
+                (meta.get('conhecimento')[0].get('conhecimento'),
+                 meta.get('manifesto')[0].get('manifesto'),
+                 meta.get('atracacao').get('escala'))
+        result['Número contêiner - tara - peso'] = [
+            '%s - %skg - %skg - %sm³' %
+            (conteiner.get('container'), conteiner.get('taracontainer'),
+             conteiner.get('pesobrutoitem'),  conteiner.get('volumeitem'))
+            for conteiner in meta.get('container')
+        ]
+        result['Data e hora de atracação do Manifesto'] = '%s %s' % (
+            meta.get('atracacao').get('dataatracacao'),
+            meta.get('atracacao').get('horaatracacao')
+        )
+        result['NCM'] = ' '.join([ncm.get('ncm') for ncm in meta.get('ncm')])
+    except Exception as err:
+        result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
+    return result
 
 
 def converte_datahora_atracacao(atracacao: dict)-> datetime:
@@ -126,8 +176,8 @@ def create_indexes(db):
 
 
 def mongo_find_in(db, collection: str, field: str, in_set,
-                  set_field: str=None,
-                  filtros: dict=None) -> typing.Tuple[list, set]:
+                  set_field: str = None,
+                  filtros: dict = None) -> typing.Tuple[list, set]:
     """Realiza um find $in in_set no db.collection.
 
     Args:

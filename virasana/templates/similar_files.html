@@ -1,38 +1,31 @@
-{% if offset == 0 %}
-{% extends "layout.html" %} 
-{% endif %}
-{% block content %}
-{% if offset == 0 %}
-{{super()}}
+{% if offset == 0 %} {% extends "layout.html" %} {% endif %} {% block content %} {% if offset == 0 %} {{super()}}
 <div id="main" class="container-fluid">
-{% endif %}
-  <div id="top" class="row">
+    {% endif %}
+    <div id="top" class="row">
         <h2>Página nº {{ offset + 1 }}</h2>
     </div>
     <div id="list" class="row">
-        <input type="hidden" id="_id" value="{{ _id }}" /> {% for i in range(0, 10) %}
+        <input type="hidden" id="_id" value="{{ _id }}" /> {% for i in range(0, chunk // 4 ) %}
         <div class="row">
             {% for i2 in range(0, 4) %}
             <div class="col-sm-3">
                 <a href="/file/{{ ids[i * 4 + i2] }}">
-                    <img src="/mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura" width="300" height="160" />
+                    <img src="/mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura" 
+                    width="300" height="160" 
+                    onmouseover="showMsg(this, '{{ ids[i * 4 + i2] }}')" onmouseout="clearMsg(this)"  />
                     <p>Imagem {{ ids[i * 4 + i2] }}.
-                        <br> Índice {{ offset * 40 + (i * 4 + i2) }} de semelhança</p>
+                        <br> Índice {{ offset * chunk + (i * 4 + i2) }} de semelhança</p>
                 </a>
             </div>
             {% endfor %}
         </div>
-        {% endfor %}
-{% if offset == 0 %}
+        {% endfor %} {% if offset == 0 %}
     </div>
     <div id="bottom" class="row">
         AJNA - Receita Federal do Brasil 2017
     </div>
 </div>
-{% endif %}
-{% endblock %}
-{% if offset == 0 %}
- {% block scripts %} {{super()}}
+{% endif %} {% endblock %} {% if offset == 0 %} {% block scripts %} {{super()}}
 <script>
     var offset = 0;
 
@@ -49,13 +42,26 @@
                         }
                     }
                 }
-                xhttp.open("GET", "/similar?_id=" + _id + "&offset=" + offset, false);
+                xhttp.open("GET", "/similar?_id=" + _id + "&offset=" + offset, true);
                 xhttp.send();
-                /*exit the function:*/
                 return;
             }
 
         }
     });
-</script> {% endblock %}
-{% endif %}
+    function showMsg(img,_id) {
+        xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    img.title = this.responseText;
+                }
+            }
+        }
+        xhttp.open("GET", "/summary/" + _id, true);
+        xhttp.send();
+    }
+    function clearMsg(img) {
+        img.title = "";
+    }
+</script> {% endblock %} {% endif %}

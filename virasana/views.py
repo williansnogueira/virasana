@@ -2,14 +2,10 @@
 import json
 import html
 import os
+import requests
 from base64 import b64encode
 from datetime import date, datetime, timedelta
 from sys import platform
-
-import numpy as np
-from sklearn.metrics.pairwise import euclidean_distances
-
-import requests
 from bson.objectid import ObjectId
 from flask import (Flask, Response, flash, jsonify, redirect, render_template,
                    request, url_for)
@@ -37,9 +33,9 @@ from virasana.integracao import (CHAVES_GRIDFS, plot_bar, plot_pie,
 from virasana.integracao.carga import CHAVES_CARGA
 from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.integracao.padma import consulta_padma
+from virasana.utils.image_search import ImageSearch
 
-IMAGE_INDEXES = os.path.join(os.path.dirname(__file__), 'indexes.npy')
-IDS_INDEXES = os.path.join(os.path.dirname(__file__), '_ids.npy')
+
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
@@ -51,6 +47,7 @@ Bootstrap(app)
 nav = Nav()
 # logo = img(src='/static/css/images/logo.png')
 stats_cache = {}
+img_search = ImageSearch(db)
 
 
 def allowed_file(filename):
@@ -188,6 +185,17 @@ def list_files():
                            task_info=task_info)
 
 
+@app.route('/summary/<_id>')
+def summary(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe os metadados associados a ele.
+    """
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    return str(grid_data.metadata)
+
+
 @app.route('/file/<_id>')
 @app.route('/file')
 @login_required
@@ -267,16 +275,6 @@ def mini2(_id):
     return mini(_id, 1)
 
 
-image_indexes = None
-ids_indexes = None
-
-
-def get_distances(search_index):
-    distances = euclidean_distances([search_index], image_indexes)
-    sequence = np.argsort(distances)
-    return sequence.reshape(-1)
-
-
 @app.route('/similar')
 @login_required
 def similar_():
@@ -289,39 +287,12 @@ def similar_():
 @login_required
 def similar(_id, offset=0):
     """Retorna índice de imagens similares."""
-    global image_indexes
-    global ids_indexes
-    if image_indexes is None:
-        image_indexes = np.load(IMAGE_INDEXES)
-        ids_indexes = np.load(IDS_INDEXES)
-    fs = GridFS(db)
-    grid_data = fs.get(ObjectId(_id))
-    image = grid_data.read()
-    preds = grid_data.metadata.get('predictions')
-    if preds:
-        bboxes = [pred.get('bbox') for pred in preds]
-        if len(bboxes) > 0 and bboxes[0]:
-            image = recorta_imagem(image, bboxes[0])
-    # TODO: Assim que todas as images tiverem índice gravado,
-    # buscar do Banco de Dados
-    # preds = consulta_padma(image, 'index')
-    # if preds.get('success'):
-    #     search_index = np.asarray(preds['predictions'][0]['code'])
-    search_index = preds[0].get('index')
-    if search_index:
-        seq = get_distances(search_index)
-        print(seq.shape)
-        start = offset * 40
-        print(type(start))
-        end = start + 40
-        seq = seq[start:end]
-        print(seq.shape)
-        most_similar = [str(ids_indexes[ind]) for ind in seq]
-        return render_template('similar_files.html',
-                               ids=most_similar,
-                               _id=_id,
-                               offset=offset)
-    return 'Imagem não encontrada', 404
+    most_similar = img_search.get_chunk(_id, offset)
+    return render_template('similar_files.html',
+                           ids=most_similar,
+                           _id=_id,
+                           offset=offset,
+                           chunk=img_search.chunk)
 
 
 filtros = dict()
@@ -372,7 +343,7 @@ class FilesForm(FlaskForm):
         ('1', 'Contêineres informados como vazios mas detectados ' +
          'como não vazios (ordem de peso detectado)')
     ]
-    numero = StringField('Número', validators=[optional()])
+    numero = StringField('Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())

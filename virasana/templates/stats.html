@@ -75,8 +75,8 @@
         includeHTML("#pie", "/pie_plotly");
         $('.bar').each(function (i, obj) {
             id = obj.getAttribute("id")
-            console.log(name);
-            includeHTML('#' + id, "/bar_plotly?recinto=" + id);
+            console.log(id);
+            includeHTML("[id='" + id + "']", "/bar_plotly?recinto=" + id);
         });
     });
 </script> {% endblock %}

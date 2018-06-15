@@ -302,10 +302,13 @@ def similar(_id, offset=0):
         bboxes = [pred.get('bbox') for pred in preds]
         if len(bboxes) > 0 and bboxes[0]:
             image = recorta_imagem(image, bboxes[0])
-
-    preds = consulta_padma(image, 'index')
-    if preds.get('success'):
-        search_index = np.asarray(preds['predictions'][0]['code'])
+    # TODO: Assim que todas as images tiverem índice gravado,
+    # buscar do Banco de Dados
+    # preds = consulta_padma(image, 'index')
+    # if preds.get('success'):
+    #     search_index = np.asarray(preds['predictions'][0]['code'])
+    search_index = preds[0].get('index')
+    if search_index:
         seq = get_distances(search_index)
         print(seq.shape)
         start = offset * 40
@@ -558,6 +561,7 @@ def bar_plotly():
             output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
             return output
     return ''
+
 
 @app.route('/padma_proxy/<image_id>')
 def padma_proxy(image_id):

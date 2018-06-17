@@ -94,7 +94,7 @@ def summary(grid_data=None, registro=None):
                 volume = float(conteiner.get('volumeitem').replace(',', '.'))
                 conteiner_pesos.append('%s - %dkg - %dkg - %dm³' %
                                        (conteiner.get('container'), tara,
-                                        peso,  volume))
+                                        peso, volume))
             result['Número contêiner - tara - peso - volume'] = conteiner_pesos
             result['NCM'] = ' '.join([ncm.get('ncm')
                                       for ncm in meta.get('ncm')])

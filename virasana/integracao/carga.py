@@ -65,30 +65,43 @@ def summary(grid_data=None, registro=None):
             raise TypeError('Não foi encontrado registro do CARGA' +
                             ' na função integracao.carga.summary')
         tipo = meta.get('manifesto')[0].get('tipomanifesto')
-        tipos = {'lci': 'Importação'}
+        tipos = {'lci': 'Importação',
+                 'bce': 'Baldeação (EXP)',
+                 'lce': 'Exportação',
+                 'bci': 'Baldeação (IMP)'}
         result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
         if meta.get('vazio'):
             result['CONTÊINER VAZIO'] = ''
             result['Manifesto - Escala'] = '%s - %s' % \
                 (meta.get('manifesto')[0].get('manifesto'),
                  meta.get('atracacao').get('escala'))
+            conteiner_pesos = []
+            for conteiner in meta.get('container'):
+                tara = float(conteiner.get('tara(kg)').replace(',', '.'))
+                conteiner_pesos.append('%s - %dkg' %
+                                       (conteiner.get('container'), tara))
+            result['Número contêiner - tara'] = conteiner_pesos
         else:
             result['CONTÊINER COM CARGA'] = ''
             result['Conhecimento - Manifesto - Escala'] = 'CE %s - %s - %s' % \
                 (meta.get('conhecimento')[0].get('conhecimento'),
                  meta.get('manifesto')[0].get('manifesto'),
                  meta.get('atracacao').get('escala'))
-        result['Número contêiner - tara - peso'] = [
-            '%s - %skg - %skg - %sm³' %
-            (conteiner.get('container'), conteiner.get('taracontainer'),
-             conteiner.get('pesobrutoitem'),  conteiner.get('volumeitem'))
-            for conteiner in meta.get('container')
-        ]
+            conteiner_pesos = []
+            for conteiner in meta.get('container'):
+                tara = float(conteiner.get('taracontainer').replace(',', '.'))
+                peso = float(conteiner.get('pesobrutoitem').replace(',', '.'))
+                volume = float(conteiner.get('volumeitem').replace(',', '.'))
+                conteiner_pesos.append('%s - %dkg - %dkg - %dm³' %
+                                       (conteiner.get('container'), tara,
+                                        peso,  volume))
+            result['Número contêiner - tara - peso - volume'] = conteiner_pesos
+            result['NCM'] = ' '.join([ncm.get('ncm')
+                                      for ncm in meta.get('ncm')])
         result['Data e hora de atracação do Manifesto'] = '%s %s' % (
             meta.get('atracacao').get('dataatracacao'),
             meta.get('atracacao').get('horaatracacao')
         )
-        result['NCM'] = ' '.join([ncm.get('ncm') for ncm in meta.get('ncm')])
     except Exception as err:
         result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
     return result

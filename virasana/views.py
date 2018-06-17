@@ -193,7 +193,7 @@ def summarytext(_id=None):
     """
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
-    result = dict_to_text(summary(grid_data=grid_data)) +  '\n' + \
+    result = dict_to_text(summary(grid_data=grid_data)) + '\n' + \
         dict_to_text(carga.summary(grid_data=grid_data))
     return result
 
@@ -224,7 +224,12 @@ def file(_id=None):
     else:
         grid_data = fs.get(ObjectId(_id))
     # print(grid_data)
-    return render_template('view_file.html', myfile=grid_data)
+    summary_ = dict_to_html(summary(grid_data=grid_data))
+    summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+    return render_template('view_file.html',
+                           myfile=grid_data,
+                           summary=summary_,
+                           summary_carga=summary_carga)
 
 
 @app.route('/image')

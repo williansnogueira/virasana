@@ -74,8 +74,8 @@ def gridfs_count(db, filtro={}):
 
 def tag(word: str, tags: list):
     """Coloca tags em torno de word."""
-    open_tags = ['<'+tag+'>' for tag in tags]
-    close_tags = ['<'+tag+'>' for tag in reversed(tags)]
+    open_tags = ['<' + tag + '>' for tag in tags]
+    close_tags = ['</' + tag + '>' for tag in reversed(tags)]
     print('***************', word)
     return ''.join(open_tags) + word + ''.join(close_tags)
 
@@ -84,10 +84,16 @@ def dict_to_html(adict: dict):
     """Retorna HTML."""
     lista = []
     LABEL = ['span', 'b']
-    TEXT = ['span']
+    TEXT = ['span', 'br']
     for key, value in adict.items():
         lista.append(tag(key, LABEL))
-        lista.append(tag(value, TEXT))
+        if isinstance(value, str):
+            val = value
+        elif isinstance(value, list):
+            val = '<br>'.join(value)
+        else:
+            val = 'Linha tipo ' + type(value) + ' não suportada.'
+        lista.append(tag(val, TEXT))
     return '\n'.join(lista)
 
 

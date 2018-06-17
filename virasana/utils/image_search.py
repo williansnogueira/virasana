@@ -25,7 +25,7 @@ class ImageSearch():
         search.get_list(_id) - Retorna lista completa
     """
 
-    def __init__(self, db, chunk=20, cache_size=1000):
+    def __init__(self, db=None, chunk=20, cache_size=1000):
         """Recebe conexão ao BD, carrega arrays, inicializa variáveis.
 
         Args:
@@ -49,19 +49,23 @@ class ImageSearch():
     def _get_cache(self, _id):
         """Consulta se há cache. Não havendo, gera."""
         cache = self.cache.get(_id)
-        if not cache or cache.get('expires') > datetime.now():
+        if cache is None or cache.get('expires') < datetime.now():
             return self._search(_id)
         return cache
 
     def _search(self, _id):
         """Consulta no banco imagem a buscar. Monta cache de ids similares."""
-        grid_data = self.db['fs.files'].find_one({'_id': ObjectId(_id)})
-        preds = grid_data.get('metadata').get('predictions')
-        if not preds:
-            raise KeyError('Imagem %d não tem índice de busca' % _id)
-        indexes = [pred.get('index') for pred in preds]
-        if len(indexes) > 0 and indexes[0]:
-            search_index = preds[0].get('index')
+        if self.db:
+            grid_data = self.db['fs.files'].find_one({'_id': ObjectId(_id)})
+            preds = grid_data.get('metadata').get('predictions')
+            if not preds:
+                raise KeyError('Imagem %d não tem índice de busca' % _id)
+            indexes = [pred.get('index') for pred in preds]
+            if len(indexes) > 0 and indexes[0]:
+                search_index = preds[0].get('index')
+        else:
+            search_index = self.image_indexes[np.where(
+                self.ids_indexes == _id)[0]][0]
         seq = self.get_distances(search_index)
         data_id = {
             'seq': seq,

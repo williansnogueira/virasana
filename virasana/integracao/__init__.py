@@ -98,7 +98,7 @@ def dict_to_html(adict: dict):
 
 
 def dict_to_text(adict: dict):
-    """Retorna key\nvalue\n."""
+    r"""Retorna key\n [value\n]."""
     lista = []
     for key, value in adict.items():
         lista.append(key)

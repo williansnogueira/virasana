@@ -14,14 +14,11 @@ Além disso, podem ser criadas e mantidas aqui funções que dêem estatíticas
 sobre a base para informar os usuários.
 
 """
-import io
-# import matplotlib.pyplot as plt
 import plotly
 import plotly.graph_objs as go
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pymongo import MongoClient
 
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
@@ -242,31 +239,6 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # print(s.getvalue())
     return stats
 
-"""
-def plot_pie(values, labels):
-    """#Gera gráfico de pizza."""
-"""
-    fig1, ax1 = plt.subplots()
-    ax1.pie(values, labels=labels, shadow=True)
-    ax1.axis('equal')
-    canvas = FigureCanvasAgg(fig1)
-    png = io.BytesIO()
-    canvas.print_png(png)
-    return png
-
-
-def plot_bar(values, labels):
-    """#Gera gráfico de barras."""
-"""
-    fig1, ax1 = plt.subplots()
-    x = list(range(len(labels)))
-    plt.bar(x, values)
-    plt.xticks(x, labels)
-    canvas = FigureCanvasAgg(fig1)
-    png = io.BytesIO()
-    canvas.print_png(png)
-    return png
-"""
 
 def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""

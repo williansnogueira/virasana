@@ -66,9 +66,8 @@ def summary(grid_data=None, registro=None):
                             ' na função integracao.carga.summary')
         tipo = meta.get('manifesto')[0].get('tipomanifesto')
         tipos = {'lci': 'Importação',
-                 'bce': 'Baldeação (EXP)',
-                 'lce': 'Exportação',
-                 'bci': 'Baldeação (IMP)'}
+                 'bce': 'Baldeação',
+                 'lce': 'Exportação'}
         result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
         if meta.get('vazio'):
             result['CONTÊINER VAZIO'] = ''

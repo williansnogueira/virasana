@@ -1,6 +1,5 @@
 """Coleção de views da interface web do módulo virasana."""
 import json
-import html
 import os
 import requests
 from base64 import b64encode
@@ -29,7 +28,6 @@ from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.integracao import (carga, CHAVES_GRIDFS,
                                  dict_to_html, dict_to_text,
-#                                 plot_bar, plot_pie,
                                  plot_bar_plotly, plot_pie_plotly,
                                  stats_resumo_imagens, summary)
 from virasana.workers.tasks import raspa_dir, trata_bson
@@ -506,29 +504,6 @@ def stats():
     return render_template('stats.html',
                            stats=stats_cache,
                            oform=form)
-
-
-@app.route('/pie')
-def pie():
-    """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
-    global stats_cache
-    if stats_cache:
-        stats = stats_cache['recinto']
-        output = plot_pie(stats.values(), stats.keys())
-        return Response(response=output.getvalue(), mimetype='image/png')
-
-
-@app.route('/bars')
-def bars():
-    """Renderiza gráfico no matplot e serializa via HTTP/HTML."""
-    global stats_cache
-    if stats_cache:
-        recinto = request.args.get('recinto')
-        recinto = html.unescape(recinto)
-        stats = stats_cache['recinto_mes'].get(recinto)
-        if stats:
-            output = plot_bar(stats.values(), stats.keys())
-            return Response(response=output.getvalue(), mimetype='image/png')
 
 
 @app.route('/pie_plotly')

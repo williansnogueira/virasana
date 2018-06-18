@@ -29,7 +29,7 @@ from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.integracao import (carga, CHAVES_GRIDFS,
                                  dict_to_html, dict_to_text,
-                                 plot_bar, plot_pie,
+#                                 plot_bar, plot_pie,
                                  plot_bar_plotly, plot_pie_plotly,
                                  stats_resumo_imagens, summary)
 from virasana.workers.tasks import raspa_dir, trata_bson

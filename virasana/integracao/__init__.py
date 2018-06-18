@@ -15,7 +15,7 @@ sobre a base para informar os usuários.
 
 """
 import io
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import plotly
 import plotly.graph_objs as go
 
@@ -242,9 +242,10 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # print(s.getvalue())
     return stats
 
-
+"""
 def plot_pie(values, labels):
-    """Gera gráfico de pizza."""
+    """#Gera gráfico de pizza."""
+"""
     fig1, ax1 = plt.subplots()
     ax1.pie(values, labels=labels, shadow=True)
     ax1.axis('equal')
@@ -255,7 +256,8 @@ def plot_pie(values, labels):
 
 
 def plot_bar(values, labels):
-    """Gera gráfico de barras."""
+    """#Gera gráfico de barras."""
+"""
     fig1, ax1 = plt.subplots()
     x = list(range(len(labels)))
     plt.bar(x, values)
@@ -264,7 +266,7 @@ def plot_bar(values, labels):
     png = io.BytesIO()
     canvas.print_png(png)
     return png
-
+"""
 
 def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""

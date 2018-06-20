@@ -348,8 +348,6 @@ FILTROS_AUDITORIA = {
     '1': {'filtro': {'metadata.carga.vazio': True,
                      'metadata.predictions.vazio': False},
           'order': [('metadata.predictions.peso', -1)]}
-
-
 }
 
 

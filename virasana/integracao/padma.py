@@ -63,6 +63,8 @@ def interpreta_pred(prediction, model):
     """Resume predições se necessário."""
     if model == 'vazio':
         return prediction['1'] < 0.5
+    if model == 'vaziosvm':
+        return prediction['naovazio'] == 0.
     if model == 'peso':
         return prediction['peso']
     if model == 'index':

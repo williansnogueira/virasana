@@ -133,8 +133,8 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
             if prediction and prediction.get('success'):
-                # print(prediction, '************')
-                # print(predictions, '************')
+                print(prediction, '************')
+                print(predictions, '************')
                 predictions[ind][model] = interpreta_pred(
                     prediction['predictions'][0], model)
         response['success'] = prediction['success']
@@ -142,7 +142,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
     return image, response
 
 
-async def fazconsulta(images: list, model: str):
+async def fazconsulta(images: list, model: str, campo: str):
     """Recebe lista de ImageID, monta uma ThreadPool.
 
     Monta ThreadPool do tamanho da lista recebida, chama consulta ao padma.
@@ -151,6 +151,7 @@ async def fazconsulta(images: list, model: str):
     Args:
         images: lista de NamedTuple tipo ImageID
         model: nome do modelo
+        campo: nome do campo a gravar no BD
     """
     with concurrent.futures.ThreadPoolExecutor() as executor:
         loop = asyncio.get_event_loop()
@@ -190,6 +191,9 @@ THREADS = 4
 @click.command()
 @click.option('--modelo', help='Modelo de predição a ser consultado',
               required=True)
+@click.option('--campo', help='Nome do campo a atualizar.' +
+              'Se omitido, usa o nome do modelo.',
+              default='')
 @click.option('--t',
               help='Tamanho do lote (padrão ' + str(BATCH_SIZE) + ')',
               default=BATCH_SIZE)
@@ -203,9 +207,11 @@ THREADS = 4
               help='Tentar mesmo se consulta anterior a este registro falhou.')
 @click.option('--update', is_flag=True,
               help='Reescrever dados existentes.')
-def async_update(modelo, t, q, sovazios, force, update):
+def async_update(modelo, campo, t, q, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
-    filtro = monta_filtro(modelo, sovazios, update)
+    if not campo:
+        campo = modelo
+    filtro = monta_filtro(campo, sovazios, update)
     batch_size = t
     threads = q
     print('Estimando número de registros a processar...')
@@ -239,13 +245,13 @@ def async_update(modelo, t, q, sovazios, force, update):
                                  predictions=pred_gravado))
         if registros_processados % threads == 0:
             s0 = time.time()
-            loop.run_until_complete(fazconsulta(images, modelo))
+            loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []
             s1 = time.time()
             print('Sequência real ..............  ', registros_processados,
                   '{0:.2f}'.format(s1 - s0), 'segundos')
     # Processa pilha restante...
-    loop.run_until_complete(fazconsulta(images, modelo))
+    loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
 
 

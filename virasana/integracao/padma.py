@@ -64,7 +64,7 @@ def interpreta_pred(prediction, model):
     if model == 'vazio':
         return prediction['1'] < 0.5
     if model == 'vaziosvm':
-        return prediction['naovazio'] == 0.
+        return prediction['vazio']
     if model == 'peso':
         return prediction['peso']
     if model == 'index':

@@ -2,6 +2,22 @@
 from collections import defaultdict
 
 
+FILTROS_AUDITORIA = {
+    '1': {'filtro': {'metadata.carga.vazio': True,
+                     'metadata.predictions.vazio': False},
+          'order': [('metadata.predictions.peso', -1)],
+          'descricao': 'Contêineres informados como vazios mas detectados ' +
+          'como não vazios (ordem decrescente de peso detectado)'
+          },
+    '2': {'filtro': {'metadata.carga.vazio': False,
+                     'metadata.predictions.vazio': True},
+          'order': [('metadata.predictions.peso', 1)],
+          'descricao': 'Contêineres informados como contendo carga mas ' +
+          'detectados como vazios (ordem de peso detectado)'
+          }
+}
+
+
 class Auditoria():
     """Recebe params, monta consultas de auditoria entre campos fs.files."""
 

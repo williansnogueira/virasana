@@ -32,7 +32,7 @@ from virasana.integracao import (carga, CHAVES_GRIDFS,
                                  stats_resumo_imagens, summary)
 from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.utils.image_search import ImageSearch
-
+from virasana.utils.auditoria import FILTROS_AUDITORIA
 
 app = Flask(__name__, static_url_path='/static')
 app.config['DEBUG'] = True
@@ -344,13 +344,6 @@ def filtro():
     return jsonify(result)
 
 
-FILTROS_AUDITORIA = {
-    '1': {'filtro': {'metadata.carga.vazio': True,
-                     'metadata.predictions.vazio': False},
-          'order': [('metadata.predictions.peso', -1)]}
-}
-
-
 class FilesForm(FlaskForm):
     """Valida pesquisa de arquivos.
 
@@ -359,18 +352,19 @@ class FilesForm(FlaskForm):
 
     """
 
-    filtros = [
-        ('0', 'Selecione uma opção'),
-        ('1', 'Contêineres informados como vazios mas detectados ' +
-         'como não vazios (ordem de peso detectado)')
+    filtros_auditoria_desc = [
+        ('0', 'Selecione uma opção')
     ]
+    for key, value in FILTROS_AUDITORIA.items():
+        filtros_auditoria_desc.append((key, value['descricao']))
     numero = StringField('Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
-    filtro_auditoria = SelectField(u'Filtros de Auditoria', choices=filtros,
+    filtro_auditoria = SelectField(u'Filtros de Auditoria',
+                                   choices=filtros_auditoria_desc,
                                    default=0)
 
 

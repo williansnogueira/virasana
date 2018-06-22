@@ -28,6 +28,7 @@ Args:
 """
 import asyncio
 import concurrent.futures
+import datetime
 import time
 from collections import namedtuple
 
@@ -44,7 +45,7 @@ from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 
 
-def monta_filtro(model: str, sovazios: bool, update: bool)-> dict:
+def monta_filtro(model: str, sovazios: bool, update: str, tamanho: int)-> dict:
     """Retorna filtro para MongoDB."""
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
@@ -52,13 +53,35 @@ def monta_filtro(model: str, sovazios: bool, update: bool)-> dict:
     # Modelo que cria uma caixa de coordenadas para recorte é pré requisito
     # para os outros modelos. Assim, outros modelos só podem rodar em registros
     # que já possuam o campo bbox (bbox: exists: True)
-    if model in BBOX_MODELS:
-        filtro['metadata.predictions.bbox'] = {'$exists': False}
-    else:
+    if model not in BBOX_MODELS:
         filtro['metadata.predictions.bbox'] = {'$exists': True}
-        if not update:
+    if update is None:
+        if model in BBOX_MODELS:
+            filtro['metadata.predictions.bbox'] = {'$exists': False}
+        else:
             filtro['metadata.predictions.' + model] = {'$exists': False}
-    return filtro
+        batch_size = tamanho
+    else:  # Parâmetro tamanho vira qtde de dias e filtra-se por datas
+        try:
+            dt_inicio = datetime.datetime.strptime(update, '%d/%m/%Y')
+            dt_fim = dt_inicio + datetime.timedelta(days=tamanho)
+            batch_size = 0
+        except ValueError:
+            print('--update: Data em formato inválido!!!')
+            return None
+        print(dt_inicio, dt_fim)
+        filtro['metadata.dataescaneamento'] = {'$gt': dt_inicio, '$lt': dt_fim}
+
+    print('Estimando número de registros a processar...')
+    count = db['fs.files'].find(
+        filtro, {'metadata.predictions': 1}
+    ).limit(batch_size).count(with_limit_and_skip=True)
+    print(
+        count, ' arquivos sem predições com os parâmetros passados...')
+    cursor = db['fs.files'].find(
+        filtro, {'metadata.predictions': 1}).limit(batch_size)
+    print('Consulta ao banco efetuada, iniciando conexões ao Padma')
+    return cursor
 
 
 def cropped_images(predictions: dict, image: bytes, _id: int)-> list:
@@ -122,7 +145,7 @@ def mostra_tempo_final(s_inicial, registros_vazios, registros_processados):
           'registros processados', registros_processados)
 
 
-def consulta_padma_retorna_image(image: ImageID, model: str):
+def consulta_padma_retorna_image(image: ImageID, model: str, campo: str):
     """Realiza request no padma. Retorna response e ImageID da consulta."""
     response = {'success': False}
     if model in BBOX_MODELS:
@@ -133,10 +156,12 @@ def consulta_padma_retorna_image(image: ImageID, model: str):
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
             if prediction and prediction.get('success'):
-                print(prediction, '************')
-                print(predictions, '************')
-                predictions[ind][model] = interpreta_pred(
+                # print(prediction, '************')
+                # print(predictions, '************')
+                predictions[ind][campo] = interpreta_pred(
                     prediction['predictions'][0], model)
+                # print('model:', model, 'campo:', campo)
+                # print(predictions, '************')
         response['success'] = prediction['success']
         response['predictions'] = predictions
     return image, response
@@ -162,7 +187,8 @@ async def fazconsulta(images: list, model: str, campo: str):
                 executor,
                 consulta_padma_retorna_image,
                 image,
-                model
+                model,
+                campo
             )
             futures.append(loop_item)
     seq = 0
@@ -194,10 +220,10 @@ THREADS = 4
 @click.option('--campo', help='Nome do campo a atualizar.' +
               'Se omitido, usa o nome do modelo.',
               default='')
-@click.option('--t',
+@click.option('--tamanho',
               help='Tamanho do lote (padrão ' + str(BATCH_SIZE) + ')',
               default=BATCH_SIZE)
-@click.option('--q',
+@click.option('--qtde',
               help='Quantidade de consultas paralelas (padrão ' +
               str(THREADS) + ')',
               default=THREADS)
@@ -205,24 +231,20 @@ THREADS = 4
               help='Processar somente vazios')
 @click.option('--force', is_flag=True,
               help='Tentar mesmo se consulta anterior a este registro falhou.')
-@click.option('--update', is_flag=True,
-              help='Reescrever dados existentes.')
-def async_update(modelo, campo, t, q, sovazios, force, update):
+@click.option('--update', default=None,
+              help='Reescrever dados existentes.' +
+              'Passa por cima de dados existentes - especificar ' +
+              'data inicial (para não começar sempre do mesmo ponto)' +
+              ' no formato DD/MM/AAAA. Se update for selecionado, o' +
+              ' parâmetro --t passa a ser a quantidade de dias a serem ' +
+              ' processados.')
+def async_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
-    filtro = monta_filtro(campo, sovazios, update)
-    batch_size = t
-    threads = q
-    print('Estimando número de registros a processar...')
-    count = db['fs.files'].find(
-        filtro, {'metadata.predictions': 1}
-    ).limit(batch_size).count(with_limit_and_skip=True)
-    print(
-        count, ' arquivos sem predições com os parâmetros passados...')
-    cursor = db['fs.files'].find(
-        filtro, {'metadata.predictions': 1}).limit(batch_size)
-    print('Consulta ao banco efetuada, iniciando conexões ao Padma')
+    cursor = monta_filtro(campo, sovazios, update, tamanho)
+    if not cursor:
+        return False
     registros_processados = 0
     registros_vazios = 0
     s_inicio = time.time()
@@ -243,7 +265,7 @@ def async_update(modelo, campo, t, q, sovazios, force, update):
         image = mongo_image(db, _id)
         images.extend(get_images(model=modelo, _id=_id, image=image,
                                  predictions=pred_gravado))
-        if registros_processados % threads == 0:
+        if registros_processados % qtde == 0:
             s0 = time.time()
             loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []

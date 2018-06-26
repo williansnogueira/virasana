@@ -13,10 +13,9 @@ from json.decoder import JSONDecodeError
 import pymongo
 
 from ajna_commons.flask.conf import (DATABASE, MONGODB_URI,
-                                     PADMA_URL, tmpdir)
+                                     PADMA_URL)
 from ajna_commons.flask.log import logger
 from ajna_commons.flask.login import DBUser
-from ajna_commons.scripts import adduser
 
 USERNAME = 'virasana_service'
 VIRASANA_PASS_FILE = os.path.join(os.path.dirname(__file__), USERNAME)
@@ -47,9 +46,10 @@ token = None
 
 
 def get_service_password():
-    """Retorna virasana_service password. 
+    """Retorna virasana_service password.
 
-    Se não existir, cria password randômico"""
+    Se não existir, cria password randômico e cria/atualiza usuário no DB.
+    """
     password = None
     try:
         with open(VIRASANA_PASS_FILE, 'rb') as secret:
@@ -63,7 +63,7 @@ def get_service_password():
         password = str(os.urandom(24))
         db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
         DBUser.dbsession = db
-        user = DBUser.add(USERNAME, password)
+        DBUser.add(USERNAME, password)
         with open(VIRASANA_PASS_FILE, 'wb') as out:
             pickle.dump(password, out, pickle.HIGHEST_PROTOCOL)
     return USERNAME, password
@@ -83,9 +83,11 @@ def get_token(session, url):
 
 
 def login(username, senha, session=None):
-    """Autentica usuário no Servidor PADMA.
+    """
+    Autentica usuário no Servidor PADMA.
 
-    Se não existir Usuário virasana, cria um com senha randômica"""
+    Se não existir Usuário virasana, cria um com senha randômica
+    """
     if session is None:
         session = requests.Session()
     url = PADMA_URL + '/login'

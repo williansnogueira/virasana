@@ -1,4 +1,9 @@
-"""Coleção de views da interface web do módulo virasana."""
+"""Coleção de views da interface web do módulo Virasana.
+
+Módulo Virasana é o Servidor de imagens e a interface para carga,
+consulta e integração das imagens com outras bases.
+
+"""
 import json
 import os
 import requests
@@ -95,7 +100,7 @@ def upload_bson():
 
 @app.route('/api/uploadbson', methods=['POST'])
 @csrf.exempt
-# @login_required
+@login_required
 def api_upload():
     """Função para upload via API de um arquivo BSON.
 
@@ -184,6 +189,7 @@ def list_files():
 
 
 @app.route('/summary/<_id>')
+@login_required
 def summarytext(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
@@ -197,6 +203,7 @@ def summarytext(_id=None):
 
 
 @app.route('/summaryhtml/<_id>')
+@login_required
 def summaryhtml(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
@@ -327,7 +334,7 @@ def campos_chave():
 
 
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def filtro():
     """Configura filtro personalizado."""
     user_filtros = filtros[current_user.id]
@@ -357,7 +364,7 @@ class FilesForm(FlaskForm):
     ]
     for key, value in FILTROS_AUDITORIA.items():
         filtros_auditoria_desc.append((key, value['descricao']))
-    numero = StringField('Número', validators=[optional()], default='')
+    numero = StringField(u'Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=90))
     end = DateField('End', validators=[optional()], default=date.today())
@@ -499,6 +506,7 @@ def stats():
 
 
 @app.route('/pie_plotly')
+@login_required
 def pie_plotly():
     """Renderiza HTML no pyplot e serializa via HTTP/HTML."""
     global stats_cache
@@ -510,6 +518,7 @@ def pie_plotly():
 
 
 @app.route('/bar_plotly')
+@login_required
 def bar_plotly():
     """Renderiza gráfico no plotly e serializa via HTTP/HTML."""
     global stats_cache
@@ -527,6 +536,7 @@ def bar_plotly():
 
 
 @app.route('/padma_proxy/<image_id>')
+@login_required
 def padma_proxy(image_id):
     """Teste. Envia uma imagem para padma teste e repassa retorno."""
     fs = GridFS(db)

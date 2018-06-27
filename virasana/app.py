@@ -6,5 +6,5 @@ login.login_manager.init_app(app)
 login.configure(app)
 login.DBUser.dbsession = db
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     app.run(debug=app.config['DEBUG'])

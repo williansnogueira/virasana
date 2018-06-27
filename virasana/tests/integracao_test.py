@@ -215,7 +215,7 @@ class TestCase(unittest.TestCase):
 
     def test_summary(self):
         # Gravar dados do CARGA no fs.files
-        processados = carga.dados_carga_grava_fsfiles(
+        carga.dados_carga_grava_fsfiles(
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
         fs = GridFS(self.db)
@@ -247,8 +247,12 @@ class TestCase(unittest.TestCase):
         assert stats['recinto']['C'] == 1
         recinto = stats['recinto']
         plot = plot_pie_plotly(list(recinto.values()), list(recinto.keys()))
+        assert plot is not None
+        assert isinstance(plot, str)
         stats = stats['recinto_mes'].get('A')
-        output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
+        plot = plot_bar_plotly(list(stats.values()), list(stats.keys()))
+        assert plot is not None
+        assert isinstance(plot, str)
 
     def test_datas_bases(self):
         datas = datas_bases()

@@ -104,7 +104,7 @@ def summary(grid_data=None, registro=None):
         if atracacao:
             result['Data e hora de atracação do Manifesto'] = '%s %s' % (
                 atracacao.get('dataatracacao'),
-                atracacao.get('horaatracacao')
+                atracacao .get('horaatracacao')
             )
     except Exception as err:
         result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
@@ -602,7 +602,7 @@ def nlinhas_zip_dir(path):
     return OrderedDict(sorted(contador.items()))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 

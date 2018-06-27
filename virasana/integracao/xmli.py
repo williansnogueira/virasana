@@ -9,7 +9,7 @@ from gridfs import GridFS
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import sanitizar, unicode_sanitizar
 
-if sys.platform == 'win32':
+if sys.platform == 'win32':  # pragma: no cover
     import lxml.etree as ET
 else:
     # defusedxml under 5.0 pode ser incompatível com python3.6
@@ -73,7 +73,7 @@ def xml_todict(xml) -> dict:
     result = {}
     try:
         root = ET.fromstring(xml)
-    except ET.ParseError as err:
+    except ET.ParseError as err:  # pragma: no cover
         print('*****************XML**********************')
         print(xml)
         print('*****************XML END')
@@ -199,7 +199,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
     return acum
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 

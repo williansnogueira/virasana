@@ -89,7 +89,7 @@ def dict_to_html(adict: dict):
         elif isinstance(value, list):
             val = '<br>'.join(value)
         else:
-            val = 'Linha tipo ' + type(value) + ' não suportada.'
+            val = 'Linha tipo ' + str(type(value)) + ' não suportada.'
         lista.append(tag(val, TEXT))
     return '\n'.join(lista)
 

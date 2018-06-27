@@ -15,8 +15,11 @@ from gridfs import GridFS
 from pymongo import MongoClient
 
 from virasana.integracao import (DATA, carga, create_indexes, datas_bases,
+                                 dict_to_text, dict_to_html,
                                  gridfs_count, peso_container_documento,
-                                 stats_resumo_imagens, volume_container, xmli)
+                                 plot_bar_plotly, plot_pie_plotly,
+                                 stats_resumo_imagens, summary,
+                                 volume_container, xmli)
 
 ZIP_DIR_TEST = os.path.join(os.path.dirname(__file__), 'sample')
 
@@ -47,7 +50,9 @@ class TestCase(unittest.TestCase):
         # Um contêiner cheio de exportação que TAMBÈM
         # passou num manifesto de vazio dois dias antes
         db['fs.files'].insert(
-            {'metadata': {'numeroinformado': 'cheio',
+            {'uploadDate': data_escaneamento,
+             'metadata': {'numeroinformado': 'cheio',
+
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento,
@@ -90,7 +95,8 @@ class TestCase(unittest.TestCase):
         fs = GridFS(db)
         metadata = {'contentType': 'text/xml',
                     'dataescaneamento': data_escaneamento}
-        fs.put(b'<DataForm><ContainerId>comxml</ContainerId></DataForm>',
+        fs.put(b'<DataForm><Login>IvanSB</Login>' +
+               b'<ContainerId>comxml</ContainerId></DataForm>',
                filename='comxml.xml', metadata=metadata)
         # Cria documentos simulando registros importados do CARGA
         db['CARGA.Container'].insert(
@@ -207,6 +213,29 @@ class TestCase(unittest.TestCase):
     def test_count(self):
         assert gridfs_count(self.db) == 8
 
+    def test_summary(self):
+        # Gravar dados do CARGA no fs.files
+        processados = carga.dados_carga_grava_fsfiles(
+            self.db,
+            data_inicio=self.data_escaneamento - timedelta(days=3))
+        fs = GridFS(self.db)
+        registro = self.db['fs.files'].find_one(
+            {'metadata.numeroinformado': 'cheio'})
+        _id = registro['_id']
+        grid_data = fs.get(_id)
+        text = dict_to_text(summary(grid_data=grid_data))
+        textc = dict_to_text(carga.summary(registro=registro))
+        html = dict_to_html(summary(registro=registro))
+        htmlc = dict_to_html(carga.summary(grid_data=grid_data))
+        assert text is not None
+        assert 'cheio' in text
+        assert textc is not None
+        assert 'cheio' in textc
+        assert html is not None
+        assert 'cheio' in html
+        assert htmlc is not None
+        assert 'cheio' in htmlc
+
     def test_stats(self):
         stats = stats_resumo_imagens(self.db)
         assert stats is not None
@@ -216,6 +245,10 @@ class TestCase(unittest.TestCase):
         assert stats['recinto']['A'] == 5
         assert stats['recinto']['B'] == 1
         assert stats['recinto']['C'] == 1
+        recinto = stats['recinto']
+        plot = plot_pie_plotly(list(recinto.values()), list(recinto.keys()))
+        stats = stats['recinto_mes'].get('A')
+        output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
 
     def test_datas_bases(self):
         datas = datas_bases()

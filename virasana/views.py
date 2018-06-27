@@ -524,11 +524,7 @@ def bar_plotly():
     global stats_cache
     if stats_cache:
         recinto = request.args.get('recinto')
-        print(recinto)
         stats = stats_cache['recinto_mes'].get(recinto)
-        print(recinto)
-        print(stats)
-        print(stats_cache)
         if stats:
             output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
             return output

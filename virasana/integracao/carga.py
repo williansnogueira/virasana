@@ -88,19 +88,24 @@ def summary(grid_data=None, registro=None):
                  meta.get('atracacao').get('escala'))
             conteiner_pesos = []
             for conteiner in meta.get('container'):
-                tara = float(conteiner.get('taracontainer').replace(',', '.'))
-                peso = float(conteiner.get('pesobrutoitem').replace(',', '.'))
-                volume = float(conteiner.get('volumeitem').replace(',', '.'))
+                tara = conteiner.get('taracontainer', '0')
+                tara = float(tara.replace(',', '.'))
+                peso = conteiner.get('pesobrutoitem', '0')
+                peso = float(peso.replace(',', '.'))
+                volume = conteiner.get('volumeitem')
+                volume = float(volume.replace(',', '.'))
                 conteiner_pesos.append('%s - %dkg - %dkg - %dm³' %
                                        (conteiner.get('container'), tara,
                                         peso, volume))
             result['Número contêiner - tara - peso - volume'] = conteiner_pesos
             result['NCM'] = ' '.join([ncm.get('ncm')
                                       for ncm in meta.get('ncm')])
-        result['Data e hora de atracação do Manifesto'] = '%s %s' % (
-            meta.get('atracacao').get('dataatracacao'),
-            meta.get('atracacao').get('horaatracacao')
-        )
+        atracacao = meta.get('atracacao')
+        if atracacao:
+            result['Data e hora de atracação do Manifesto'] = '%s %s' % (
+                atracacao.get('dataatracacao'),
+                atracacao.get('horaatracacao')
+            )
     except Exception as err:
         result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
     return result

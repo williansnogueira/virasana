@@ -275,6 +275,7 @@ def image_id(_id):
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'
 
+
 def do_mini(_id, n):
     """Recorta a imagem do banco e serializa para stream HTTP."""
     fs = GridFS(db)
@@ -290,6 +291,7 @@ def do_mini(_id, n):
     if image:
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
+
 
 @app.route('/mini1/<_id>')
 @login_required
@@ -311,6 +313,7 @@ lista_ids = [
         {'metadata.contentType': 'image/jpeg'}, {'_id': 1}
     ).limit(1000)
 ]
+
 
 @app.route('/minitest')
 def minitest():

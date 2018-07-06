@@ -275,28 +275,50 @@ def image_id(_id):
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'
 
+def do_mini(_id, n):
+    """Recorta a imagem do banco e serializa para stream HTTP."""
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    image = grid_data.read()
+    if n is not None:
+        n = int(n)
+        preds = grid_data.metadata.get('predictions')
+        if preds:
+            bboxes = [pred.get('bbox') for pred in preds]
+            if len(bboxes) >= n + 1 and bboxes[n]:
+                image = recorta_imagem(image, bboxes[n])
+    if image:
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem imagem'
 
 @app.route('/mini1/<_id>')
 @login_required
 def mini(_id, n=0):
     """Recorta a imagem do banco e serializa para stream HTTP."""
-    fs = GridFS(db)
-    grid_data = fs.get(ObjectId(_id))
-    image = grid_data.read()
-    preds = grid_data.metadata.get('predictions')
-    if preds:
-        bboxes = [pred.get('bbox') for pred in preds]
-        if len(bboxes) >= n + 1 and bboxes[n]:
-            image = recorta_imagem(image, bboxes[n])
-            return Response(response=image, mimetype='image/jpeg')
-    return 'Sem imagem'
+    return do_mini(_id, 0)
 
 
 @app.route('/mini2/<_id>')
 @login_required
 def mini2(_id):
     """Link para imagem do segundo contêiner, se houver."""
-    return mini(_id, 1)
+    return do_mini(_id, 1)
+
+
+lista_ids = [
+    linha['_id'] for linha in
+    db['fs.files'].find(
+        {'metadata.contentType': 'image/jpeg'}, {'_id': 1}
+    ).limit(1000)
+]
+
+@app.route('/minitest')
+def minitest():
+    """Recorta a imagem do banco e serializa para stream HTTP."""
+    import random
+    _id = lista_ids[random.randint(0, 100)]
+    n = request.args.get('mini')
+    return do_mini(_id, n)
 
 
 @app.route('/similar')

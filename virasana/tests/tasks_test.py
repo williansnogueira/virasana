@@ -11,7 +11,7 @@ import pytest
 # from celery import states
 from pymongo import MongoClient
 
-import virasana.app as app
+from virasana.main import app
 from ajna_commons.flask.conf import BACKEND, BROKER
 from ajna_commons.flask.login import DBUser
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
@@ -49,8 +49,8 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         self.worker = celery_worker
 
     def setUp(self):
-        app.app.testing = True
-        self.app = app.app.test_client()
+        app.testing = True
+        self.app = app.test_client()
         DBUser.dbsession = None  # Bypass mongodb authentication
         self._bsonimage = BsonImage(
             filename=os.path.join(IMG_FOLDER, 'stamp1.jpg'),

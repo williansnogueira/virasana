@@ -12,6 +12,7 @@ app = configure_app(mongodb)
 # Aceitar autenticação com qualquer username == password
 login_ajna.DBUser.dbsession = None
 
+
 class FlaskTestCase(unittest.TestCase):
     def setUp(self):
         # Ativar esta variável de ambiente na inicialização

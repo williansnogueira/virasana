@@ -281,7 +281,7 @@ def grid_data():
     """Executa uma consulta no banco.
 
     Monta um dicionário de consulta a partir dos argumentos do get.
-    Se encontrar registro, retorna registro inteiro via JSON (metadados), 
+    Se encontrar registro, retorna registro inteiro via JSON (metadados),
     o arquivo (campo content) fica em fs.chunks e é recuperado pela view
     image_id."""
     # TODO: permitir consulta via POST de JSON

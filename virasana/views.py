@@ -304,7 +304,8 @@ def grid_data():
 def image_id(_id):
     """Recorta a imagem do banco e serializa para stream HTTP.
 
-    Estes métodos dispensam autenticação, pois é necessário ter um _id válido."""
+    Estes métodos dispensam autenticação, pois é necessário ter um _id válido.
+    """
     db = app.config['mongodb']
     image = mongo_image(db, _id)
     if image:

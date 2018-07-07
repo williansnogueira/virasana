@@ -11,13 +11,20 @@ import pytest
 # from celery import states
 from pymongo import MongoClient
 
-from virasana.main import app
 from ajna_commons.flask.conf import BACKEND, BROKER
-from ajna_commons.flask.login import DBUser
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+import ajna_commons.flask.login as login_ajna
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
+from virasana.views import configure_app
 from virasana.workers.tasks import celery
 
-# from virasana.workers.raspadir import trata
+
+conn = MongoClient(host=MONGODB_URI)
+mongodb = conn[DATABASE]
+app = configure_app(mongodb)
+# Aceitar autenticação com qualquer username == password
+login_ajna.DBUser.dbsession = None
+
 
 TEST_BSON = os.path.join(os.path.dirname(
     __file__), 'test.bson')
@@ -51,7 +58,6 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
     def setUp(self):
         app.testing = True
         self.app = app.test_client()
-        DBUser.dbsession = None  # Bypass mongodb authentication
         self._bsonimage = BsonImage(
             filename=os.path.join(IMG_FOLDER, 'stamp1.jpg'),
             chave='virasana1',

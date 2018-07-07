@@ -266,7 +266,8 @@ def image():
     """Executa uma consulta no banco.
 
     Monta um dicionário de consulta a partir dos argumentos do get.
-    Se encontrar registro, chama image_id."""
+    Se encontrar registro, chama image_id.
+    """
     db = app.config['mongodb']
     filtro = {key: value for key, value in request.args.items()}
     linha = db['fs.files'].find_one(filtro, {'_id': 1})
@@ -283,7 +284,8 @@ def grid_data():
     Monta um dicionário de consulta a partir dos argumentos do get.
     Se encontrar registro, retorna registro inteiro via JSON (metadados),
     o arquivo (campo content) fica em fs.chunks e é recuperado pela view
-    image_id."""
+    image_id.
+    """
     # TODO: permitir consulta via POST de JSON
     db = app.config['mongodb']
     filtro = {key: value for key, value in request.args.items()}
@@ -363,7 +365,8 @@ def minitest():
     """Retorna uma imagem aleatória.
 
     Se for passado o parâmetro 'mini', faz também recorte
-    Deixar desabilitado em produção."""
+    Deixar desabilitado em produção.
+    """
     if not lista_ids:
         return abort(404)
     import random

@@ -11,8 +11,9 @@ from base64 import b64encode
 from datetime import date, datetime, timedelta
 from sys import platform
 from bson.objectid import ObjectId
-from flask import (Flask, Response, flash, jsonify, redirect, render_template,
-                   request, url_for)
+from pymongo import MongoClient
+from flask import (abort, Flask, Response, flash, jsonify, redirect,
+                   render_template, request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from werkzeug.utils import secure_filename
@@ -22,13 +23,14 @@ from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
-from pymongo import MongoClient
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
                      StringField)
 from wtforms.validators import optional
 
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
+
+import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.integracao import (carga, CHAVES_GRIDFS,
@@ -39,18 +41,35 @@ from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.utils.image_search import ImageSearch
 from virasana.utils.auditoria import FILTROS_AUDITORIA
 
+
 app = Flask(__name__, static_url_path='/static')
-app.config['DEBUG'] = True
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# CORS(app)
-db = MongoClient(host=MONGODB_URI)[DATABASE]
 csrf = CSRFProtect(app)
 Bootstrap(app)
 nav = Nav()
-# logo = img(src='/static/css/images/logo.png')
+nav.init_app(app)
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def configure_app(mongodb):
+    """Configurações gerais e de Banco de Dados da Aplicação."""
+    app.config['DEBUG'] = os.environ.get('DEBUG', 'None') == '1'
+    if app.config['DEBUG'] is True:
+        app.jinja_env.auto_reload = True
+        app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.secret_key = SECRET
+    app.config['SECRET_KEY'] = SECRET
+    app.config['SESSION_TYPE'] = 'filesystem'
+    login_ajna.configure(app)
+    login_ajna.DBUser.dbsession = mongodb
+    app.config['mongodb'] = mongodb
+    img_search = ImageSearch(mongodb)
+    app.config['img_search'] = img_search
+    return app
+
+
 stats_cache = {}
-img_search = ImageSearch(db)
 
 
 def allowed_file(filename):
@@ -66,7 +85,7 @@ def index():
     if current_user.is_authenticated:
         return render_template('index.html')
     else:
-        return redirect(url_for('login'))
+        return redirect(url_for('commons.login'))
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
@@ -174,6 +193,7 @@ def list_files():
     por uploadDate mais recente.
     Se houver upload em andamento, informa.
     """
+    db = app.config['mongodb']
     fs = GridFS(db)
     lista_arquivos = []
     for grid_data in fs.find().sort('uploadDate', -1).limit(10):
@@ -195,6 +215,7 @@ def summarytext(_id=None):
 
     Exibe os metadados associados a ele.
     """
+    db = app.config['mongodb']
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     result = dict_to_text(summary(grid_data=grid_data)) + '\n' + \
@@ -209,6 +230,7 @@ def summaryhtml(_id=None):
 
     Exibe os metadados associados a ele.
     """
+    db = app.config['mongodb']
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     result = dict_to_html(summary(grid_data=grid_data))
@@ -223,6 +245,7 @@ def file(_id=None):
 
     Exibe o arquivo e os metadados associados a ele.
     """
+    db = app.config['mongodb']
     fs = GridFS(db)
     if request.args.get('filename'):
         grid_data = fs.find_one({'filename': request.args.get('filename')})
@@ -240,7 +263,11 @@ def file(_id=None):
 @app.route('/image')
 @login_required
 def image():
-    """Serializa a imagem do banco para stream HTTP."""
+    """Executa uma consulta no banco.
+
+    Monta um dicionário de consulta a partir dos argumentos do get.
+    Se encontrar registro, chama image_id."""
+    db = app.config['mongodb']
     filtro = {key: value for key, value in request.args.items()}
     linha = db['fs.files'].find_one(filtro, {'_id': 1})
     if linha:
@@ -251,7 +278,14 @@ def image():
 @app.route('/grid_data')
 @login_required
 def grid_data():
-    """Serializa os dados do banco para stream JSON HTTP."""
+    """Executa uma consulta no banco.
+
+    Monta um dicionário de consulta a partir dos argumentos do get.
+    Se encontrar registro, retorna registro inteiro via JSON (metadados), 
+    o arquivo (campo content) fica em fs.chunks e é recuperado pela view
+    image_id."""
+    # TODO: permitir consulta via POST de JSON
+    db = app.config['mongodb']
     filtro = {key: value for key, value in request.args.items()}
     linha = db['fs.files'].find_one(filtro)
 
@@ -267,9 +301,11 @@ def grid_data():
 
 
 @app.route('/image/<_id>')
-@login_required
 def image_id(_id):
-    """Recorta a imagem do banco e serializa para stream HTTP."""
+    """Recorta a imagem do banco e serializa para stream HTTP.
+
+    Estes métodos dispensam autenticação, pois é necessário ter um _id válido."""
+    db = app.config['mongodb']
     image = mongo_image(db, _id)
     if image:
         return Response(response=image, mimetype='image/jpeg')
@@ -278,6 +314,7 @@ def image_id(_id):
 
 def do_mini(_id, n):
     """Recorta a imagem do banco e serializa para stream HTTP."""
+    db = app.config['mongodb']
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     image = grid_data.read()
@@ -294,30 +331,40 @@ def do_mini(_id, n):
 
 
 @app.route('/mini1/<_id>')
-@login_required
 def mini(_id, n=0):
     """Recorta a imagem do banco e serializa para stream HTTP."""
     return do_mini(_id, 0)
 
 
 @app.route('/mini2/<_id>')
-@login_required
 def mini2(_id):
     """Link para imagem do segundo contêiner, se houver."""
     return do_mini(_id, 1)
 
 
+# Para testes de desempenho: o endpoint abaixo retorna uma imagem aleatória
+# Se for passado o parâmetro 'mini', faz também recorte
+# Deixar desabilitado em produção
+# Para habilitar, criar lista_ids descomentando linhas abaixo
+lista_ids = []
+"""
 lista_ids = [
     linha['_id'] for linha in
     db['fs.files'].find(
         {'metadata.contentType': 'image/jpeg'}, {'_id': 1}
     ).limit(1000)
 ]
+"""
 
 
 @app.route('/minitest')
 def minitest():
-    """Recorta a imagem do banco e serializa para stream HTTP."""
+    """Retorna uma imagem aleatória.
+
+    Se for passado o parâmetro 'mini', faz também recorte
+    Deixar desabilitado em produção."""
+    if not lista_ids:
+        return abort(404)
     import random
     _id = lista_ids[random.randint(0, 100)]
     n = request.args.get('mini')
@@ -342,6 +389,7 @@ def similar_():
 @login_required
 def similar(_id, offset=0):
     """Retorna índice de imagens similares."""
+    img_search = app.config['img_search']
     most_similar = img_search.get_chunk(_id, offset)
     return render_template('similar_files.html',
                            ids=most_similar,
@@ -449,6 +497,7 @@ def valida_form_files(form, filtro):
 @login_required
 def files():
     """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
+    db = app.config['mongodb']
     PAGE_ROWS = 50
     lista_arquivos = []
     campos = campos_chave()
@@ -519,6 +568,7 @@ class StatsForm(FlaskForm):
 @login_required
 def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
+    db = app.config['mongodb']
     global stats_cache
     form = StatsForm(**request.form)
     if form.validate():
@@ -560,6 +610,7 @@ def bar_plotly():
 @login_required
 def padma_proxy(image_id):
     """Teste. Envia uma imagem para padma teste e repassa retorno."""
+    db = app.config['mongodb']
     fs = GridFS(db)
     _id = ObjectId(image_id)
     if fs.exists(_id):
@@ -585,20 +636,9 @@ def mynavbar():
              View('Estatísticas', 'stats'),
              ]
     if current_user.is_authenticated:
-        items.append(View('Sair', 'logout'))
+        items.append(View('Sair', 'commons.logout'))
     return Navbar(*items)
 
-
-app.config['DEBUG'] = os.environ.get('DEBUG', 'None') == '1'
-if app.config['DEBUG'] is True:
-    app.jinja_env.auto_reload = True
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.secret_key = SECRET
-app.config['SECRET_KEY'] = SECRET
-# app.config['SESSION_TYPE'] = 'filesystem'
-# Session(app)
-
-nav.init_app(app)
 
 if __name__ == '__main__':
     # start the web server

@@ -1,8 +1,8 @@
 import os
-os.environ['DEBUG'] = '1'
-
 from ajna_commons.flask.conf import VIRASANA_URL
-from virasana.app import app
+
+os.environ['DEBUG'] = '1'
+from virasana.main import app
 
 if __name__ == '__main__':
     port = 5000

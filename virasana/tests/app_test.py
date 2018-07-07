@@ -1,41 +1,56 @@
 # Tescases for virasana.app.py
 import os
 import unittest
+from pymongo import MongoClient
+import ajna_commons.flask.login as login_ajna
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from virasana.views import configure_app
 
-import virasana.app as app
-from ajna_commons.flask.login import DBUser
-
+conn = MongoClient(host=MONGODB_URI)
+mongodb = conn[DATABASE]
+app = configure_app(mongodb)
+# Aceitar autenticação com qualquer username == password
+login_ajna.DBUser.dbsession = None
 
 class FlaskTestCase(unittest.TestCase):
     def setUp(self):
+        # Ativar esta variável de ambiente na inicialização
+        # do Servidor WEB para transformar em teste de integração
         self.http_server = os.environ.get('HTTP_SERVER')
         if self.http_server is not None:
             from webtest import TestApp
             self.app = TestApp(self.http_server)
         else:
-            app.app.testing = True
-            app.app.config['WTF_CSRF_ENABLED'] = False
-            self.app = app.app.test_client()
-            DBUser.dbsession = None  # Bypass mongodb authentication
+            app.testing = True
+            self.app = app.test_client()
 
     def tearDown(self):
-        rv = self.logout()
-        assert rv is not None
+        self.logout()
 
-    def login(self, username, senha, next_url=''):
-        url = '/login'
-        if next_url:
-            url = url + '?next=' + next_url
-        print(url)
+    def get_token(self, url):
         if self.http_server is not None:
-            # First, get the CSRF Token
-            response = self.app.get('/login')
+            response = self.app.get(url)
             self.csrf_token = str(response.html.find_all(
                 attrs={'name': 'csrf_token'})[0])
             begin = self.csrf_token.find('value="') + 7
             end = self.csrf_token.find('"/>')
             self.csrf_token = self.csrf_token[begin: end]
-            response = self.app.post(url,
+        else:
+            response = self.app.get(url, follow_redirects=True)
+            csrf_token = response.data.decode()
+            begin = csrf_token.find('csrf_token"') + 10
+            end = csrf_token.find('username"') - 10
+            csrf_token = csrf_token[begin: end]
+            begin = csrf_token.find('value="') + 7
+            end = csrf_token.find('/>')
+            self.csrf_token = csrf_token[begin: end]
+            return self.csrf_token
+
+    def login(self, username, senha):
+        self.get_token('/login')
+        self.http_server = None
+        if self.http_server is not None:
+            response = self.app.post('/login',
                                      params=dict(
                                          username=username,
                                          senha=senha,
@@ -43,72 +58,88 @@ class FlaskTestCase(unittest.TestCase):
                                      )
             return response
         else:
-            return self.app.post(url, data=dict(
+            return self.app.post('/login', data=dict(
                 username=username,
                 senha=senha,
+                csrf_token=self.csrf_token
             ), follow_redirects=True)
 
     def logout(self):
+        return self._get('/logout', follow_redirects=True)
+
+    # methods
+    def data(self, rv):
         if self.http_server is not None:
-            return self.app.get('/logout',
-                                params=dict(csrf_token=self.csrf_token))
+            return str(rv.html).encode('utf_8')
+        return rv.data
+
+    def _post(self, url, data, follow_redirects=True):
+        self.get_token(url)
+        data['csrf_token'] = self.csrf_token
+        print('TOKEN', self.csrf_token)
+        if self.http_server is not None:
+            rv = self.app.post(url, params=data)
         else:
-            return self.app.get('/logout', follow_redirects=True)
+            rv = self.app.post(url, data=data,
+                               follow_redirects=follow_redirects)
+        return rv
 
-    def test_login_invalido(self):
-        rv = self.login('none', 'error')
-        print(rv)
-        assert rv is not None
-        assert b'401' in rv.data
+    def _get(self, url, follow_redirects=True):
+        if self.http_server is not None:
+            rv = self.app.get(url)
+        else:
+            rv = self.app.get(url,
+                              follow_redirects=follow_redirects)
+        return rv
 
-    def test_next_invalido(self):
-        pass
-        """
-        rv = self.login('ajna', 'ajna', 'www.google.com')
-        print(rv)
-        assert rv is not None
-        assert b'400' in rv.data
-        """
+    def test_not_found(self):
+        rv = self._get('/non_ecsiste')
+        assert b'Erro 404' in rv.data
 
     def test_index(self):
-        rv = self.login('ajna', 'ajna')
-        assert rv is not None
-        rv = self.app.get('/', follow_redirects=True)
-        assert b'AJNA' in rv.data
+        rv = self._get('/', follow_redirects=True)
+        data = self.data(rv)
+        assert b'AJNA' in data
+        assert b'input type="password"' in data
+        self.login('ajna', 'ajna')
+        rv = self._get('/', follow_redirects=True)
+        data = self.data(rv)
+        assert b'input type="password"' not in data
+        assert b'AJNA' in data
 
     def test_upload_bson(self):
         self.login('ajna', 'ajna')
-        rv = self.app.get('/uploadbson', follow_redirects=True)
+        rv = self._get('/uploadbson', follow_redirects=True)
         assert b'AJNA' in rv.data
         print(rv.data)
 
     def test_task_progress(self):
         self.login('ajna', 'ajna')
-        rv = self.app.get('/api/task/123')
+        rv = self._get('/api/task/123')
         assert b'state' in rv.data
         print(rv.data)
 
     def test_list(self):
         self.login('ajna', 'ajna')
-        rv = self.app.get('/list_files')
+        rv = self._get('/list_files')
         assert b'AJNA' in rv.data
         print(rv.data)
         # TODO: insert file and test return on list
 
     def test_file(self):
         self.login('ajna', 'ajna')
-        # rv = self.app.get('/file/123')
+        # rv = self._get('/file/123')
         # assert b'AJNA' in rv.data
         # print(rv.data)
 
     def test_image(self):
         self.login('ajna', 'ajna')
-        # rv = self.app.get('/image/123')
+        # rv = self._get('/image/123')
         # assert b'AJNA' in rv.data
         # print(rv.data)
 
     def test_files(self):
         self.login('ajna', 'ajna')
-        rv = self.app.get('/files')
+        rv = self._get('/files')
         assert b'AJNA' in rv.data
         print(rv.data)

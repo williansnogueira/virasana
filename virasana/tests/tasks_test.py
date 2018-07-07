@@ -12,19 +12,10 @@ import pytest
 from pymongo import MongoClient
 
 from ajna_commons.flask.conf import BACKEND, BROKER
-from ajna_commons.flask.conf import DATABASE, MONGODB_URI
-import ajna_commons.flask.login as login_ajna
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
-from virasana.views import configure_app
 from virasana.workers.tasks import celery
 
-
-conn = MongoClient(host=MONGODB_URI)
-mongodb = conn[DATABASE]
-app = configure_app(mongodb)
-# Aceitar autenticação com qualquer username == password
-login_ajna.DBUser.dbsession = None
-
+from app_test import app
 
 TEST_BSON = os.path.join(os.path.dirname(
     __file__), 'test.bson')

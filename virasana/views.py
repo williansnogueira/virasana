@@ -345,12 +345,11 @@ def mini2(_id):
     return do_mini(_id, 1)
 
 
-# Para testes de desempenho: o endpoint abaixo retorna uma imagem aleatória
-# Se for passado o parâmetro 'mini', faz também recorte
-# Deixar desabilitado em produção
-# Para habilitar, criar lista_ids descomentando linhas abaixo
 lista_ids = []
 """
+Para testes de desempenho: o endpoint minitest retorna uma imagem aleatória
+Se for passado o parâmetro 'mini', faz também recorte
+Para habilitar, criar lista_ids descomentando linhas abaixo
 lista_ids = [
     linha['_id'] for linha in
     db['fs.files'].find(

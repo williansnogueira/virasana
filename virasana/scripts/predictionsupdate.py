@@ -38,7 +38,7 @@ from bson import ObjectId
 # os.environ['DEBUG'] = '1'
 # from ajna_commons.flask.log import logger
 
-from virasana.views import db
+from virasana.main import mongodb as db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred)
 

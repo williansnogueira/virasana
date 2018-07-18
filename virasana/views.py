@@ -33,6 +33,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
 import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
+from ajna_commons.utils.sanitiza import mongo_sanitizar
 from virasana.integracao import (carga, CHAVES_GRIDFS,
                                  dict_to_html, dict_to_text,
                                  plot_bar_plotly, plot_pie_plotly,
@@ -269,7 +270,8 @@ def image():
     Se encontrar registro, chama image_id.
     """
     db = app.config['mongodb']
-    filtro = {key: value for key, value in request.args.items()}
+    filtro = {key: value for key, value in
+              mongo_sanitizar(request.args.items())}
     linha = db['fs.files'].find_one(filtro, {'_id': 1})
     if linha:
         return image_id(linha['_id'])

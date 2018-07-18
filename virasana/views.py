@@ -249,7 +249,8 @@ def file(_id=None):
     db = app.config['mongodb']
     fs = GridFS(db)
     if request.args.get('filename'):
-        grid_data = fs.find_one({'filename': request.args.get('filename')})
+        filename = mongo_sanitizar(request.args.get('filename'))
+        grid_data = fs.find_one({'filename': filename})
     else:
         grid_data = fs.get(ObjectId(_id))
     # print(grid_data)
@@ -290,7 +291,8 @@ def grid_data():
     """
     # TODO: permitir consulta via POST de JSON
     db = app.config['mongodb']
-    filtro = {key: value for key, value in request.args.items()}
+    filtro = {key: value for key, value in
+              mongo_sanitizar(request.args.items())}
     linha = db['fs.files'].find_one(filtro)
 
     class BSONEncoder(json.JSONEncoder):
@@ -419,13 +421,13 @@ def campos_chave():
 def filtro():
     """Configura filtro personalizado."""
     user_filtros = filtros[current_user.id]
-    print(request.form)
-    print(request.args)
+    # print(request.form)
+    # print(request.args)
     campo = request.args.get('campo')
     if campo:
         valor = request.args.get('valor')
         if valor:   # valor existe, adiciona
-            user_filtros[campo] = valor
+            user_filtros[campo] = mongo_sanitizar(valor)
         else:  # valor não existe, exclui chave
             user_filtros.pop(campo)
     result = [{'campo': k, 'valor': v} for k, v in user_filtros.items()]
@@ -467,7 +469,7 @@ def recupera_user_filtros():
         filtros[current_user.id] = user_filtros
     if user_filtros:  # Adiciona filtro personalizado se houver
         for campo, valor in user_filtros.items():
-            filtro[campo] = valor.lower()
+            filtro[campo] = valor
     return filtro, user_filtros
 
 
@@ -494,7 +496,8 @@ def valida_form_files(form, filtro):
             end = datetime.combine(end, datetime.max.time())
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
-            filtro['metadata.numeroinformado'] = {'$regex': '^' + numero}
+            filtro['metadata.numeroinformado'] = \
+                {'$regex': '^' + mongo_sanitizar(numero)}
         if alerta:
             filtro['metadata.xml.alerta'] = True
         # print(filtro)
@@ -522,7 +525,8 @@ def files():
         numero = request.args.get('numero')
         if numero:
             form_files = FilesForm(numero=numero)
-            filtro['metadata.numeroinformado'] = {'$regex': '^' + numero}
+            filtro['metadata.numeroinformado'] = \
+                {'$regex': '^' + mongo_sanitizar(numero)}
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
         if order is None:

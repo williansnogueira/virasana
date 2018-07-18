@@ -304,7 +304,7 @@ def grid_data():
 
 @app.route('/image/<_id>')
 def image_id(_id):
-    """Recorta a imagem do banco e serializa para stream HTTP.
+    """Recupera a imagem do banco e serializa para stream HTTP.
 
     Estes métodos dispensam autenticação, pois é necessário ter um _id válido.
     """
@@ -316,20 +316,23 @@ def image_id(_id):
 
 
 def do_mini(_id, n):
-    """Recorta a imagem do banco e serializa para stream HTTP."""
+    """Recupera, recorta a imagem do banco e serializa para stream HTTP."""
     db = app.config['mongodb']
+    print('********n', n)
     fs = GridFS(db)
-    grid_data = fs.get(ObjectId(_id))
-    image = grid_data.read()
-    if n is not None:
-        n = int(n)
-        preds = grid_data.metadata.get('predictions')
-        if preds:
-            bboxes = [pred.get('bbox') for pred in preds]
-            if len(bboxes) >= n + 1 and bboxes[n]:
-                image = recorta_imagem(image, bboxes[n])
-    if image:
-        return Response(response=image, mimetype='image/jpeg')
+    _id = ObjectId(_id)
+    if fs.exists(_id):
+        print('********n', n)
+        grid_data = fs.get(_id)
+        if n is not None:
+            n = int(n)
+            preds = grid_data.metadata.get('predictions')
+            if preds:
+                bboxes = [pred.get('bbox') for pred in preds]
+                if len(bboxes) >= n + 1 and bboxes[n]:
+                    image = grid_data.read()
+                    image = recorta_imagem(image, bboxes[n])
+                    return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
 
 

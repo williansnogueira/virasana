@@ -65,8 +65,11 @@ def configure_app(mongodb):
     login_ajna.configure(app)
     login_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
-    img_search = ImageSearch(mongodb)
-    app.config['img_search'] = img_search
+    try:
+        img_search = ImageSearch(mongodb)
+        app.config['img_search'] = img_search
+    except:
+        pass
     return app
 
 
@@ -90,7 +93,8 @@ def index():
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
-@login_required
+@csrf.exempt
+# @login_required
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração.
 
@@ -120,7 +124,7 @@ def upload_bson():
 
 @app.route('/api/uploadbson', methods=['POST'])
 @csrf.exempt
-@login_required
+# @login_required
 def api_upload():
     """Função para upload via API de um arquivo BSON.
 
@@ -137,6 +141,7 @@ def api_upload():
         json['taskid']: ID da task do celery a ser monitorada
 
     """
+    sync = request.form.get('sync', False)
     # ensure a bson was properly uploaded to our endpoint
     file = request.files.get('file')
     data = {'success': False,
@@ -154,7 +159,7 @@ def api_upload():
             print(file)
         else:
             content = file.read()
-            if platform == 'win32':
+            if sync or platform == 'win32':
                 with MongoClient(host=MONGODB_URI) as conn:
                     db = conn[DATABASE]
                     trata_bson(content, db)

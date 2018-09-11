@@ -251,16 +251,23 @@ def file(_id=None):
 
     Exibe o arquivo e os metadados associados a ele.
     """
+
     db = app.config['mongodb']
     fs = GridFS(db)
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
+        print(filename)
         grid_data = fs.find_one({'filename': filename})
     else:
+        if not _id:
+            _id = request.args.get('_id')
         grid_data = fs.get(ObjectId(_id))
     # print(grid_data)
-    summary_ = dict_to_html(summary(grid_data=grid_data))
-    summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+    if grid_data:
+        summary_ = dict_to_html(summary(grid_data=grid_data))
+        summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+    else:
+        summary_ = summary_carga = "Arquivo não encontrado."
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
@@ -545,9 +552,11 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        count = db['fs.files'].find(filtro, {'_id'}
+        """count = db['fs.files'].find(filtro, {'_id'}
                                     ).limit(40 * PAGE_ROWS
                                             ).count(with_limit_and_skip=True)
+        """
+        count = 100
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)

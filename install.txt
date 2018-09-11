@@ -1,0 +1,95 @@
+# Python
+sudo apt install python3-pip
+sudo apt install python3-venv
+
+# REDIS
+sudo apt install redis
+
+# MongoDB
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+sudo apt update
+sudo apt install mongodb-org
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+#Nginx
+sudo apt install nginx
+sudo ufw allow 'Nginx HTTP'
+sudo ufw enable
+
+#Supervisor - para iniciar servicos
+sudo apt install supervisor
+
+#HELP
+git clone https://github.com/IvanBrasilico/ajna_docs.git
+cd AJNA
+# Copiar docs para diretorio do nginx para acessando localhost/help abrir a documentacao do AJNA
+sudo cp -r _build/html/ /var/www/html/help/
+
+#Commons
+git clone https://github.com/IvanBrasilico/ajna_commons.git
+cd ajna_commons/
+ln -s ../ajna_commons/ajna_commons .
+python3 -m venv commons-venv
+. commons-venv/bin/activate
+pip install .
+python ajna_commons/scripts/adduser.py 
+
+
+# Virasana - Servidor de imagens
+git clone https://github.com/IvanBrasilico/virasana.git
+cd virasana/
+ln -s ../ajna_commons/ajna_commons .
+python3 -m venv virasana-venv
+. virasana-venv/bin/activate
+pip install .
+python wsgi.py -- para testar
+
+# Copiar diretorio static para nginx
+sudo mkdir /var/www/html/static
+sudo cp -r virasana/static/* /var/www/html/static
+
+# Configurar Nginx
+# Colocar linhas abaixo em /etc/nginx/sites-available/default
+
+server {
+	listen 80 default_server;
+
+    (...)
+
+	location /bhadrasana {
+		proxy_pass http://127.0.0.1:5000;
+	}
+
+	location /virasana {
+		proxy_pass http://127.0.0.1:5001;
+	}
+
+	location /padma {
+		proxy_pass http://127.0.0.1:5001;
+	}
+}
+
+
+# Configurar Supervisor -> interface web
+sudo gedit /etc/supervisor/conf.d/virasana.conf
+
+[program:virasana]
+directory=/home/ajna/AJNA/virasana
+command=/home/ajna/AJNA/virasana/virasana-venv/bin/gunicorn wsgi_production:application -b localhost:5001
+autostart=true
+autorestart=true
+
+sudo supervisorctl reread
+sudo service supervisor restart
+
+
+
+# TODO: Ver procedimento geracao indexes.npy e documentar
+# TODO: Fazer documento sobre sequencia pos instalacao
+# Para importar arquivos manualmente:
+virasana/workers/dir_monitor.py
+# Para habilitar importacao periodica de arquivos:
+# Proximos passos... (integracao XML, outras integracoes, etc)
+

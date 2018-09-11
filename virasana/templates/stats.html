@@ -1,6 +1,6 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
 <div id="main" class="container-fluid">
-    <form method="POST" action="/stats">
+    <form method="POST" action="stats">
         <div class="col-sm-12">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         </div>
@@ -72,11 +72,11 @@
             /*exit the function:*/
             return;
         }
-        includeHTML("#pie", "/pie_plotly");
+        includeHTML("#pie", "pie_plotly");
         $('.bar').each(function (i, obj) {
             id = obj.getAttribute("id")
             console.log(id);
-            includeHTML("[id='" + id + "']", "/bar_plotly?recinto=" + id);
+            includeHTML("[id='" + id + "']", "bar_plotly?recinto=" + id);
         });
     });
 </script> {% endblock %}

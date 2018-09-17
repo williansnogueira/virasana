@@ -113,10 +113,13 @@ def upload_bson():
                 db = conn[DATABASE]
                 trata_bson(content, db)
         else:
-            d = {'bson': b64encode(content).decode('utf-8')}
+            # print('Escrevendo no REDIS')
+            d = {'bson': b64encode(content).decode('utf-8'),
+                 'filename': file.filename}
             redisdb.rpush(BSON_REDIS, json.dumps(d))
             result = raspa_dir.delay()
             taskid = result.id
+            # print('taskid', taskid)
     if taskid:
         return redirect(url_for('list_files', taskid=taskid))
     return redirect(url_for('list_files'))

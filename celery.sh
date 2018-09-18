@@ -1,1 +1,1 @@
-celery -A virasana.workers.tasks.celery worker -B --loglevel=info
+celery -A virasana.workers.tasks.celery worker --loglevel=info -n virasana@%h

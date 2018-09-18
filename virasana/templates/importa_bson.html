@@ -7,7 +7,7 @@
             </big>
         </h4>
         <div class="col-sm-6">
-            <form action="/uploadbson" method="post" enctype="multipart/form-data" id="frmrisco">
+            <form action="uploadbson" method="post" enctype="multipart/form-data" id="frmrisco">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <h3>
                     <i>Informe um arquivo BSON</i>
@@ -56,7 +56,7 @@
 {% endblock %} {% block scripts %} {{super()}}
 <script>
     function importar(filename) {
-        window.location.assign('/file?filename=' + filename )
+        window.location.assign('file?filename=' + filename )
     }
 
 </script> {% endblock %}

@@ -65,8 +65,11 @@ def configure_app(mongodb):
     login_ajna.configure(app)
     login_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
-    img_search = ImageSearch(mongodb)
-    app.config['img_search'] = img_search
+    try:
+        img_search = ImageSearch(mongodb)
+        app.config['img_search'] = img_search
+    except:
+        pass
     return app
 
 
@@ -90,7 +93,8 @@ def index():
 
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
-@login_required
+@csrf.exempt
+# @login_required
 def upload_bson():
     """Função simplificada para upload do arquivo de uma extração.
 
@@ -109,10 +113,13 @@ def upload_bson():
                 db = conn[DATABASE]
                 trata_bson(content, db)
         else:
-            d = {'bson': b64encode(content).decode('utf-8')}
+            # print('Escrevendo no REDIS')
+            d = {'bson': b64encode(content).decode('utf-8'),
+                 'filename': file.filename}
             redisdb.rpush(BSON_REDIS, json.dumps(d))
             result = raspa_dir.delay()
             taskid = result.id
+            # print('taskid', taskid)
     if taskid:
         return redirect(url_for('list_files', taskid=taskid))
     return redirect(url_for('list_files'))
@@ -120,7 +127,7 @@ def upload_bson():
 
 @app.route('/api/uploadbson', methods=['POST'])
 @csrf.exempt
-@login_required
+# @login_required
 def api_upload():
     """Função para upload via API de um arquivo BSON.
 
@@ -137,6 +144,7 @@ def api_upload():
         json['taskid']: ID da task do celery a ser monitorada
 
     """
+    sync = request.form.get('sync', False)
     # ensure a bson was properly uploaded to our endpoint
     file = request.files.get('file')
     data = {'success': False,
@@ -154,7 +162,7 @@ def api_upload():
             print(file)
         else:
             content = file.read()
-            if platform == 'win32':
+            if sync or platform == 'win32':
                 with MongoClient(host=MONGODB_URI) as conn:
                     db = conn[DATABASE]
                     trata_bson(content, db)
@@ -246,16 +254,23 @@ def file(_id=None):
 
     Exibe o arquivo e os metadados associados a ele.
     """
+
     db = app.config['mongodb']
     fs = GridFS(db)
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
+        print(filename)
         grid_data = fs.find_one({'filename': filename})
     else:
+        if not _id:
+            _id = request.args.get('_id')
         grid_data = fs.get(ObjectId(_id))
     # print(grid_data)
-    summary_ = dict_to_html(summary(grid_data=grid_data))
-    summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+    if grid_data:
+        summary_ = dict_to_html(summary(grid_data=grid_data))
+        summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+    else:
+        summary_ = summary_carga = "Arquivo não encontrado."
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
@@ -540,9 +555,11 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        count = db['fs.files'].find(filtro, {'_id'}
+        """count = db['fs.files'].find(filtro, {'_id'}
                                     ).limit(40 * PAGE_ROWS
                                             ).count(with_limit_and_skip=True)
+        """
+        count = 100
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)

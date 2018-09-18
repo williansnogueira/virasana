@@ -133,8 +133,10 @@ def create_indexes(db):
     db['CARGA.ContainerVazio'].create_index('manifesto')
     db['CARGA.ContainerVazio'].create_index(
         [('manifesto', pymongo.ASCENDING),
-         ('container', pymongo.ASCENDING)],
-        unique=True)
+         ('container', pymongo.ASCENDING)]
+         )
+    # TODO: ver porque esta duplicado
+        # unique=True)
     """
     cursor = db['CARGA.EscalaManifesto'].aggregate(
         [{'$group':
@@ -154,26 +156,28 @@ def create_indexes(db):
     db['CARGA.EscalaManifesto'].create_index(
         [('manifesto', pymongo.ASCENDING),
          ('escala', pymongo.ASCENDING)],
-        unique=True)
-    db['CARGA.Escala'].create_index('escala', unique=True)
+         )
+    # TODO: ver porque esta duplicado
+        # unique=True)
+    db['CARGA.Escala'].create_index('escala') #, unique=True)
     db['CARGA.Container'].create_index('container')
     db['CARGA.Container'].create_index('conhecimento')
-    db['CARGA.Conhecimento'].create_index('conhecimento', unique=True)
+    db['CARGA.Conhecimento'].create_index('conhecimento') # , unique=True)
     db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
     db['CARGA.ManifestoConhecimento'].create_index('manifesto')
     db['CARGA.AtracDesatracEscala'].create_index('escala')
     db['CARGA.AtracDesatracEscala'].create_index('manifesto')
-    db['CARGA.Manifesto'].create_index('manifesto', unique=True)
+    db['CARGA.Manifesto'].create_index('manifesto') # , unique=True)
     db['CARGA.NCM'].create_index('conhecimento')
     db['CARGA.NCM'].create_index(
         [('conhecimento', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
-        unique=True)
+        ) # unique=True)
     db['CARGA.Container'].create_index(
         [('conhecimento', pymongo.ASCENDING),
          ('container', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
-        unique=True)
+        ) # unique=True)
     # Cria campos utilizados para pesquisa de imagens
     for campo in CHAVES_CARGA:
         try:

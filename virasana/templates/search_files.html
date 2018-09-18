@@ -1,7 +1,7 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
 <div id="main" class="container-fluid">
     <div id="top" class="row">
-        <form method="POST" id="formfiltro" action="/files">
+        <form method="POST" id="formfiltro" action="files">
             <div class="col-sm-12">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             </div>
@@ -126,12 +126,12 @@
                 <td>{{ myfile['filename'] }}</td>
                 <td>{{ myfile['dataescaneamento'] }}</td>
                 <td>
-                    <img src="/image/{{ myfile['_id'] }}" alt="Sem imagem" height="60" />
-                    <img src="/mini1/{{ myfile['_id'] }}" alt="Sem miniatura" height="60" />
-                    <img src="/mini2/{{ myfile['_id'] }}" alt="Sem segundo contêiner" height="60" />
+                    <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" height="60" />
+                    <img src="mini1/{{ myfile['_id'] }}" alt="Sem miniatura" height="60" />
+                    <img src="mini2/{{ myfile['_id'] }}" alt="Sem segundo contêiner" height="60" />
                 </td>
                 <td>
-                    <a href="/file/{{ myfile['_id'] }}" target="_BLANK">Ver</a>
+                    <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">Ver</a>
                 </td>
             </tr>
             {% endfor %}
@@ -153,12 +153,12 @@
         var campo = $("#campos").val();
         var valor = $("#valor").val();
         if ((campo != '') && (valor != '')) {
-            window.location.assign('/files?campo=' + campo + '&valor=' + valor)
+            window.location.assign('files?campo=' + campo + '&valor=' + valor)
         }
     }
 
     function exclui_campo(campo) {
-        window.location.assign('/files?campo=' + campo)
+        window.location.assign('files?campo=' + campo)
     }
     function next_page(increment) {
         var page = Number($('#pagina_atual').val());
@@ -188,7 +188,7 @@
     }
 
     function exclui_campo(campo) {
-            $.getJSON('/filtro_personalizado', {
+            $.getJSON('filtro_personalizado', {
               campo: campo,
             }, function(filtros) {
               table_filtros(filtros);
@@ -197,7 +197,7 @@
 
     $(function() {
         var filtro_personalizado = function(e) {
-          $.getJSON('/filtro_personalizado', {
+          $.getJSON('filtro_personalizado', {
             campo: $('#campos').val(),
             valor: $('#valor').val(),
           }, function(filtros) {

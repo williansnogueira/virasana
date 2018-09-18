@@ -10,26 +10,26 @@
                     <div class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
                             <li>
-                                <a href="/padma_proxy/{{ myfile['_id'] }}" target="_BLANK">Predições imagem</a>
+                                <a href="padma_proxy/{{ myfile['_id'] }}" target="_BLANK">Predições imagem</a>
                             </li>
                             <li>
-                                <a href="/files?numero={{ myfile['metadata']['numeroinformado'] }}">
+                                <a href="files?numero={{ myfile['metadata']['numeroinformado'] }}">
                                     Listar todas as passages por escâner
                                 </a>
                             </li>
                             <li>
-                                <a href="/similar/{{ myfile['_id'] }}">
+                                <a href="similar/{{ myfile['_id'] }}">
                                     Buscar imagens similares
                                 </a>
                             </li>
                         </ul>
                     </div>
-                    <img src="/image/{{ myfile['_id'] }}" width="500" height="250"/>
+                    <img src="image/{{ myfile['_id'] }}" width="500" height="250"/>
                     <div class="col-md-6">
-                        <img src="/mini1/{{ myfile['_id'] }}" width="250" height="180" alt="Sem miniatura" />
+                        <img src="mini1/{{ myfile['_id'] }}" width="250" height="180" alt="Sem miniatura" />
                     </div>
                     <div class="col-md-6">
-                        <img src="/mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner" />
+                        <img src="mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner" />
                     </div>
                 </div>
                 <div class="col-md-6">

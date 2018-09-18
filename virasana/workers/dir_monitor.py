@@ -22,6 +22,7 @@ from ajna_commons.flask.conf import VIRASANA_URL
 from ajna_commons.flask.log import logger
 
 # VIRASANA_URL = "http://localhost:5001"
+LOGIN_URL = VIRASANA_URL + '/login'
 API_URL = VIRASANA_URL + '/api/uploadbson'
 if platform == 'win32':  # I am on ALFSTS???
     BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'AJNA', 'BSON_IVAN')
@@ -29,6 +30,29 @@ else:
     BSON_DIR = os.path.join(os.path.dirname(__file__),
                             '..', '..', '..', '..', 'files', 'BSON')
 
+SYNC = True
+BSON_DIR = os.path.join('/home', 'ajna', 'Downloads', 'BSON')
+
+def get_token(url):
+    response = requests.get(url)
+    csrf_token = response.text
+    print(csrf_token)
+    begin = csrf_token.find('csrf_token"') + 10
+    end = csrf_token.find('username"') - 10
+    csrf_token = csrf_token[begin: end]
+    begin = csrf_token.find('value="') + 7
+    end = csrf_token.find('/>')
+    csrf_token = csrf_token[begin: end]
+    print('****', csrf_token)
+    return csrf_token
+
+def login(username='ajna', senha='ajna'):
+    token = get_token(LOGIN_URL)
+    return requests.post(LOGIN_URL, data=dict(
+        username=username,
+        senha=senha,
+        csrf_token=token
+    ))
 
 def despacha(filename, target=API_URL):
     """Envia por HTTP POST o arquivo especificado.
@@ -46,7 +70,8 @@ def despacha(filename, target=API_URL):
     """
     bson = open(filename, 'rb')
     files = {'file': bson}
-    rv = requests.post(API_URL, files=files)
+    # login()
+    rv = requests.post(API_URL, files=files, data={'sync': SYNC})
     if rv is None:
         return False, None
     response_json = rv.json()
@@ -65,24 +90,27 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
 
     Returns:
         Lista de erros
-
+            
     """
     erros = []
     sucessos = []
     exceptions = []
     # Limitar a cinco arquivos por rodada!!!
-    for filename in os.listdir(dir)[:50]:
+    cont = 0
+    for filename in os.listdir(dir)[:90]:
         try:
             bsonfile = os.path.join(dir, filename)
             success, response = despacha(bsonfile, target)
             if success:
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
-                response_json = response.json()
-                if platform == 'win32':
+                response_json = response.json()                                                                                                                                                                                                                                     
+                if (platform == 'win32') or SYNC:
                     if response_json.get('success', False) is True:
                         os.remove(bsonfile)
                         logger.info('Arquivo ' + bsonfile + ' removido.')
+                        cont += 1
+                        logger.info(f'********* {cont}')
                 else:
                     taskid = response_json.get('taskid', '')
                     sucessos.append(taskid)

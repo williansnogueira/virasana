@@ -9,8 +9,8 @@
         <div class="row">
             {% for i2 in range(0, 4) %}
             <div class="col-sm-3">
-                <a href="/file/{{ ids[i * 4 + i2] }}">
-                    <img src="/mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura" 
+                <a href="file/{{ ids[i * 4 + i2] }}">
+                    <img src="mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura"
                     width="300" height="160" 
                     onmouseover="showMsg(this, '{{ ids[i * 4 + i2] }}')" onmouseout="clearMsg(this)"  />
                     <p>Imagem {{ ids[i * 4 + i2] }}.

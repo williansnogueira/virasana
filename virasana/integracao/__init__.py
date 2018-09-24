@@ -14,14 +14,17 @@ Além disso, podem ser criadas e mantidas aqui funções que dêem estatíticas
 sobre a base para informar os usuários.
 
 """
+import os
 import plotly
 import plotly.graph_objs as go
+import time
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime
-from pymongo import MongoClient
+from pymongo import ASCENDING, MongoClient
 
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from ajna_commons.flask.log import logger
 from virasana.integracao import carga
 from virasana.integracao import xmli
 
@@ -62,6 +65,21 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.numeroinformado')
     db['fs.files'].create_index('metadata.dataescaneamento')
     db['fs.files'].create_index('metadata.contentType')
+    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
+                                 ('metadata.dataescaneamento', ASCENDING)])
+    db['fs.files'].create_index([('metadata.carga.atracacao.escala', ASCENDING),
+                                 ('metadata.contentType', ASCENDING)])
+    db['fs.files'].create_index([('metadata.xml.date', ASCENDING),
+                                 ('metadata.contentType', ASCENDING)])
+    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
+                                 ('metadata.dataescaneamento', ASCENDING),
+                                 (xmli.DATA, ASCENDING)])
+    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
+                                 ('metadata.dataescaneamento', ASCENDING),
+                                 (carga.DATA, ASCENDING)])
+    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
+                                 ('metadata.dataescaneamento', ASCENDING),
+                                 ('metadata.recinto', ASCENDING)])
 
 
 def gridfs_count(db, filtro={}):
@@ -73,7 +91,9 @@ def tag(word: str, tags: list):
     """Coloca tags em torno de word."""
     open_tags = ['<' + tag + '>' for tag in tags]
     close_tags = ['</' + tag + '>' for tag in reversed(tags)]
-    print('***************', word)
+    logger.debug('*************** %s ' %
+
+                 word)
     return ''.join(open_tags) + word + ''.join(close_tags)
 
 
@@ -138,6 +158,8 @@ def summary(grid_data=None, registro=None):
     return result
 
 
+
+
 def stats_resumo_imagens(db, datainicio=None, datafim=None):
     """Números gerais do Banco de Dados e suas integrações.
 
@@ -148,32 +170,34 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # import cProfile, pstats, io
     # pr = cProfile.Profile()
     # pr.enable()
-    # datainicio = datetime(2018,1,1)
-    # datafim = datetime(2018,2,1)
+    s0 = time.time()
     stats = {}
     filtro = IMAGENS
     if datainicio and datafim:
-        print(datainicio, datafim)
+        logger.debug('Data inicio % s ' % datainicio)
+        logger.debug('Data fim % s ' % datafim)
         filtro['metadata.dataescaneamento'] = {
             '$gt': datainicio, '$lt': datafim}
+    logger.debug('Consultando Totais')
     now_atual = datetime.now()
     stats['Data do levantamento'] = now_atual
     total = gridfs_count(db, filtro)
     stats['Total de imagens'] = total
     stats['Imagens com info do Carga'] = total - \
-        gridfs_count(db, dict(filtro, **carga.FALTANTES))
+                                         gridfs_count(db, dict(filtro, **carga.FALTANTES))
     stats['Imagens com info do XML'] = total - \
-        gridfs_count(db, dict(filtro, **xmli.FALTANTES))
+                                       gridfs_count(db, dict(filtro, **xmli.FALTANTES))
     # DATAS
+    logger.debug('Totais consultados')
     datas = {'imagem': DATA,
              'XML': xmli.DATA,
              'Carga': carga.DATA}
     for base, data in datas.items():
-        # print(data)
         filtro_data = dict(filtro)
         if data != DATA:
             filtro_data[data] = {'$ne': None}
-        linha = db['fs.files'].find(filtro_data).sort(data, 1).limit(1)
+        logger.debug('Inicio consulta data %s %s' % (data, filtro_data))
+        linha = db['fs.files'].find(filtro_data, data).sort(data, 1).limit(1)
         try:
             linha = next(linha)
             for data_path in data.split('.'):
@@ -193,11 +217,12 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         except StopIteration:  # Não há registro nas datas filtradas
             pass
     # Qtde por Terminal
+    logger.debug('Inicio consulta recintos 1. Filtro: %s ' % filtro)
     cursor = db['fs.files'].aggregate(
         [{'$match': filtro},
          {'$group':
-          {'_id': '$metadata.recinto',
-           'count': {'$sum': 1}}
+              {'_id': '$metadata.recinto',
+               'count': {'$sum': 1}}
           }])
     recintos = dict()
     for recinto in cursor:
@@ -205,19 +230,20 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     ordered = OrderedDict(
         {key: recintos[key] for key in sorted(recintos)})
     stats['recinto'] = ordered
+    logger.debug('Inicio consulta recintos 2')
     cursor = db['fs.files'].aggregate(
-        [{'$match': {'metadata.contentType': 'image/jpeg'}},
+        [{'$match': filtro},
          {'$project':
-            {'month': {'$month': '$metadata.dataescaneamento'},
-             'year': {'$year': '$metadata.dataescaneamento'},
-             'recinto': '$metadata.recinto'
-             }
+              {'month': {'$month': '$metadata.dataescaneamento'},
+               'year': {'$year': '$metadata.dataescaneamento'},
+               'recinto': '$metadata.recinto'
+               }
           },
          {'$group':
-            {'_id':
-                {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
-             'count': {'$sum': 1}
-             }
+              {'_id':
+                   {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
+               'count': {'$sum': 1}
+               }
           }
          ])
     recinto_mes = defaultdict(dict)
@@ -244,7 +270,8 @@ def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""
     # labels = ['1', '2', '3']
     # values =  [10, 20, 30]
-    print(values, labels)
+    logger.debug(labels)
+    logger.debug(values)
     plot = plotly.offline.plot({
         'data': [go.Pie(labels=labels, values=values)],
         'layout': go.Layout(title='Imagens por Recinto')
@@ -257,7 +284,8 @@ def plot_pie_plotly(values, labels):
 def plot_bar_plotly(values, labels):
     """Gera gráfico de barras."""
     # x = list(range(len(labels)))
-    print(labels, values)
+    logger.debug(labels)
+    logger.debug(values)
     plot = plotly.offline.plot({
         'data': [go.Bar(x=labels, y=values)],
         'layout': go.Layout(title='',
@@ -346,7 +374,7 @@ def volume_container(db, numeros: list):
         for item in linha['metadata']['carga']['container']:
             volume += float(item['volumeitem'].replace(',', '.'))
         result[linha['metadata']['carga']
-               ['container'][0]['container']] = volume
+        ['container'][0]['container']] = volume
     return result
 
 
@@ -368,7 +396,11 @@ def peso_container_balanca(db, numero: list):
 
 
 if __name__ == '__main__':
+    os.environ['DEBUG'] = '1'
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     print('Criando índices para metadata')
     create_indexes(db)
-    # print(stats_resumo_imagens(db))
+    print('Exibindo estatísticas')
+    datainicio = datetime(2017, 7, 1)
+    datafim = datetime(2017, 8,1)
+    logger.debug(stats_resumo_imagens(db, datainicio, datafim))

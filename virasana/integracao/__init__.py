@@ -14,6 +14,7 @@ Além disso, podem ser criadas e mantidas aqui funções que dêem estatíticas
 sobre a base para informar os usuários.
 
 """
+import logging
 import os
 import plotly
 import plotly.graph_objs as go
@@ -67,6 +68,9 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.contentType')
     db['fs.files'].create_index([('metadata.contentType', ASCENDING),
                                  ('metadata.dataescaneamento', ASCENDING)])
+    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
+                                 ('metadata.dataescaneamento', ASCENDING),
+                                 ('metadata.carga.atracacao.escala', ASCENDING)])
     db['fs.files'].create_index([('metadata.carga.atracacao.escala', ASCENDING),
                                  ('metadata.contentType', ASCENDING)])
     db['fs.files'].create_index([('metadata.xml.date', ASCENDING),
@@ -84,7 +88,13 @@ def create_indexes(db):
 
 def gridfs_count(db, filtro={}):
     """Aplica filtro, retorna contagem."""
-    return db['fs.files'].find(filtro).count(with_limit_and_skip=True)
+    campos = [(key, 1) for key in filtro.keys()]
+    logger.debug('integracao.gridfs_count filtro:%s hint:%s' %
+                 (filtro, campos))
+    return db['fs.files'].find(
+        filter=filtro,
+        hint=campos
+    ).count(with_limit_and_skip=True)
 
 
 def tag(word: str, tags: list):
@@ -158,8 +168,6 @@ def summary(grid_data=None, registro=None):
     return result
 
 
-
-
 def stats_resumo_imagens(db, datainicio=None, datafim=None):
     """Números gerais do Banco de Dados e suas integrações.
 
@@ -182,11 +190,16 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     now_atual = datetime.now()
     stats['Data do levantamento'] = now_atual
     total = gridfs_count(db, filtro)
+    logger.debug('Total %s ' % filtro)
     stats['Total de imagens'] = total
+    filtro_carga = dict(filtro, **carga.FALTANTES)
     stats['Imagens com info do Carga'] = total - \
-                                         gridfs_count(db, dict(filtro, **carga.FALTANTES))
+                                         gridfs_count(db, filtro_carga)
+    logger.debug('Total %s ' % filtro_carga)
+    filtro_xml = dict(filtro, **xmli.FALTANTES)
     stats['Imagens com info do XML'] = total - \
-                                       gridfs_count(db, dict(filtro, **xmli.FALTANTES))
+                                       gridfs_count(db, filtro_xml)
+    logger.debug('Total %s ' % filtro_xml)
     # DATAS
     logger.debug('Totais consultados')
     datas = {'imagem': DATA,
@@ -196,8 +209,14 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         filtro_data = dict(filtro)
         if data != DATA:
             filtro_data[data] = {'$ne': None}
-        logger.debug('Inicio consulta data %s %s' % (data, filtro_data))
-        linha = db['fs.files'].find(filtro_data, data).sort(data, 1).limit(1)
+        campos = [(key, 1) for key in filtro_data.keys()]
+        logger.debug('Inicio consulta data %s Filtro:%s Hint:%s' \
+                     % (data, filtro_data, campos))
+        linha = db['fs.files'].find(
+            filter=filtro_data,
+            projection=data,
+            hint=campos
+        ).sort(data, 1).limit(1)
         try:
             linha = next(linha)
             for data_path in data.split('.'):
@@ -231,21 +250,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         {key: recintos[key] for key in sorted(recintos)})
     stats['recinto'] = ordered
     logger.debug('Inicio consulta recintos 2')
-    cursor = db['fs.files'].aggregate(
-        [{'$match': filtro},
-         {'$project':
-              {'month': {'$month': '$metadata.dataescaneamento'},
-               'year': {'$year': '$metadata.dataescaneamento'},
-               'recinto': '$metadata.recinto'
-               }
-          },
-         {'$group':
-              {'_id':
-                   {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
-               'count': {'$sum': 1}
-               }
-          }
-         ])
+    cursor = db['stat_recinto'].find()
     recinto_mes = defaultdict(dict)
     for linha in cursor:
         recinto = linha['_id']['recinto']
@@ -257,6 +262,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
             {key: value[key] for key in sorted(value)})
         recinto_mes[recinto] = ordered
     stats['recinto_mes'] = recinto_mes
+    logger.debug('Fim consulta recintos 2')
     # pr.disable()
     # s = io.StringIO()
     # sortby = 'cumulative'
@@ -265,6 +271,24 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # print(s.getvalue())
     return stats
 
+def atualiza_stats(db):
+    """Cria coleção com estatísticas de recinto por ano e mês."""
+    db['fs.files'].aggregate(
+        [{'$match': {'metadata.contentType': 'image/jpeg'}},
+         {'$project':
+              {'month': {'$month': '$metadata.dataescaneamento'},
+               'year': {'$year': '$metadata.dataescaneamento'},
+               'recinto': '$metadata.recinto'
+               }
+          },
+         {'$group':
+              {'_id':
+                   {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
+               'count': {'$sum': 1}
+               }
+          },
+         {'$out': 'stat_recinto'}
+         ])
 
 def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""
@@ -397,10 +421,13 @@ def peso_container_balanca(db, numero: list):
 
 if __name__ == '__main__':
     os.environ['DEBUG'] = '1'
+    logger.setLevel(logging.DEBUG)
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    print('Criando índices para metadata')
+    logger.info('Criando índices para metadata')
     create_indexes(db)
-    print('Exibindo estatísticas')
+    logger.info('Atualizando estatísticas')
+    atualiza_stats(db)
+    logger.info('Exibindo estatísticas')
     datainicio = datetime(2017, 7, 1)
-    datafim = datetime(2017, 8,1)
-    logger.debug(stats_resumo_imagens(db, datainicio, datafim))
+    datafim = datetime.datetime.now()
+    print(stats_resumo_imagens(db, datainicio, datafim))

@@ -24,10 +24,14 @@ celery = Celery(__name__, broker=BROKER,
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    """Agenda tarefas que serão executadas com frequência fixa."""
+    """Agenda tarefas que serão executadas com frequência fixa.
+
+    Os tempos são em segundos
+    """
     sender.add_periodic_task(15 * 61.0, processa_carga.s())
-    sender.add_periodic_task(11 * 60.0, processa_xml.s())
+    sender.add_periodic_task(11 * 63.0, processa_xml.s())
     sender.add_periodic_task(4 * 57.0, processa_bson.s())
+    sender.add_periodic_task(12 * 3.600, processa_stats.s()) # 12h
 
 
 @celery.task

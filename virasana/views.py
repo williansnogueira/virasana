@@ -655,7 +655,6 @@ def padma_proxy(image_id):
         result = r.text
     return result
 
-
 @nav.navigation()
 def mynavbar():
     """Menu da aplicação."""

@@ -17,7 +17,6 @@ from virasana.integracao import atualiza_stats, carga, xmli
 
 from .dir_monitor import despacha_dir
 
-
 celery = Celery(__name__, broker=BROKER,
                 backend=BACKEND)
 
@@ -31,7 +30,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(15 * 61.0, processa_carga.s())
     sender.add_periodic_task(11 * 63.0, processa_xml.s())
     sender.add_periodic_task(4 * 57.0, processa_bson.s())
-    sender.add_periodic_task(12 * 3.600, processa_stats.s()) # 12h
+    sender.add_periodic_task(12 * 3.600, processa_stats.s())  # 12h
 
 
 @celery.task
@@ -94,19 +93,3 @@ def processa_carga():
         db = conn[DATABASE]
         doisdias = datetime.now() - timedelta(days=2)
         carga.dados_carga_grava_fsfiles(db, 5000, doisdias)
-
-
-@celery.task
-def processa_bson():
-    """Chama função do módulo dir_monitor.
-
-    Para permitir o upload de BSON do AVATAR através da simples
-    colocação do arquivo em um diretório.
-    Neste módulo pode ser configurado o endereço de um diretório
-    e o endereço do virasana. A função a seguir varre o diretório e,
-    havendo arquivos, envia por request POST para o URL do virasana.
-    Se obtiver sucesso, exclui o arquivo enviado do diretório.
-
-
-    """
-    despacha_dir()

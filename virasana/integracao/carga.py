@@ -13,11 +13,11 @@ import pymongo
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 
-FALTANTES = {'metadata.carga.atracacao.escala': None,
-             'metadata.contentType': 'image/jpeg'}
+FALTANTES = {'metadata.contentType': 'image/jpeg',
+             'metadata.carga.atracacao.escala': None}
 
-ENCONTRADOS = {'metadata.carga.atracacao.escala': {'$ne': None},
-               'metadata.contentType': 'image/jpeg'}
+ENCONTRADOS = {'metadata.contentType': 'image/jpeg',
+               'metadata.carga.atracacao.escala': {'$ne': None}}
 
 NUMERO = 'metadata.carga.container.container'
 
@@ -71,7 +71,8 @@ def summary(grid_data=None, registro=None):
         result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
         if meta.get('vazio'):
             result['CONTÊINER VAZIO'] = ''
-            result['Manifesto - Escala'] = '%s - %s' % \
+            result['Manifesto - Escala'] = \
+                '%s - %s' % \
                 (meta.get('manifesto')[0].get('manifesto'),
                  meta.get('atracacao').get('escala'))
             conteiner_pesos = []
@@ -82,7 +83,8 @@ def summary(grid_data=None, registro=None):
             result['Número contêiner - tara'] = conteiner_pesos
         else:
             result['CONTÊINER COM CARGA'] = ''
-            result['Conhecimento - Manifesto - Escala'] = 'CE %s - %s - %s' % \
+            result['Conhecimento - Manifesto - Escala'] = \
+                'CE %s - %s - %s' % \
                 (meta.get('conhecimento')[0].get('conhecimento'),
                  meta.get('manifesto')[0].get('manifesto'),
                  meta.get('atracacao').get('escala'))
@@ -104,14 +106,14 @@ def summary(grid_data=None, registro=None):
         if atracacao:
             result['Data e hora de atracação do Manifesto'] = '%s %s' % (
                 atracacao.get('dataatracacao'),
-                atracacao .get('horaatracacao')
+                atracacao.get('horaatracacao')
             )
     except Exception as err:
         result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
     return result
 
 
-def converte_datahora_atracacao(atracacao: dict)-> datetime:
+def converte_datahora_atracacao(atracacao: dict) -> datetime:
     """Tansforma data e hora de atracação em objeto datetime.
 
     Args:
@@ -134,9 +136,9 @@ def create_indexes(db):
     db['CARGA.ContainerVazio'].create_index(
         [('manifesto', pymongo.ASCENDING),
          ('container', pymongo.ASCENDING)]
-         )
+    )
     # TODO: ver porque esta duplicado
-        # unique=True)
+    # unique=True)
     """
     cursor = db['CARGA.EscalaManifesto'].aggregate(
         [{'$group':
@@ -156,28 +158,28 @@ def create_indexes(db):
     db['CARGA.EscalaManifesto'].create_index(
         [('manifesto', pymongo.ASCENDING),
          ('escala', pymongo.ASCENDING)],
-         )
+    )
     # TODO: ver porque esta duplicado
-        # unique=True)
-    db['CARGA.Escala'].create_index('escala') #, unique=True)
+    # unique=True)
+    db['CARGA.Escala'].create_index('escala')  # , unique=True)
     db['CARGA.Container'].create_index('container')
     db['CARGA.Container'].create_index('conhecimento')
-    db['CARGA.Conhecimento'].create_index('conhecimento') # , unique=True)
+    db['CARGA.Conhecimento'].create_index('conhecimento')  # , unique=True)
     db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
     db['CARGA.ManifestoConhecimento'].create_index('manifesto')
     db['CARGA.AtracDesatracEscala'].create_index('escala')
     db['CARGA.AtracDesatracEscala'].create_index('manifesto')
-    db['CARGA.Manifesto'].create_index('manifesto') # , unique=True)
+    db['CARGA.Manifesto'].create_index('manifesto')  # , unique=True)
     db['CARGA.NCM'].create_index('conhecimento')
     db['CARGA.NCM'].create_index(
         [('conhecimento', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
-        ) # unique=True)
+    )  # unique=True)
     db['CARGA.Container'].create_index(
         [('conhecimento', pymongo.ASCENDING),
          ('container', pymongo.ASCENDING),
          ('item', pymongo.ASCENDING)],
-        ) # unique=True)
+    )  # unique=True)
     # Cria campos utilizados para pesquisa de imagens
     for campo in CHAVES_CARGA:
         try:
@@ -269,7 +271,7 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
 
 
 def get_escalas(db, conhecimentos_set: set, scan_datetime: datetime,
-                days: int, exportacao=False)-> typing.Tuple[list, list, int]:
+                days: int, exportacao=False) -> typing.Tuple[list, list, int]:
     """Dada uma lista de conhecimentos, retorna a lista de escalas.
 
     Retorna a lista de escalas vinculadas, com datadeatracao entre
@@ -460,9 +462,9 @@ def busca_info_container(db, numero: str,
             # Senão, pegar vazio ou CE, o que tiver a data mais próxima
             filtro = {'metadata.numeroinformado': numero,
                       'metadata.dataescaneamento':
-                      {'$lt': data_escaneamento,
-                       '$gt': data_escaneamento - timedelta(days=days)
-                       },
+                          {'$lt': data_escaneamento,
+                           '$gt': data_escaneamento - timedelta(days=days)
+                           },
                       'metadata.carga.vazio': True}
             cursor = db['fs.files'].find_one(filtro)
             if cursor is not None:

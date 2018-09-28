@@ -24,6 +24,8 @@ from collections import defaultdict, OrderedDict
 from datetime import datetime
 from pymongo import ASCENDING, MongoClient
 
+from pymongo.errors import OperationFailure
+
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from ajna_commons.flask.log import logger
 from virasana.integracao import carga
@@ -66,18 +68,27 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.numeroinformado')
     db['fs.files'].create_index('metadata.dataescaneamento')
     db['fs.files'].create_index('metadata.contentType')
-    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
-                                 ('metadata.dataescaneamento', ASCENDING)])
-    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
-                                 ('metadata.dataescaneamento', ASCENDING),
-                                 ('metadata.carga.atracacao.escala', ASCENDING)])
-    db['fs.files'].create_index([('metadata.carga.atracacao.escala', ASCENDING),
-                                 ('metadata.contentType', ASCENDING)])
-    db['fs.files'].create_index([('metadata.xml.date', ASCENDING),
-                                 ('metadata.contentType', ASCENDING)])
-    db['fs.files'].create_index([('metadata.contentType', ASCENDING),
-                                 ('metadata.dataescaneamento', ASCENDING),
-                                 (xmli.DATA, ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING),
+         ('metadata.carga.atracacao.escala', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.carga.atracacao.escala', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.carga.atracacao.escala', ASCENDING),
+         ('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.xml.date', ASCENDING),
+         ('metadata.contentType', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING),
+         (xmli.DATA, ASCENDING)])
     db['fs.files'].create_index([('metadata.contentType', ASCENDING),
                                  ('metadata.dataescaneamento', ASCENDING),
                                  (carga.DATA, ASCENDING)])
@@ -88,13 +99,21 @@ def create_indexes(db):
 
 def gridfs_count(db, filtro={}):
     """Aplica filtro, retorna contagem."""
-    campos = [(key, 1) for key in filtro.keys()]
+    campos = []
     logger.debug('integracao.gridfs_count filtro:%s hint:%s' %
                  (filtro, campos))
-    return db['fs.files'].find(
-        filter=filtro,
-        hint=campos
-    ).count(with_limit_and_skip=True)
+    if filtro:
+        campos = [(key, 1) for key in filtro.keys()]
+        print(campos)
+        try:
+            return db['fs.files'].find(
+                filter=filtro,
+                hint=campos
+            ).count(with_limit_and_skip=True)
+        except OperationFailure:
+            return db['fs.files'].find(
+                filter=filtro).count(with_limit_and_skip=True)
+    return db['fs.files'].find().count()
 
 
 def tag(word: str, tags: list):
@@ -178,7 +197,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # import cProfile, pstats, io
     # pr = cProfile.Profile()
     # pr.enable()
-    s0 = time.time()
+    # s0 = time.time()
     stats = {}
     filtro = IMAGENS
     if datainicio and datafim:
@@ -207,10 +226,10 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
              'Carga': carga.DATA}
     for base, data in datas.items():
         filtro_data = dict(filtro)
-        if data != DATA:
-            filtro_data[data] = {'$ne': None}
+        # if data != DATA:
+        #    filtro_data[data] = {'$ne': None}
         campos = [(key, 1) for key in filtro_data.keys()]
-        logger.debug('Inicio consulta data %s Filtro:%s Hint:%s' \
+        logger.debug('Inicio consulta data %s Filtro:%s Hint:%s'
                      % (data, filtro_data, campos))
         linha = db['fs.files'].find(
             filter=filtro_data,
@@ -271,6 +290,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     # print(s.getvalue())
     return stats
 
+
 def atualiza_stats(db):
     """Cria coleção com estatísticas de recinto por ano e mês."""
     db['fs.files'].aggregate(
@@ -289,6 +309,7 @@ def atualiza_stats(db):
           },
          {'$out': 'stat_recinto'}
          ])
+
 
 def plot_pie_plotly(values, labels):
     """Gera gráfico de terminais."""
@@ -426,7 +447,7 @@ if __name__ == '__main__':
     logger.info('Criando índices para metadata')
     create_indexes(db)
     logger.info('Atualizando estatísticas')
-    # atualiza_stats(db)
+    atualiza_stats(db)
     logger.info('Exibindo estatísticas')
     datainicio = datetime(2017, 7, 1)
     datafim = datetime.now()

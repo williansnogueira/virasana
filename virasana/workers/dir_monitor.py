@@ -33,7 +33,9 @@ else:
 SYNC = True
 BSON_DIR = os.path.join('/home', 'ajna', 'Downloads', 'BSON')
 
+
 def get_token(url):
+    """Recupera o token CRSF necessário para fazer POST."""
     response = requests.get(url)
     csrf_token = response.text
     print(csrf_token)
@@ -46,13 +48,16 @@ def get_token(url):
     print('****', csrf_token)
     return csrf_token
 
+
 def login(username='ajna', senha='ajna'):
+    """Efetua login no servidor."""
     token = get_token(LOGIN_URL)
     return requests.post(LOGIN_URL, data=dict(
         username=username,
         senha=senha,
         csrf_token=token
     ))
+
 
 def despacha(filename, target=API_URL):
     """Envia por HTTP POST o arquivo especificado.
@@ -75,8 +80,8 @@ def despacha(filename, target=API_URL):
     if rv is None:
         return False, None
     response_json = rv.json()
-    erro = response_json.get('success', False) and (
-        rv.status_code == requests.codes.ok)
+    erro = response_json.get('success', False) and \
+           (rv.status_code == requests.codes.ok)
     return erro, rv
 
 
@@ -90,7 +95,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
 
     Returns:
         Lista de erros
-            
+
     """
     erros = []
     sucessos = []
@@ -104,7 +109,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
             if success:
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
-                response_json = response.json()                                                                                                                                                                                                                                     
+                response_json = response.json()
                 if (platform == 'win32') or SYNC:
                     if response_json.get('success', False) is True:
                         os.remove(bsonfile)

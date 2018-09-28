@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.integracao import (DATA, carga, create_indexes, datas_bases,
-                                 dict_to_text, dict_to_html,
+from virasana.integracao import (atualiza_stats, DATA, carga, create_indexes,
+                                 datas_bases, dict_to_text, dict_to_html,
                                  gridfs_count, peso_container_documento,
                                  plot_bar_plotly, plot_pie_plotly,
                                  stats_resumo_imagens, summary,
@@ -36,8 +36,8 @@ class TestCase(unittest.TestCase):
         # após é escaneado novamente, e oito dias depois sai
         # em CE de exportação
         data_escaneamento_cheioe = datetime(2017, 1, 8)
-        data_escaneamento_menos2 = '05/01/2017'   # dois dias a menos
-        data_escaneamento_menos4 = '03/01/2017'   # quatro dias a menos
+        data_escaneamento_menos2 = '05/01/2017'  # dois dias a menos
+        data_escaneamento_menos4 = '03/01/2017'  # quatro dias a menos
         data_escaneamento_menos6 = '01/01/2017'  # seis dias a menos
         data_escaneamento_mais8 = '16/01/2017'  # oito dias a mais
         data_escaneamento_false = datetime(2016, 12, 1)
@@ -190,7 +190,8 @@ class TestCase(unittest.TestCase):
         db['CARGA.AtracDesatracEscala'].insert(
             {'escala': 21, 'dataatracacao': data_escaneamento_mais8,
              'horaatracacao': '00:00:01'})
-        # carga.create_indexes(db)
+        create_indexes(db)
+        carga.create_indexes(db)
 
     def tearDown(self):
         db = self.db
@@ -204,6 +205,7 @@ class TestCase(unittest.TestCase):
         db['CARGA.Manifesto'].drop()
         db['CARGA.Container'].drop()
         db['CARGA.ContainerVazio'].drop()
+        db['CARGA.NCM'].drop()
 
     def test_indexes(self):
         create_indexes(self.db)
@@ -237,6 +239,7 @@ class TestCase(unittest.TestCase):
         assert 'cheio' in htmlc
 
     def test_stats(self):
+        atualiza_stats(self.db)
         stats = stats_resumo_imagens(self.db)
         assert stats is not None
         assert stats['Total de imagens'] == 7

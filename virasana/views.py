@@ -42,7 +42,6 @@ from virasana.workers.tasks import raspa_dir, trata_bson
 from virasana.utils.image_search import ImageSearch
 from virasana.utils.auditoria import FILTROS_AUDITORIA
 
-
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
 Bootstrap(app)
@@ -79,7 +78,7 @@ stats_cache = {}
 def allowed_file(filename):
     """Checa extensões permitidas."""
     return '.' in filename and \
-        filename.rsplit('.', 1)[-1].lower() in ['bson']
+           filename.rsplit('.', 1)[-1].lower() in ['bson']
 
 
 @app.route('/')
@@ -158,7 +157,7 @@ def api_upload():
                 data['mensagem'] = 'Nome do arquivo vazio'
             else:
                 data['mensagem'] = 'Nome de arquivo não permitido: ' + \
-                    file.filename
+                                   file.filename
             print(file)
         else:
             content = file.read()
@@ -228,7 +227,7 @@ def summarytext(_id=None):
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
     result = dict_to_text(summary(grid_data=grid_data)) + '\n' + \
-        dict_to_text(carga.summary(grid_data=grid_data))
+             dict_to_text(carga.summary(grid_data=grid_data))
     return result
 
 
@@ -254,7 +253,6 @@ def file(_id=None):
 
     Exibe o arquivo e os metadados associados a ele.
     """
-
     db = app.config['mongodb']
     fs = GridFS(db)
     if request.args.get('filename'):
@@ -270,7 +268,7 @@ def file(_id=None):
         summary_ = dict_to_html(summary(grid_data=grid_data))
         summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
     else:
-        summary_ = summary_carga = "Arquivo não encontrado."
+        summary_ = summary_carga = 'Arquivo não encontrado.'
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
@@ -317,6 +315,7 @@ def grid_data():
             if isinstance(o, datetime):
                 return datetime.strftime(o, '%x %X')
             return json.JSONEncoder.default(self, o)
+
     if linha:
         return BSONEncoder().encode(linha)
 
@@ -441,7 +440,7 @@ def filtro():
     campo = request.args.get('campo')
     if campo:
         valor = request.args.get('valor')
-        if valor:   # valor existe, adiciona
+        if valor:  # valor existe, adiciona
             user_filtros[campo] = mongo_sanitizar(valor)
         else:  # valor não existe, exclui chave
             user_filtros.pop(campo)
@@ -563,9 +562,9 @@ def files():
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
-        for grid_data in db['fs.files']\
-            .find(filter=filtro, projection=projection)\
-            .sort(order)\
+        for grid_data in db['fs.files'] \
+                .find(filter=filtro, projection=projection) \
+                .sort(order) \
                 .limit(PAGE_ROWS).skip(skip):
             linha = {}
             linha['_id'] = grid_data['_id']
@@ -654,6 +653,7 @@ def padma_proxy(image_id):
                           files=data, headers=headers)
         result = r.text
     return result
+
 
 @nav.navigation()
 def mynavbar():

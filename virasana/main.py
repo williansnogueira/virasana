@@ -1,5 +1,4 @@
 """Módulo de entrada da aplicação web."""
-import logging
 from pymongo import MongoClient
 
 import ajna_commons.flask.log as log

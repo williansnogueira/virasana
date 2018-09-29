@@ -20,8 +20,8 @@ import time
 from datetime import datetime
 
 import click
-from pymongo import MongoClient
 
+from virasana.db import mongodb as db
 from virasana.integracao import carga, create_indexes
 
 batch_size = 8000
@@ -36,7 +36,6 @@ today = datetime.today()
 @click.option('--interval', default=5, help='Intervalo de dias - padrão 5')
 def update(year, month, batch_size, interval):
     """Script de linha de comando para integração de dados do sistema Carga."""
-    db = MongoClient()['test']
     create_indexes(db)
     carga.create_indexes(db)
     print('Começando a procurar por dados do CARGA a inserir')

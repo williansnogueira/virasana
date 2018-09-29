@@ -16,8 +16,8 @@ import time
 from datetime import datetime
 
 import click
-from virasana.db import mongodb as db
 
+from virasana.db import mongodb as db
 from virasana.integracao import create_indexes, gridfs_count, xmli
 
 BATCH_SIZE = 50000

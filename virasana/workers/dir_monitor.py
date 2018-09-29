@@ -59,7 +59,7 @@ def login(username='ajna', senha='ajna'):
     ))
 
 
-def despacha(filename, target=API_URL):
+def despacha(filename, target=API_URL, sync=SYNC):
     """Envia por HTTP POST o arquivo especificado.
 
     Args:
@@ -76,7 +76,7 @@ def despacha(filename, target=API_URL):
     bson = open(filename, 'rb')
     files = {'file': bson}
     # login()
-    rv = requests.post(API_URL, files=files, data={'sync': SYNC})
+    rv = requests.post(target, files=files, data={'sync': sync})
     if rv is None:
         return False, None
     response_json = rv.json()
@@ -85,7 +85,7 @@ def despacha(filename, target=API_URL):
     return erro, rv
 
 
-def despacha_dir(dir=BSON_DIR, target=API_URL):
+def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
     """Envia por HTTP POST todos os arquivos do diretório.
 
     Args:
@@ -102,15 +102,17 @@ def despacha_dir(dir=BSON_DIR, target=API_URL):
     exceptions = []
     # Limitar a cinco arquivos por rodada!!!
     cont = 0
+    if not os.path.exists(dir):
+        return ['Diretório %s não encontrado' % dir], []
     for filename in os.listdir(dir)[:90]:
         try:
             bsonfile = os.path.join(dir, filename)
-            success, response = despacha(bsonfile, target)
+            success, response = despacha(bsonfile, target, sync)
             if success:
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
                 response_json = response.json()
-                if (platform == 'win32') or SYNC:
+                if (platform == 'win32') or sync:
                     if response_json.get('success', False) is True:
                         os.remove(bsonfile)
                         logger.info('Arquivo ' + bsonfile + ' removido.')

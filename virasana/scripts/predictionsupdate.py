@@ -11,7 +11,7 @@ detecção do objeto contêiner (lista BBOX_MODELS do integracao.padma).
 
 Args:
 
-    modelo: modelos a consultar
+    modelo: modelo a consultar
 
     t: tamanho do lote de atualização/limite de registros da consulta
 
@@ -38,7 +38,7 @@ from bson import ObjectId
 # os.environ['DEBUG'] = '1'
 # from ajna_commons.flask.log import logger
 
-from virasana.main import mongodb as db
+from virasana.db import mongodb as db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred)
 

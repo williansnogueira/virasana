@@ -16,22 +16,21 @@ import time
 from datetime import datetime
 
 import click
-from pymongo import MongoClient
+from virasana.db import mongodb as db
 
 from virasana.integracao import create_indexes, gridfs_count, xmli
 
-batch_size = 50000
+BATCH_SIZE = 50000
 today = datetime.today()
 
 
 @click.command()
 @click.option('--year', default=today.year, help='Ano - padrão atual')
 @click.option('--month', default=today.month, help='Mes - padrão atual')
-@click.option('--batch_size', default=batch_size,
-              help='Tamanho do lote - padrão' + str(batch_size))
+@click.option('--batch_size', default=BATCH_SIZE,
+              help='Tamanho do lote - padrão' + str(BATCH_SIZE))
 def update(year, month, batch_size):
     """Script de linha de comando para integração do arquivo XML."""
-    db = MongoClient()['test']
     create_indexes(db)
     xmli.create_indexes(db)
     print('Começando a procurar por dados de XML a inserir')

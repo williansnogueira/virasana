@@ -13,9 +13,8 @@ from pymongo import MongoClient
 
 from ajna_commons.flask.conf import BACKEND, BROKER
 from ajna_commons.models.bsonimage import BsonImage, BsonImageList
-from virasana.workers.tasks import celery
-
 from app_test import app
+from virasana.workers.tasks import celery
 
 TEST_BSON = os.path.join(os.path.dirname(
     __file__), 'test.bson')

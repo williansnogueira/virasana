@@ -1,6 +1,6 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
-from datetime import datetime
 import sys
+from datetime import datetime
 
 import chardet
 from gridfs import GridFS

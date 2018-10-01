@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.integracao import (atualiza_stats, DATA, carga, create_indexes,
-                                 datas_bases, dict_to_text, dict_to_html,
+from virasana.integracao import (DATA, atualiza_stats, carga, create_indexes,
+                                 datas_bases, dict_to_html, dict_to_text,
                                  gridfs_count, peso_container_documento,
                                  plot_bar_plotly, plot_pie_plotly,
                                  stats_resumo_imagens, summary,

@@ -1,7 +1,6 @@
 """Funções para Auditoria/comparação nos metadados de fs.files."""
 from collections import defaultdict
 
-
 FILTROS_AUDITORIA = {
     '1': {'filtro': {'metadata.carga.vazio': True,
                      'metadata.predictions.vazio': False},

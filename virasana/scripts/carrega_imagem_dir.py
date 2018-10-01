@@ -1,4 +1,4 @@
-"""Script de linha de comando para processar diretório de arquivos BSON
+"""Script de linha de comando para processar diretório de arquivos BSON.
 
 Script de linha de comando para fazer atualização 'manual'
 processando diretório contendo arquivos BSON gerados pelo Avatar
@@ -9,8 +9,9 @@ Args:
     --sync: Fazer consulta de forma síncrona (True ou False)
 
 """
-import click
 import os
+
+import click
 
 from virasana.workers.dir_monitor import despacha_dir
 

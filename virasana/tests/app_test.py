@@ -1,7 +1,9 @@
 # Tescases for virasana.app.py
 import os
 import unittest
+
 from pymongo import MongoClient
+
 import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from virasana.views import configure_app

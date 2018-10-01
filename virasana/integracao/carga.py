@@ -257,7 +257,6 @@ def busca_atracacao_data(atracacoes: list, scan_datetime: datetime,
         intervalo threshold
 
     """
-    # TODO: Ver se é melhor utilizar sinais de acordo com EXP ou IMP
     index = None
     threshold = timedelta(days=abs(days))
     for ind, atracacao in enumerate(atracacoes):

@@ -11,8 +11,7 @@ from datetime import datetime, timedelta
 from celery import Celery
 from pymongo import MongoClient
 
-from ajna_commons.flask.conf import (BACKEND, BROKER, DATABASE,
-                                     MONGODB_URI)
+from ajna_commons.flask.conf import BACKEND, BROKER, DATABASE, MONGODB_URI
 from virasana.integracao import atualiza_stats, carga, xmli
 
 from .dir_monitor import despacha_dir

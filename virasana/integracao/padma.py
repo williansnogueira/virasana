@@ -4,16 +4,14 @@ Funções para consultar PADMA e gravar predições no metadata
 do GridFS.
 
 """
-import pickle
-import requests
 import os
-
+import pickle
 from json.decoder import JSONDecodeError
 
 import pymongo
+import requests
 
-from ajna_commons.flask.conf import (DATABASE, MONGODB_URI,
-                                     PADMA_URL)
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI, PADMA_URL
 from ajna_commons.flask.log import logger
 from ajna_commons.flask.login import DBUser
 

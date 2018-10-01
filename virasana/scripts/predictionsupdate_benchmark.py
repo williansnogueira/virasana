@@ -7,11 +7,8 @@ import asyncio
 import time
 
 from ajna_commons.utils.images import mongo_image
+from predictionsupdate import fazconsulta, get_images, monta_filtro
 from virasana.views import db
-
-from predictionsupdate import (fazconsulta,
-                               get_images, monta_filtro)
-
 
 s0 = time.time()
 # Monta lista com 50 imagens recortadas

@@ -1,8 +1,8 @@
 """Utiliza np.arrays de hash das imagens para busca distância euclidiana."""
-import numpy as np
 import os
 from datetime import datetime, timedelta
 
+import numpy as np
 from bson.objectid import ObjectId
 from sklearn.metrics.pairwise import euclidean_distances
 

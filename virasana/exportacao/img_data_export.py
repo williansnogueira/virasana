@@ -20,9 +20,8 @@ from pymongo import MongoClient
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from ajna_commons.utils.images import get_imagens_recortadas, mongo_image
-from virasana.integracao import carga, CHAVES_GRIDFS, xmli
 from virasana.exportacao.utils import campos_mongo_para_lista
-
+from virasana.integracao import CHAVES_GRIDFS, carga, xmli
 
 BATCH_SIZE = 1000
 today = datetime.today()

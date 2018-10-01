@@ -35,17 +35,18 @@ from collections import namedtuple
 import click
 from bson import ObjectId
 
-# os.environ['DEBUG'] = '1'
-# from ajna_commons.flask.log import logger
-
+from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.db import mongodb as db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred)
 
-from ajna_commons.utils.images import mongo_image, recorta_imagem
+
+# os.environ['DEBUG'] = '1'
+# from ajna_commons.flask.log import logger
 
 
-def monta_filtro(model: str, sovazios: bool, update: str, tamanho: int)-> dict:
+def monta_filtro(model: str, sovazios: bool,
+                 update: str, tamanho: int) -> dict:
     """Retorna filtro para MongoDB."""
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
@@ -84,7 +85,7 @@ def monta_filtro(model: str, sovazios: bool, update: str, tamanho: int)-> dict:
     return cursor
 
 
-def cropped_images(predictions: dict, image: bytes, _id: int)-> list:
+def cropped_images(predictions: dict, image: bytes, _id: int) -> list:
     """Recorta imagens de acordo com bbox passada.
 
     Para acessar algumas predições, é necessário recortar as imagens antes.
@@ -114,7 +115,7 @@ ImageID = namedtuple('ImageID', ['id', 'content', 'predictions'])
 
 
 def get_images(model: str, _id: ObjectId, image: bytes,
-               predictions: dict)-> list:
+               predictions: dict) -> list:
     """Retorna ImagemID.
 
     Se model for BBOX, simplesmente anexa imagem original.
@@ -219,14 +220,14 @@ THREADS = 4
 @click.option('--modelo', help='Modelo de predição a ser consultado',
               required=True)
 @click.option('--campo', help='Nome do campo a atualizar.' +
-              'Se omitido, usa o nome do modelo.',
+                              'Se omitido, usa o nome do modelo.',
               default='')
 @click.option('--tamanho',
               help='Tamanho do lote (padrão ' + str(BATCH_SIZE) + ')',
               default=BATCH_SIZE)
 @click.option('--qtde',
               help='Quantidade de consultas paralelas (padrão ' +
-              str(THREADS) + ')',
+                   str(THREADS) + ')',
               default=THREADS)
 @click.option('--sovazios', is_flag=True,
               help='Processar somente vazios')
@@ -234,11 +235,11 @@ THREADS = 4
               help='Tentar mesmo se consulta anterior a este registro falhou.')
 @click.option('--update', default=None,
               help='Reescrever dados existentes.' +
-              'Passa por cima de dados existentes - especificar ' +
-              'data inicial (para não começar sempre do mesmo ponto)' +
-              ' no formato DD/MM/AAAA. Se update for selecionado, o' +
-              ' parâmetro --t passa a ser a quantidade de dias a serem ' +
-              ' processados.')
+                   'Passa por cima de dados existentes - especificar ' +
+                   'data inicial (para não começar sempre do mesmo ponto)' +
+                   ' no formato DD/MM/AAAA. Se update for selecionado, o' +
+                   ' parâmetro --t passa a ser a quantidade de dias a serem ' +
+                   ' processados.')
 def async_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:

@@ -81,7 +81,7 @@ def despacha(filename, target=API_URL, sync=SYNC):
         return False, None
     response_json = rv.json()
     erro = response_json.get('success', False) and \
-           (rv.status_code == requests.codes.ok)
+        (rv.status_code == requests.codes.ok)
     return erro, rv
 
 

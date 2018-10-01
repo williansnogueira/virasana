@@ -6,13 +6,13 @@ consulta e integração das imagens com outras bases.
 """
 import json
 import os
-import requests
 from base64 import b64encode
 from datetime import date, datetime, timedelta
 from sys import platform
+
+import requests
 from bson.objectid import ObjectId
-from pymongo import MongoClient
-from flask import (abort, Flask, Response, flash, jsonify, redirect,
+from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
@@ -23,24 +23,24 @@ from flask_nav.elements import Navbar, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
+from pymongo import MongoClient
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
                      StringField)
 from wtforms.validators import optional
 
+import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
-
-import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from ajna_commons.utils.sanitiza import mongo_sanitizar
-from virasana.integracao import (carga, CHAVES_GRIDFS,
-                                 dict_to_html, dict_to_text,
-                                 plot_bar_plotly, plot_pie_plotly,
-                                 stats_resumo_imagens, summary)
-from virasana.workers.tasks import raspa_dir, trata_bson
-from virasana.utils.image_search import ImageSearch
+from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
+                                 dict_to_text, plot_bar_plotly,
+                                 plot_pie_plotly, stats_resumo_imagens,
+                                 summary)
 from virasana.utils.auditoria import FILTROS_AUDITORIA
+from virasana.utils.image_search import ImageSearch
+from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
@@ -67,7 +67,7 @@ def configure_app(mongodb):
     try:
         img_search = ImageSearch(mongodb)
         app.config['img_search'] = img_search
-    except:
+    except (IOError, FileNotFoundError):
         pass
     return app
 
@@ -563,9 +563,9 @@ def files():
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \
-                .find(filter=filtro, projection=projection) \
-                .sort(order) \
-                .limit(PAGE_ROWS).skip(skip):
+            .find(filter=filtro, projection=projection) \
+            .sort(order) \
+            .limit(PAGE_ROWS).skip(skip):
             linha = {}
             linha['_id'] = grid_data['_id']
             linha['filename'] = grid_data['filename']

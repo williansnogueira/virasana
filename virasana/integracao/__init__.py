@@ -18,7 +18,6 @@ import logging
 import os
 import plotly
 import plotly.graph_objs as go
-import time
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime
@@ -303,7 +302,8 @@ def atualiza_stats(db):
           },
          {'$group':
               {'_id':
-                   {'recinto': '$recinto', 'month': '$month', 'year': '$year'},
+                   {'recinto': '$recinto', 'month': '$month',
+                    'year': '$year'},
                'count': {'$sum': 1}
                }
           },

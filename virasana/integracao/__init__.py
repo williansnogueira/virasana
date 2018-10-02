@@ -191,12 +191,6 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
 
     Estatísticas gerais sobre as imagens
     """
-    # TODO: Extremamente lento, guardar estatísticas em tabelas à parte
-    # e rodar de forma batch ou criar counters
-    # import cProfile, pstats, io
-    # pr = cProfile.Profile()
-    # pr.enable()
-    # s0 = time.time()
     stats = {}
     filtro = IMAGENS
     if datainicio and datafim:
@@ -281,12 +275,6 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         recinto_mes[recinto] = ordered
     stats['recinto_mes'] = recinto_mes
     logger.debug('Fim consulta recintos 2')
-    # pr.disable()
-    # s = io.StringIO()
-    # sortby = 'cumulative'
-    # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    # ps.print_stats()
-    # print(s.getvalue())
     return stats
 
 

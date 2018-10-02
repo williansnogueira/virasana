@@ -157,7 +157,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str, campo: str):
         # print(predictions, '************')
         for ind, content in enumerate(image.content):
             prediction = consulta_padma(content, model)
-            # print(prediction, '************')
+            print(prediction, '************')
             if prediction and prediction.get('success'):
                 # print(prediction, '************')
                 predictions[ind][campo] = interpreta_pred(
@@ -166,6 +166,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str, campo: str):
         # print(predictions, '************')
         response['success'] = prediction['success']
         response['predictions'] = predictions
+        response['erro'] = prediction.get('erro')
     return image, response
 
 
@@ -208,7 +209,8 @@ async def fazconsulta(images: list, model: str, campo: str):
             )
         else:
             print(
-                'Consulta retornou vazia! (modelo %s existe?)' % model)
+                'Consulta retornou erro! (modelo %s existe?)' % model)
+            print('ERRO: %s' % response.get('erro'))
 
 
 BATCH_SIZE = 10000

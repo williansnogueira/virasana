@@ -114,7 +114,7 @@ def consulta_padma(image, model):
     data = {}
     data['image'] = image
     headers = {}
-    result = {'predictions': None, 'success': False}
+    result = {'predictions': [], 'success': False}
     s = requests.Session()
     username, password = get_service_password()
     if token is None:
@@ -125,11 +125,10 @@ def consulta_padma(image, model):
                    files=data, headers=headers)
         if r.status_code == 200:
             result = r.json()
+        # print(r.json())
     except JSONDecodeError as err:
-        logger.error('Erro em consulta_padma %s HTTP Code:%s ' %
+        logger.error('Erro em consulta_padma(JSON inválido) %s HTTP Code:%s ' %
                      (err, r.status_code))
-        # if r:
-        #    logger.error('Resposta do Servidor %s' % r.text)
     return result
 
 

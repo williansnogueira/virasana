@@ -219,8 +219,8 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
              'Carga': carga.DATA}
     for base, data in datas.items():
         filtro_data = dict(filtro)
-        # if data != DATA:
-        #    filtro_data[data] = {'$ne': None}
+        if data != DATA:
+            filtro_data[data] = {'$ne': None}
         campos = [(key, 1) for key in filtro_data.keys()]
         logger.debug('Inicio consulta data %s Filtro:%s Hint:%s'
                      % (data, filtro_data, campos))
@@ -280,6 +280,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
 
 def atualiza_stats(db):
     """Cria coleção com estatísticas de recinto por ano e mês."""
+    logger.debug('Inicio atualização consulta recintos 2')
     db['fs.files'].aggregate(
         [{'$match': {'metadata.contentType': 'image/jpeg'}},
          {'$project':
@@ -297,6 +298,7 @@ def atualiza_stats(db):
           },
          {'$out': 'stat_recinto'}
          ])
+    logger.debug('Fim atualização consulta recintos 2')
 
 
 def plot_pie_plotly(values, labels):

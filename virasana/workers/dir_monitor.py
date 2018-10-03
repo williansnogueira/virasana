@@ -94,7 +94,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
         target: URL do Servidor e API destino
 
     Returns:
-        Lista de erros
+        diretório usado, lista de erros, lista de exceções
 
     """
     erros = []
@@ -103,7 +103,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
     # Limitar a cinco arquivos por rodada!!!
     cont = 0
     if not os.path.exists(dir):
-        return ['Diretório %s não encontrado' % dir], []
+        return dir, ['Diretório não encontrado'], []
     for filename in os.listdir(dir)[:90]:
         try:
             bsonfile = os.path.join(dir, filename)
@@ -127,12 +127,11 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
                                bsonfile)).start()
             else:
                 erros.append(response)
-
                 logger.error(response.text)
         except Exception as err:
             exceptions.append(err)
             logger.error(err, exc_info=True)
-    return erros, exceptions
+    return dir, erros, exceptions
 
 
 def espera_resposta(api_url, bson_file, sleep_time=10, timeout=180):

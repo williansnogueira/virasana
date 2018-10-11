@@ -435,9 +435,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     logger.info('Criando índices para metadata')
-    create_indexes(db)
+    # create_indexes(db)
     logger.info('Atualizando estatísticas')
-    atualiza_stats(db)
+    # atualiza_stats(db)
     logger.info('Exibindo estatísticas')
     datainicio = datetime(2017, 7, 1)
     datafim = datetime.now()

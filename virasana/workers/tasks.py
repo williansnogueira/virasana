@@ -20,6 +20,7 @@ from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
 from ajna_commons.flask.log import logger
 from ajna_commons.models.bsonimage import BsonImageList
 from virasana.integracao import atualiza_stats, carga, xmli
+from virasana.scripts.predictionsupdate import predictions_update
 from virasana.workers.dir_monitor import despacha_dir
 
 celery = Celery(__name__, broker=BROKER,
@@ -57,21 +58,6 @@ def raspa_dir(self):
         trata_bson(file, db)
     return {'current': '',
             'status': 'Todos os arquivos processados'}
-
-
-@celery.task
-def processa_stats():
-    """Chama função do módulo integracao.
-
-    O módulo integração pode definir uma função atualiza_stats
-    Sua função é criar coleções de estatísticas sobre o Banco de Dados
-    que seriam custosas de produzir on-line.
-
-
-    """
-    with MongoClient(host=MONGODB_URI) as conn:
-        db = conn[DATABASE]
-        atualiza_stats(db)
 
 
 @celery.task
@@ -129,3 +115,32 @@ def processa_carga():
         db = conn[DATABASE]
         doisdias = datetime.now() - timedelta(days=2)
         carga.dados_carga_grava_fsfiles(db, 5000, doisdias)
+
+
+@celery.task
+def processa_stats():
+    """Chama função do módulo integracao.
+
+    O módulo integração pode definir uma função atualiza_stats
+    Sua função é criar coleções de estatísticas sobre o Banco de Dados
+    que seriam custosas de produzir on-line.
+
+
+    """
+    with MongoClient(host=MONGODB_URI) as conn:
+        db = conn[DATABASE]
+        atualiza_stats(db)
+
+
+@celery.task
+def processa_predictions():
+    """Roda modelos de aprendizado de máquina disponíveis.
+
+    Roda modelos e adiciona resultado no metadata.
+
+
+    """
+    predictions_update('ssd', 'bbox', 1000, 4)
+    predictions_update('index', 'index', 1000, 4)
+    predictions_update('vaziosvm', 'vazio', 1000, 20)
+    predictions_update('peso', 'peso', 1000, 40)

@@ -242,7 +242,7 @@ THREADS = 4
                    ' no formato DD/MM/AAAA. Se update for selecionado, o' +
                    ' parâmetro --t passa a ser a quantidade de dias a serem ' +
                    ' processados.')
-def async_update(modelo, campo, tamanho, qtde, sovazios, force, update):
+def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
@@ -283,7 +283,7 @@ def async_update(modelo, campo, tamanho, qtde, sovazios, force, update):
 
 if __name__ == '__main__':
     s0 = time.time()
-    async_update()
+    predictions_update()
     s1 = time.time()
     print(
         'Tempo total de execução em segundos: {0:.2f}'.format(s1 - s0))

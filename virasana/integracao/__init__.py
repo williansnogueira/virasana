@@ -115,6 +115,7 @@ def gridfs_count(db, filtro={}):
     return db['fs.files'].find().count()
 
 
+
 def tag(word: str, tags: list):
     """Coloca tags em torno de word."""
     open_tags = ['<' + tag + '>' for tag in tags]
@@ -278,7 +279,25 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     return stats
 
 
-def atualiza_stats(db):
+def atualiza_total_diario(db):
+    """Cria coleção com estatística de total diário escaneamento."""
+    logger.debug('Inicio atualizaçap total diário escaneamento')
+    db['fs.files'].aggregate([
+        {'$match': {'metadata.contentType': 'image/jpeg'}},
+        {'$project':
+             {'yearMonthDay': {'$dateToString': {format: "%Y-%m-%d", date: "$metadata.dataescaneamento"}}},
+         },
+        {'$group':
+             {'_id': '$yearMonthDay',
+              'count': {'$sum': 1}
+              }
+         },
+         {'$out': 'total_diario_escaneamento'}
+         ])
+    logger.debug('Fim atualização total diário escaneamento')
+
+
+def atualiza_totais_recintos2(db):
     """Cria coleção com estatísticas de recinto por ano e mês."""
     logger.debug('Inicio atualização consulta recintos 2')
     db['fs.files'].aggregate(
@@ -299,6 +318,22 @@ def atualiza_stats(db):
          {'$out': 'stat_recinto'}
          ])
     logger.debug('Fim atualização consulta recintos 2')
+
+def atualiza_stats(db, tipo='all'):
+    """Recebe tipo, roda atualização de estat[istica correspondente."""
+    logger.debug('Atualiza stats. Tipo: %s' % tipo)
+    atualizacoes = {
+        'recintos2': atualiza_totais_recintos2,
+    }
+    if tipo == 'all':
+        for func in atualizacoes.items():
+            func(db)
+    else:
+        func = tipo.get(tipo)
+        if func is None:
+            logger.debug('Atualiza stats. Tipo %s inexistente' % tipo)
+        else:
+            func(db)
 
 
 def plot_pie_plotly(values, labels):
@@ -434,9 +469,9 @@ if __name__ == '__main__':
     os.environ['DEBUG'] = '1'
     logger.setLevel(logging.DEBUG)
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    logger.info('Criando índices para metadata')
+    # logger.info('Criando índices para metadata')
     # create_indexes(db)
-    logger.info('Atualizando estatísticas')
+    # logger.info('Atualizando estatísticas')
     # atualiza_stats(db)
     logger.info('Exibindo estatísticas')
     datainicio = datetime(2017, 7, 1)

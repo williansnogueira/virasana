@@ -257,7 +257,7 @@ def file(_id=None):
     fs = GridFS(db)
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
-        logger.info('Filename %s '% filename)
+        logger.warn('Filename %s '% filename)
         grid_data = fs.find_one({'filename': filename})
     else:
         if not _id:

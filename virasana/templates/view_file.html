@@ -7,6 +7,7 @@
             <h3>Resumo</h3>
             <div id="resumo">
                 <div class="col-md-6">
+                    {% if myfile %}
                     <div class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
                             <li>
@@ -31,12 +32,14 @@
                     <div class="col-md-6">
                         <img src="mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner" />
                     </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-6">
                     <br> {{ summary|safe }}
                     <br> {{ summary_carga|safe }}
                 </div>
             </div>
+            {% if myfile %}
             <h3>Dados do arquivo de Imagem</h3>
             <div id="file">
                 <ul>
@@ -47,6 +50,7 @@
                     {% endif %} {% endfor %}
                 </ul>
             </div>
+            {% endif %}
             <h3>Dados do arquivo XML</h3>
             <div id="xml">
                 {% if myfile['metadata']['xml'] %}

@@ -625,6 +625,7 @@ def pie_plotly():
 def bar_plotly():
     """Renderiza gráfico no plotly e serializa via HTTP/HTML."""
     global stats_cache
+    print('stats_cache', stats_cache)
     if stats_cache:
         recinto = request.args.get('recinto')
         stats = stats_cache['recinto_mes'].get(recinto)

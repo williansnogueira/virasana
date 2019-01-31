@@ -117,7 +117,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
                         os.remove(bsonfile)
                         logger.info('Arquivo ' + bsonfile + ' removido.')
                         cont += 1
-                        logger.info(f'********* {cont}')
+                        logger.info('********* %s' % cont)
                 else:
                     taskid = response_json.get('taskid', '')
                     sucessos.append(taskid)

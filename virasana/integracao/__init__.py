@@ -223,12 +223,13 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         if data != DATA:
             filtro_data[data] = {'$ne': None}
         campos = [(key, 1) for key in filtro_data.keys()]
+        print('*********************', campos)
         logger.debug('Inicio consulta data %s Filtro:%s Hint:%s'
                      % (data, filtro_data, campos))
         linha = db['fs.files'].find(
-            filter=filtro_data,
-            projection=data,
-            hint=campos
+            filter=filtro_data
+            , projection=data
+            # , hint=campos
         ).sort(data, 1).limit(1)
         try:
             linha = next(linha)

@@ -98,7 +98,7 @@ def export(start, end, out, filename, batch_size, cache, original):
     except FileExistsError:
         pass
     # print(lista)
-    print(f'Salvando csv em {out}')
+    print('Salvando csv em %s' % out)
     with open(os.path.join(out, filename),
               'w', encoding=ENCODE, newline='') as csv_file:
         writer = csv.writer(csv_file, quotechar='"', quoting=csv.QUOTE_ALL)

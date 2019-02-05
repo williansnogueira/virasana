@@ -554,11 +554,11 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        """count = db['fs.files'].find(filtro, {'_id'}
+        count = db['fs.files'].find(filtro, {'_id'}
                                     ).limit(40 * PAGE_ROWS
                                             ).count(with_limit_and_skip=True)
-        """
-        count = 100
+
+        # count = 100
         npaginas = count // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
@@ -625,6 +625,7 @@ def pie_plotly():
 def bar_plotly():
     """Renderiza gráfico no plotly e serializa via HTTP/HTML."""
     global stats_cache
+    print('stats_cache', stats_cache)
     if stats_cache:
         recinto = request.args.get('recinto')
         stats = stats_cache['recinto_mes'].get(recinto)

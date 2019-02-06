@@ -80,8 +80,8 @@ def processa_bson():
     logger.info('Atualizando metadata XML...')
     num2, num5 = processa_xml()
     logger.info('Metadata XML atualizado. '
-                '% novos nos últimos cinco dias, '
-                '% novos nos últimos dois anos' %
+                '%s novos nos últimos cinco dias, '
+                '%s novos nos últimos dois anos' %
                 (num2, num5))
 
 
@@ -138,6 +138,8 @@ def processa_predictions():
 
     Roda modelos e adiciona resultado no metadata.
 
+    Serve também como documentação dos modelos atualmente recomendados
+    no pipeline padrão.
 
     """
     predictions_update('ssd', 'bbox', 1000, 4)

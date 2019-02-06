@@ -10,6 +10,7 @@ Se houverem arquivos, envia via POST para o endereco VIRASANA_URL
 Pode ser importado e rodado em uma tarefa periódica (celery, cron, etc)
 
 """
+import json
 import os
 import time
 from sys import platform
@@ -79,10 +80,14 @@ def despacha(filename, target=API_URL, sync=SYNC):
     rv = requests.post(target, files=files, data={'sync': sync})
     if rv is None:
         return False, None
-    response_json = rv.json()
-    erro = response_json.get('success', False) and \
-        (rv.status_code == requests.codes.ok)
-    return erro, rv
+    try:
+        response_json = rv.json()
+        success = response_json.get('success', False) and \
+               (rv.status_code == requests.codes.ok)
+    except json.decoder.JSONDecodeError as err:
+        logger.error(err, exc_info=True)
+        success = False
+    return success, rv
 
 
 def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
@@ -164,15 +169,21 @@ def espera_resposta(api_url, bson_file, sleep_time=10, timeout=180):
                 return False
             rv = requests.get(api_url)
             if rv and rv.status_code == 200:
-                response_json = rv.json()
-                state = response_json.get('state')
-                if state and state in states.SUCCESS:
-                    os.remove(bson_file)
-                    logger.info('Arquivo ' + bson_file + ' removido.')
-                    return True
-                if state and state in states.FAILURE:
+                try:
+                    response_json = rv.json()
+                    state = response_json.get('state')
+                    if state and state in states.SUCCESS:
+                        os.remove(bson_file)
+                        logger.info('Arquivo ' + bson_file + ' removido.')
+                        return True
+                    if state and state in states.FAILURE:
+                        logger.error(rv.text)
+                        return False
+                except json.decoder.JSONDecodeError as err:
+                    logger.error(err, exc_info=True)
                     logger.error(rv.text)
                     return False
+
     except Exception as err:
         logger.error(err, exc_info=True)
         print(err)

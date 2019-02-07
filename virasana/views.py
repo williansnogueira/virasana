@@ -143,7 +143,7 @@ def api_upload():
         json['taskid']: ID da task do celery a ser monitorada
 
     """
-    sync = request.form.get('sync', False)
+    sync = request.form.get('sync', 'False')
     # ensure a bson was properly uploaded to our endpoint
     file = request.files.get('file')
     data = {'success': False,
@@ -161,7 +161,7 @@ def api_upload():
             print(file)
         else:
             content = file.read()
-            if sync or platform == 'win32':
+            if sync=='True' or platform == 'win32':
                 with MongoClient(host=MONGODB_URI) as conn:
                     db = conn[DATABASE]
                     trata_bson(content, db)
@@ -181,7 +181,7 @@ def api_upload():
 
 
 @app.route('/api/task/<taskid>')
-@login_required
+# @login_required
 def task_progress(taskid):
     """Retorna um json do progresso da celery task."""
     task = raspa_dir.AsyncResult(taskid)

@@ -9,8 +9,8 @@
         <div class="row">
             {% for i2 in range(0, 4) %}
             <div class="col-sm-3">
-                <a href="file/{{ ids[i * 4 + i2] }}">
-                    <img src="mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura"
+                <a href="/virasana/file?_id={{ ids[i * 4 + i2] }}">
+                    <img src="/virasana/mini1/{{ ids[i * 4 + i2] }}" alt="Sem miniatura"
                     width="300" height="160" 
                     onmouseover="showMsg(this, '{{ ids[i * 4 + i2] }}')" onmouseout="clearMsg(this)"  />
                     <p>Imagem {{ ids[i * 4 + i2] }}.
@@ -42,7 +42,7 @@
                         }
                     }
                 }
-                xhttp.open("GET", "/similar?_id=" + _id + "&offset=" + offset, true);
+                xhttp.open("GET", "/virasana/similar?_id=" + _id + "&offset=" + offset, true);
                 xhttp.send();
                 return;
             }
@@ -58,7 +58,7 @@
                 }
             }
         }
-        xhttp.open("GET", "/summary/" + _id, true);
+        xhttp.open("GET", "/virasana/summary/" + _id, true);
         xhttp.send();
     }
     function clearMsg(img) {

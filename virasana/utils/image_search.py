@@ -6,6 +6,9 @@ import numpy as np
 from bson.objectid import ObjectId
 from sklearn.metrics.pairwise import euclidean_distances
 
+from ajna_commons.flask.log import logger
+from virasana.scripts.gera_indexes import gera_indexes
+
 # Local onde as arrays geradas ficam gravadas
 # Deve haver um serviço gerando as arrays a partir do banco de dados
 IMAGE_INDEXES = os.path.join(os.path.dirname(__file__), 'indexes.npy')
@@ -34,6 +37,9 @@ class ImageSearch():
             cache_size: tamanho da listagem de ids que será guardada
         """
         self.db = db
+        if not os.path.exists(IMAGE_INDEXES):
+            logger.info('Criando índices... Para recriar exclua arquivo utils/indexes.npy')
+            gera_indexes()
         self.image_indexes = np.load(IMAGE_INDEXES)
         self.ids_indexes = np.load(IDS_INDEXES)
         self.chunk = chunk

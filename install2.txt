@@ -1,0 +1,16 @@
+# Pós instalação, para integrar as bases:
+
+# Rodar comandos abaixo para fazer UPLOAD de BSONs de uma estação Windows para o Servidor
+
+(base) D:\Users\25052288840\ajna_docs\virasana>set VIRASANA_URL=http://10.68.64.12/virasana/
+(base) D:\Users\25052288840\ajna_docs\virasana>python virasana\scripts\imagensupload.py --dir "\Users\25052288840\Desktop\BSONS"
+
+
+# Rodar comandos abaixo para integração no Servidor se tarefas periódicas não estiverem configuradas ou
+# forem dados antigos
+
+(virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo ssd -- qtde 16
+(virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo index --qtde 64
+(virasana-venv) #python virasana/scripts/gera_indexes.py
+(virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo peso --qtde 64
+(virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo vaziosvm --campo vazio --qtde 16

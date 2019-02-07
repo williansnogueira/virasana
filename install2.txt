@@ -9,6 +9,8 @@
 # Rodar comandos abaixo para integração no Servidor se tarefas periódicas não estiverem configuradas ou
 # forem dados antigos
 
+(virasana-venv) #python virasana/scripts/xmlupdate.py --year AAAA -- month MM
+(virasana-venv) #python virasana/scripts/cargaupdate.py --year AAAA -- month MM
 (virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo ssd -- qtde 16
 (virasana-venv) #python virasana/scripts/predictionsupdate.py --modelo index --qtde 64
 (virasana-venv) #python virasana/scripts/gera_indexes.py

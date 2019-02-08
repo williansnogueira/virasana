@@ -83,14 +83,14 @@ def despacha(filename, target=API_URL, sync=SYNC):
     try:
         response_json = rv.json()
         success = response_json.get('success', False) and \
-               (rv.status_code == requests.codes.ok)
+                  (rv.status_code == requests.codes.ok)
     except json.decoder.JSONDecodeError as err:
         logger.error(err, exc_info=True)
         success = False
     return success, rv
 
 
-def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
+def despacha_dir(dir=BSON_DIR, url=API_URL, sync=SYNC):
     """Envia por HTTP POST todos os arquivos do diretório.
 
     Args:
@@ -112,7 +112,7 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
     for filename in os.listdir(dir)[:90]:
         try:
             bsonfile = os.path.join(dir, filename)
-            success, response = despacha(bsonfile, target, sync)
+            success, response = despacha(bsonfile, url, sync)
             if success:
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
@@ -127,9 +127,8 @@ def despacha_dir(dir=BSON_DIR, target=API_URL, sync=SYNC):
                     taskid = response_json.get('taskid', '')
                     sucessos.append(taskid)
                     Thread(target=espera_resposta,
-                           args=(
-                               VIRASANA_URL + '/api/task/' + taskid,
-                               bsonfile)).start()
+                           args=(url + '/api/task/' + taskid, bsonfile)
+                           ).start()
             else:
                 erros.append(response)
                 logger.error(response.text)

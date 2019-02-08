@@ -153,3 +153,4 @@ virasana/integracao/virasana_service
 .idea/*
 
 celerybeat*
+.idea/*

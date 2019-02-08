@@ -151,3 +151,5 @@ original_imgs.tar.gz
 *.npy
 virasana/integracao/virasana_service
 .idea/*
+
+celerybeat*

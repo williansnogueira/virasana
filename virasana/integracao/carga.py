@@ -56,7 +56,7 @@ def summary(grid_data=None, registro=None):
     """
     result = {}
     if grid_data:
-        print(grid_data)
+        # print(grid_data)
         meta = grid_data.metadata.get('carga')
     elif registro:
         meta = registro.get('metadata').get('carga')

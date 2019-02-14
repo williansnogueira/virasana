@@ -5,13 +5,13 @@ consulta e integração das imagens com outras bases.
 
 """
 import json
-import os
-from base64 import b64encode
-from datetime import date, datetime, timedelta
-from sys import platform
-
 import requests
+import os
+
 from bson.objectid import ObjectId
+from base64 import b64encode
+from bson import json_util
+from datetime import date, datetime, timedelta
 from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, url_for)
 from flask_bootstrap import Bootstrap
@@ -24,6 +24,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
+from sys import platform
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
                      StringField)
 from wtforms.validators import optional
@@ -243,6 +244,34 @@ def summaryhtml(_id=None):
     grid_data = fs.get(ObjectId(_id))
     result = dict_to_html(summary(grid_data=grid_data))
     return result
+
+
+@app.route('/summaryjson/<_id>')
+# @login_required
+def summaryjson(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe os metadados associados a ele.
+    """
+    db = app.config['mongodb']
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    result = summary(grid_data=grid_data)
+    result_carga = carga.summary(grid_data=grid_data)
+    return jsonify({**result, **result_carga})
+
+
+@app.route('/json/<_id>')
+# @login_required
+def json_get(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe os metadados associados a ele.
+    """
+    db = app.config['mongodb']
+    fs = GridFS(db)
+    grid_data = fs.get(ObjectId(_id))
+    return json.dumps(grid_data.metadata, sort_keys=True, indent=4, default=json_util.default)
 
 
 

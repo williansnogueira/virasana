@@ -218,7 +218,7 @@ def list_files():
 
 
 @app.route('/summary/<_id>')
-@login_required
+# @login_required
 def summarytext(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
@@ -324,7 +324,7 @@ def image():
 
 
 @app.route('/grid_data')
-@login_required
+# @login_required
 def grid_data():
     """Executa uma consulta no banco.
 
@@ -335,20 +335,13 @@ def grid_data():
     """
     # TODO: permitir consulta via POST de JSON
     db = app.config['mongodb']
-    filtro = {key: value for key, value in
-              mongo_sanitizar(request.args.items())}
-    linha = db['fs.files'].find_one(filtro)
+    filtro = {mongo_sanitizar(key):mongo_sanitizar(value)
+              for key, value in request.args.items()}
+    logger.warning(filtro)
+    linhas = db['fs.files'].find(filtro)
+    result = [str(linha['_id']) for linha in linhas]
+    return jsonify(result)
 
-    class BSONEncoder(json.JSONEncoder):
-        def default(self, o):
-            if isinstance(o, ObjectId):
-                return str(o)
-            if isinstance(o, datetime):
-                return datetime.strftime(o, '%x %X')
-            return json.JSONEncoder.default(self, o)
-
-    if linha:
-        return BSONEncoder().encode(linha)
 
 
 @app.route('/image/<_id>')

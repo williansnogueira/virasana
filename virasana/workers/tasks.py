@@ -96,10 +96,10 @@ def processa_xml():
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         cincodias = datetime.now() - timedelta(days=5)
-        num5 = xmli.dados_xml_grava_fsfiles(db, 10000, cincodias)
+        num5 = xmli.dados_xml_grava_fsfiles(db, 1000, cincodias)
         # Olhar o passado tbm...
         doisanos = datetime.now() - timedelta(days=730)
-        num2 = xmli.dados_xml_grava_fsfiles(db, 10000, doisanos)
+        num2 = xmli.dados_xml_grava_fsfiles(db, 1000, doisanos)
     return num5, num2
 
 
@@ -144,5 +144,5 @@ def processa_predictions():
     """
     predictions_update('ssd', 'bbox', 1000, 4)
     predictions_update('index', 'index', 1000, 4)
-    predictions_update('vaziosvm', 'vazio', 1000, 20)
-    predictions_update('peso', 'peso', 1000, 40)
+    predictions_update('vaziosvm', 'vazio', 1000, 4)
+    predictions_update('peso', 'peso', 1000, 4)

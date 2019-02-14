@@ -18,10 +18,10 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     # Tempos "quebrados" para evitar simultaneidade
     # processa_xml será chamado por processa_bson
-    sender.add_periodic_task(11 * 60.0, processa_bson.s())  # 11 min
+    sender.add_periodic_task(30 * 60.0, processa_bson.s())  # 30 min
     # sender.add_periodic_task(11 * 60.1, processa_xml.s())  # 11 min
     sender.add_periodic_task(61 * 60.0, processa_predictions.s())  # 61 min
     sender.add_periodic_task(6 * 3603.0, processa_carga.s())  # 6h
-    sender.add_periodic_task(12 * 3600.00, processa_stats.s())  # 12h
+    # sender.add_periodic_task(12 * 3600.00, processa_stats.s())  # 12h
 
 

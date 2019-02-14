@@ -23,6 +23,8 @@ FALTANTES = {'metadata.xml.date': None,
              'metadata.contentType': 'image/jpeg'
              }
 
+# TODO: inserir campos dos novos XML, começando por campos de container e
+# data adicionados ontem ao AVATAR.
 FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
           'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
           'UpdateCount', 'LastStateDateTime')

@@ -45,7 +45,8 @@
                 <ul>
                     <li>File Name: {{ myfile['filename'] }}</li>
                     <li>Upload Date: {{ myfile['upload_date'] }}</li>
-                    {% for key, value in myfile['metadata'].items() %} {% if value is not mapping %}
+                    {% for key, value in myfile['metadata'].items() %}
+                    {% if (value is not mapping) and (value is iterable and value is not string)  %}
                     <li> {{ key }}: {{ value }}</li>
                     {% endif %} {% endfor %}
                 </ul>

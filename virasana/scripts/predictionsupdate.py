@@ -159,7 +159,7 @@ def consulta_padma_retorna_image(image: ImageID, model: str, campo: str):
             prediction = consulta_padma(content, model)
             print(prediction, '************')
             if prediction and prediction.get('success'):
-                # print(prediction, '************')
+                print(prediction, '************')
                 predictions[ind][campo] = interpreta_pred(
                     prediction['predictions'][0], model)
                 # print('model:', model, 'campo:', campo)

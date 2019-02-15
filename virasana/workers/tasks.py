@@ -74,12 +74,12 @@ def processa_bson():
 
     """
     print('TESTE')
-    logger.info('Varrendo diretório...')
+    logger.warning('Varrendo diretório...')
     dir, erros, excecoes = despacha_dir()
-    logger.info('Varreu diretório %s. Erros %s' % (dir, erros))
-    logger.info('Atualizando metadata XML...')
+    logger.warning('Varreu diretório %s. Erros %s' % (dir, erros))
+    logger.warning('Atualizando metadata XML...')
     num2, num5 = processa_xml()
-    logger.info('Metadata XML atualizado. '
+    logger.warning('Metadata XML atualizado. '
                 '%s novos nos últimos cinco dias, '
                 '%s novos nos últimos dois anos' %
                 (num2, num5))

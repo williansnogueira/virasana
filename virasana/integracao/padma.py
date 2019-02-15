@@ -142,9 +142,10 @@ def interpreta_pred(prediction, model):
         return prediction['peso']
     if model == 'index':
         return prediction['code']
-    if prediction:
+    if prediction is not None:
         return prediction
-    raise NotImplementedError('Modelo %s não implementado!' % model)
+    raise NotImplementedError('Modelo %s não implementado! prediction %s'
+                              % (model, prediction))
 
 
 if __name__ == '__main__':

@@ -23,7 +23,6 @@ from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
-from werkzeug.utils import secure_filename
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
@@ -102,10 +101,11 @@ def valid_file(file):
             mensagem = 'Nome do arquivo vazio'
         else:
             mensagem = 'Nome de arquivo não permitido: ' + \
-                               file.filename
+                       file.filename
             # print(file)
         return False, mensagem
     return True, None
+
 
 @app.route('/uploadbson', methods=['GET', 'POST'])
 @csrf.exempt
@@ -119,7 +119,7 @@ def upload_bson():
     if request.method == 'POST':
         # check if the post request has the file part
         file = request.files.get('file')
-        validfile, mensagem =valid_file(file)
+        validfile, mensagem = valid_file(file)
         if not validfile:
             flash(mensagem)
             return redirect(request.url)
@@ -168,7 +168,7 @@ def api_upload():
     try:
         # ensure a bson was properly uploaded to our endpoint
         file = request.files.get('file')
-        validfile, mensagem =valid_file(file)
+        validfile, mensagem = valid_file(file)
         if not validfile:
             data['mensagem'] = mensagem
             return jsonify(data)

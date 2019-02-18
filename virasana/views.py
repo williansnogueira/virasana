@@ -5,18 +5,25 @@ consulta e integração das imagens com outras bases.
 
 """
 import json
-import requests
 import os
-
-from bson.objectid import ObjectId
 from base64 import b64encode
-from bson import json_util
 from datetime import date, datetime, timedelta
+from sys import platform
+
+import ajna_commons.flask.login as login_ajna
+import requests
+from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
+                                     PADMA_URL, SECRET, redisdb)
+from ajna_commons.flask.log import logger
+from ajna_commons.utils.images import mongo_image, recorta_imagem
+from ajna_commons.utils.sanitiza import mongo_sanitizar
+from bson import json_util
+from bson.objectid import ObjectId
 from flask import (Flask, Response, abort, flash, jsonify, redirect,
                    render_template, request, url_for)
 from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
-# from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename
 # from flask_cors import CORS
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
@@ -24,23 +31,17 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from sys import platform
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
                      StringField)
 from wtforms.validators import optional
 
-import ajna_commons.flask.login as login_ajna
-from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
-                                     PADMA_URL, SECRET, redisdb)
-from ajna_commons.flask.log import logger
-from ajna_commons.utils.images import mongo_image, recorta_imagem
-from ajna_commons.utils.sanitiza import mongo_sanitizar
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
                                  summary)
 from virasana.utils.auditoria import FILTROS_AUDITORIA
 from virasana.utils.image_search import ImageSearch
+from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
@@ -92,6 +93,20 @@ def index():
         return redirect(url_for('commons.login'))
 
 
+def valid_file(file):
+    """Valida arquivo passado e retorna validade e mensagem."""
+    if not file or file.filename == '' or not allowed_file(file.filename):
+        if not file:
+            mensagem = 'Arquivo nao informado'
+        elif not file.filename:
+            mensagem = 'Nome do arquivo vazio'
+        else:
+            mensagem = 'Nome de arquivo não permitido: ' + \
+                               file.filename
+            # print(file)
+        return False, mensagem
+    return True, None
+
 @app.route('/uploadbson', methods=['GET', 'POST'])
 @csrf.exempt
 # @login_required
@@ -104,8 +119,9 @@ def upload_bson():
     if request.method == 'POST':
         # check if the post request has the file part
         file = request.files.get('file')
-        if not file or file.filename == '' or not allowed_file(file.filename):
-            flash('Arquivo não informado ou inválido!')
+        validfile, mensagem =valid_file(file)
+        if not validfile:
+            flash(mensagem)
             return redirect(request.url)
         content = file.read()
         if platform == 'win32':
@@ -116,8 +132,8 @@ def upload_bson():
             # print('Escrevendo no REDIS')
             d = {'bson': b64encode(content).decode('utf-8'),
                  'filename': file.filename}
-            redisdb.rpush(BSON_REDIS, json.dumps(d))
-            result = raspa_dir.delay()
+            redisdb.rpush(BSON_REDIS + file.filename, json.dumps(d))
+            result = raspa_dir.delay(file.filename)
             taskid = result.id
             # print('taskid', taskid)
     if taskid:
@@ -145,35 +161,39 @@ def api_upload():
 
     """
     sync = request.form.get('sync', 'False')
-    # ensure a bson was properly uploaded to our endpoint
-    file = request.files.get('file')
+    todir = request.form.get('todir', 'False')
     data = {'success': False,
             'mensagem': 'Task iniciada',
             'taskid': ''}
     try:
-        if not file or file.filename == '' or not allowed_file(file.filename):
-            if not file:
-                data['mensagem'] = 'Arquivo nao informado'
-            elif not file.filename:
-                data['mensagem'] = 'Nome do arquivo vazio'
-            else:
-                data['mensagem'] = 'Nome de arquivo não permitido: ' + \
-                                   file.filename
-            print(file)
+        # ensure a bson was properly uploaded to our endpoint
+        file = request.files.get('file')
+        validfile, mensagem =valid_file(file)
+        if not validfile:
+            data['mensagem'] = mensagem
+            return jsonify(data)
+
+        # else
+        if todir == 'True':
+            # Apenas salva em sistema de arquivo para carga posterior
+            with open(os.path.join(BSON_DIR, file.filename), 'b') as out:
+                file.write()
+            return jsonify(data)
+
+        # else
+        content = file.read()
+        if sync == 'True' or platform == 'win32':
+            with MongoClient(host=MONGODB_URI) as conn:
+                db = conn[DATABASE]
+                trata_bson(content, db)
+            data['success'] = True
         else:
-            content = file.read()
-            if sync=='True' or platform == 'win32':
-                with MongoClient(host=MONGODB_URI) as conn:
-                    db = conn[DATABASE]
-                    trata_bson(content, db)
-                data['success'] = True
-            else:
-                d = {'bson': b64encode(content).decode('utf-8'),
-                     'filename': file.filename}
-                redisdb.rpush(BSON_REDIS, json.dumps(d))
-                result = raspa_dir.delay()
-                data['taskid'] = result.id
-                data['success'] = True
+            d = {'bson': b64encode(content).decode('utf-8'),
+                 'filename': file.filename}
+            redisdb.rpush(BSON_REDIS + file.filename, json.dumps(d))
+            result = raspa_dir.delay(file.filename)
+            data['taskid'] = result.id
+            data['success'] = True
     except Exception as err:
         logger.error(err, exc_info=True)
         data['mensagem'] = 'Excecao ' + str(err)
@@ -274,8 +294,6 @@ def json_get(_id=None):
     return json.dumps(grid_data.metadata, sort_keys=True, indent=4, default=json_util.default)
 
 
-
-
 @app.route('/file/<_id>')
 @app.route('/file')
 @login_required
@@ -288,7 +306,7 @@ def file(_id=None):
     fs = GridFS(db)
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
-        logger.warn('Filename %s '% filename)
+        logger.warn('Filename %s ' % filename)
         grid_data = fs.find_one({'filename': filename})
     else:
         if not _id:
@@ -335,13 +353,12 @@ def grid_data():
     """
     # TODO: permitir consulta via POST de JSON
     db = app.config['mongodb']
-    filtro = {mongo_sanitizar(key):mongo_sanitizar(value)
+    filtro = {mongo_sanitizar(key): mongo_sanitizar(value)
               for key, value in request.args.items()}
     logger.warning(filtro)
     linhas = db['fs.files'].find(filtro)
     result = [str(linha['_id']) for linha in linhas]
     return jsonify(result)
-
 
 
 @app.route('/image/<_id>')
@@ -587,9 +604,9 @@ def files():
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \
-            .find(filter=filtro, projection=projection) \
-            .sort(order) \
-            .limit(PAGE_ROWS).skip(skip):
+                .find(filter=filtro, projection=projection) \
+                .sort(order) \
+                .limit(PAGE_ROWS).skip(skip):
             linha = {}
             linha['_id'] = grid_data['_id']
             linha['filename'] = grid_data['filename']

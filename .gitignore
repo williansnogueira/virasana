@@ -154,3 +154,4 @@ virasana/integracao/virasana_service
 
 celerybeat*
 .idea/*
+.BSON/*

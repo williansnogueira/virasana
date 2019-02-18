@@ -17,22 +17,25 @@ from sys import platform
 from threading import Thread
 
 import requests
-from celery import states
-
 from ajna_commons.flask.conf import VIRASANA_URL
-from ajna_commons.flask.log import logger
+from ajna_commons.flask.log import logger, root_path
+from celery import states
 
 # VIRASANA_URL = "http://localhost:5001"
 LOGIN_URL = VIRASANA_URL + '/login'
 API_URL = VIRASANA_URL + '/api/uploadbson'
 if platform == 'win32':  # I am on ALFSTS???
-    BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'AJNA', 'BSON_IVAN')
+    BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'AJNA', 'BSON')
 else:
-    BSON_DIR = os.path.join(os.path.dirname(__file__),
-                            '..', '..', '..', '..', 'files', 'BSON')
+    BSON_DIR = root_path[0:root_path.find('virasana')]
+    BSON_DIR = os.path.join(BSON_DIR, 'virasana', 'BSON')
+    try:
+        if not os.path.exists(BSON_DIR):
+            os.mkdir(BSON_DIR)
+    except:
+        BSON_DIR = os.path.join('/home', 'ajna', 'virasana', 'BSON')
 
 SYNC = True
-BSON_DIR = os.path.join('/home', 'ajna', 'Downloads', 'BSON')
 
 
 def get_token(url):

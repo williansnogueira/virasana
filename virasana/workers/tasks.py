@@ -74,12 +74,12 @@ def processa_bson():
 
     """
     print('TESTE')
-    logger.info('Varrendo diretório...')
+    logger.warning('Varrendo diretório...')
     dir, erros, excecoes = despacha_dir()
-    logger.info('Varreu diretório %s. Erros %s' % (dir, erros))
-    logger.info('Atualizando metadata XML...')
+    logger.warning('Varreu diretório %s. Erros %s' % (dir, erros))
+    logger.warning('Atualizando metadata XML...')
     num2, num5 = processa_xml()
-    logger.info('Metadata XML atualizado. '
+    logger.warning('Metadata XML atualizado. '
                 '%s novos nos últimos cinco dias, '
                 '%s novos nos últimos dois anos' %
                 (num2, num5))
@@ -96,10 +96,10 @@ def processa_xml():
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         cincodias = datetime.now() - timedelta(days=5)
-        num5 = xmli.dados_xml_grava_fsfiles(db, 1000, cincodias)
+        num5 = xmli.dados_xml_grava_fsfiles(db, 3000, cincodias)
         # Olhar o passado tbm...
         doisanos = datetime.now() - timedelta(days=730)
-        num2 = xmli.dados_xml_grava_fsfiles(db, 1000, doisanos)
+        num2 = xmli.dados_xml_grava_fsfiles(db, 10000, doisanos)
     return num5, num2
 
 
@@ -142,7 +142,7 @@ def processa_predictions():
     no pipeline padrão.
 
     """
-    predictions_update('ssd', 'bbox', 1000, 4)
-    predictions_update('index', 'index', 1000, 4)
-    predictions_update('vaziosvm', 'vazio', 1000, 4)
-    predictions_update('peso', 'peso', 1000, 4)
+    predictions_update('ssd', 'bbox', 5000, 4)
+    predictions_update('index', 'index', 5000, 4)
+    predictions_update('vaziosvm', 'vazio', 5000, 4)
+    predictions_update('peso', 'peso', 5000, 4)

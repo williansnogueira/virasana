@@ -76,6 +76,7 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         for file in files:
             self._fs.delete(file._id)
 
+    """
     def test_apiupload(self):
         self.app.post('/login', data=dict(
             username='ajna',
@@ -92,3 +93,4 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
             '/api/uploadbson', data=files)
         print(rv.data)
         assert rv.data is not None
+    """

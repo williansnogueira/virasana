@@ -16,17 +16,16 @@ sobre a base para informar os usuários.
 """
 import logging
 import os
-import plotly
-import plotly.graph_objs as go
-
 from collections import defaultdict, OrderedDict
 from datetime import datetime
-from pymongo import ASCENDING, MongoClient
 
-from pymongo.errors import OperationFailure
-
+import plotly
+import plotly.graph_objs as go
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from ajna_commons.flask.log import logger
+from pymongo import ASCENDING, MongoClient
+from pymongo.errors import OperationFailure
+
 from virasana.integracao import carga
 from virasana.integracao import xmli
 
@@ -96,7 +95,7 @@ def create_indexes(db):
                                  ('metadata.recinto', ASCENDING)])
 
 
-def gridfs_count(db, filtro={}):
+def gridfs_count(db, filtro={}, limit=10000):
     """Aplica filtro, retorna contagem."""
     campos = []
     logger.debug('integracao.gridfs_count filtro:%s hint:%s' %
@@ -105,15 +104,14 @@ def gridfs_count(db, filtro={}):
         campos = [(key, 1) for key in filtro.keys()]
         print(campos)
         try:
-            return db['fs.files'].find(
+            return db['fs.files'].count_documents(
                 filter=filtro,
-                hint=campos
-            ).count(with_limit_and_skip=True)
+                hint=campos,
+                limit=limit)
         except OperationFailure:
-            return db['fs.files'].find(
-                filter=filtro).count(with_limit_and_skip=True)
-    return db['fs.files'].find().count()
-
+            return db['fs.files'].count_documents(
+                filter=filtro, limit=limit)
+    return db['fs.files'].count_documents({})
 
 
 def tag(word: str, tags: list):
@@ -293,8 +291,8 @@ def atualiza_total_diario(db):
               'count': {'$sum': 1}
               }
          },
-         {'$out': 'total_diario_escaneamento'}
-         ])
+        {'$out': 'total_diario_escaneamento'}
+    ])
     logger.debug('Fim atualização total diário escaneamento')
 
 
@@ -320,6 +318,7 @@ def atualiza_totais_recintos2(db):
          ])
     logger.debug('Fim atualização consulta recintos 2')
 
+
 def atualiza_stats(db, tipo='all'):
     """Recebe tipo, roda atualização de estat[istica correspondente."""
     logger.debug('Atualiza stats. Tipo: %s' % tipo)
@@ -327,7 +326,7 @@ def atualiza_stats(db, tipo='all'):
         'recintos2': atualiza_totais_recintos2,
     }
     if tipo == 'all':
-        for func in atualizacoes.items():
+        for key, func in atualizacoes.items():
             func(db)
     else:
         func = tipo.get(tipo)
@@ -360,7 +359,7 @@ def plot_bar_plotly(values, labels):
     plot = plotly.offline.plot({
         'data': [go.Bar(x=labels, y=values)],
         'layout': go.Layout(title='',
-                            xaxis=go.XAxis(type='category'))
+                            xaxis=go.layout.XAxis(type='category'))
     },
         show_link=False,
         output_type='div',

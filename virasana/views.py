@@ -31,7 +31,7 @@ from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
-                     StringField)
+                     SelectMultipleField, StringField)
 from wtforms.validators import optional
 
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
@@ -42,6 +42,21 @@ from virasana.utils.auditoria import FILTROS_AUDITORIA
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
+
+# TODO: Criar tabela para tags???
+
+tags_usuario_desc = [
+    ('0' , '0 - Selecione tag desejada'),
+    ('1', 'Cocaína'),
+    ('2', 'Armas'),
+    ('3', 'Auditando'),
+    ('4', 'Test4'),
+    ('5', 'Test5'),
+    ('6', 'Test6'),
+    ('7', 'Test7'),
+    ('8', 'Test8'),
+    ('9', 'Test9'),
+]
 
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
@@ -324,6 +339,42 @@ def file(_id=None):
                            summary_carga=summary_carga)
 
 
+@app.route('/image_tag', methods=['POST'])
+@login_required
+@csrf.exempt
+def image_tag():
+    """Função para inserção de tag na imagem
+
+    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
+    a string passada.
+
+    Args:
+        _id: ObjectId do arquivo
+        _tag:
+
+    Returns:
+        json['success']: True ou False
+
+    """
+    _id = request.form.get('_id')
+    tag = request.form.get('tag')
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        db['fs.files'].update_one(
+            {'_id': ObjectId(_id)},
+            {'$set':
+                 {current_user.id: {'$addToSet': tag}}
+             },
+            upsert=False
+        )
+        data['success'] = True
+    except Exception as err:
+        logger.error(err, exc_info=True)
+
+    return jsonify(data)
+
+
 @app.route('/image')
 @login_required
 def image():
@@ -511,6 +562,9 @@ class FilesForm(FlaskForm):
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
                                    choices=filtros_auditoria_desc,
                                    default=0)
+    filtro_tags = SelectMultipleField(u'Tags de usuário',
+                                      choices=sorted(tags_usuario_desc, key=lambda x: x[1]),
+                                      default=[0])
 
 
 def recupera_user_filtros():
@@ -544,6 +598,11 @@ def valida_form_files(form, filtro):
             if filtro_auditoria:
                 filtro.update(filtro_auditoria['filtro'])
                 order = filtro_auditoria['order']
+        tags_escolhidas = form.filtro_tags.data
+        print('****************************', tags_escolhidas)
+        if tags_escolhidas and tags_escolhidas!=['0']:
+            tags_escolhidas = [current_user.id + ':' + tag for tag in tags_escolhidas]
+            filtro.update({'tags': {'$in': tags_escolhidas}})
         if numero == 'None':
             numero = None
         if start and end:
@@ -567,13 +626,13 @@ def files():
     PAGE_ROWS = 50
     lista_arquivos = []
     campos = campos_chave()
-    filtro = {}
     npaginas = 1
     pagina_atual = 1
     order = None
     form_files = FilesForm()
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
+        print('****************************', request.form)
         form_files = FilesForm(**request.form)
         filtro, pagina_atual, order = valida_form_files(form_files, filtro)
     else:
@@ -595,12 +654,10 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        count = db['fs.files'].find(filtro, {'_id'}
-                                    ).limit(40 * PAGE_ROWS
-                                            ).count(with_limit_and_skip=True)
-
+        count = db['fs.files'].count_documents(filtro, limit=40 * PAGE_ROWS)
+        print(count)
         # count = 100
-        npaginas = count // PAGE_ROWS + 1
+        npaginas = (count-1) // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \

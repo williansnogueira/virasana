@@ -49,7 +49,7 @@ class TestCase(unittest.TestCase):
         # Um manifesto de vazio
         # Um contêiner cheio de exportação que TAMBÈM
         # passou num manifesto de vazio dois dias antes
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'uploadDate': data_escaneamento,
              'metadata': {'numeroinformado': 'cheio',
 
@@ -57,36 +57,36 @@ class TestCase(unittest.TestCase):
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento,
                           }})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'metadata': {'numeroinformado': 'cheio2',
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento,
                           }})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'metadata': {'numeroinformado': 'vazio',
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento}})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'filename': 'comxmlS_stamp.jpg',
              'metadata': {'numeroinformado': 'comxml',
                           'contentType': 'image/jpeg',
                           'recinto': 'B',
                           'dataescaneamento': data_escaneamento}})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'metadata': {'numeroinformado': 'cheioe',
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento,
                           }})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'metadata': {'numeroinformado': 'cheioe',
                           'contentType': 'image/jpeg',
                           'recinto': 'A',
                           'dataescaneamento': data_escaneamento,
                           }})
-        db['fs.files'].insert(
+        db['fs.files'].insert_one(
             {'filename': 'semxmlS_stamp.jpg',
              'metadata': {'contentType': 'image/jpeg',
                           'recinto': 'C',
@@ -99,95 +99,95 @@ class TestCase(unittest.TestCase):
                b'<ContainerId>comxml</ContainerId></DataForm>',
                filename='comxml.xml', metadata=metadata)
         # Cria documentos simulando registros importados do CARGA
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'cheio',
              'conhecimento': 1,
              'pesobrutoitem': '10,00',
              'volumeitem': '1,00'})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'cheio2',
              'conhecimento': 2,
              'item': 1,
              'pesobrutoitem': '10,00',
              'volumeitem': '1,00'})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'cheio2',
              'conhecimento': 2,
              'item': 2,
              'pesobrutoitem': '10,00',
              'volumeitem': '1,00'})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'cheioe',
              'conhecimento': 21,
              'pesobrutoitem': '10,00',
              'volumeitem': '1,00'})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'semconhecimento', 'conhecimento': 9})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'semescala', 'conhecimento': 3})
-        db['CARGA.Container'].insert(
+        db['CARGA.Container'].insert_one(
             {'container': 'escalaforadoprazo', 'conhecimento': 4})
-        db['CARGA.ContainerVazio'].insert(
+        db['CARGA.ContainerVazio'].insert_one(
             {'container': 'vazio', 'manifesto': 2})
         # Condição em que existe tanto manifesto de vazio quanto
         # CE de cheio - sistema deve buscar data mais próxima
-        db['CARGA.ContainerVazio'].insert(
+        db['CARGA.ContainerVazio'].insert_one(
             {'container': 'cheio', 'manifesto': 41})
         # Aqui contêiner de exportação entrou!!!!
-        db['CARGA.ContainerVazio'].insert(
+        db['CARGA.ContainerVazio'].insert_one(
             {'container': 'cheioe', 'manifesto': 22})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 1, 'tipo': 'mbl'})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 2, 'tipo': 'bl'})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 3, 'tipo': 'bl'})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 4, 'tipo': 'bl'})
-        db['CARGA.Conhecimento'].insert({'conhecimentoe': 5, 'tipo': 'bl'})
-        db['CARGA.Conhecimento'].insert({'conhecimento': 21, 'tipo': 'mbl'})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.Conhecimento'].insert_one({'conhecimento': 1, 'tipo': 'mbl'})
+        db['CARGA.Conhecimento'].insert_one({'conhecimento': 2, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert_one({'conhecimento': 3, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert_one({'conhecimento': 4, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert_one({'conhecimentoe': 5, 'tipo': 'bl'})
+        db['CARGA.Conhecimento'].insert_one({'conhecimento': 21, 'tipo': 'mbl'})
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 1, 'manifesto': 1})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 2, 'manifesto': 2})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 3, 'manifesto': 3})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 4, 'manifesto': 4})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 3, 'manifesto': 32})
-        db['CARGA.ManifestoConhecimento'].insert(
+        db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 21, 'manifesto': 21})
-        db['CARGA.Manifesto'].insert(
+        db['CARGA.Manifesto'].insert_one(
             {'manifesto': 1, 'tipomanifesto': 'lci'})
-        db['CARGA.Manifesto'].insert(
+        db['CARGA.Manifesto'].insert_one(
             {'manifesto': 2, 'tipomanifesto': 'lci'})
-        db['CARGA.Manifesto'].insert(
+        db['CARGA.Manifesto'].insert_one(
             {'manifesto': 21, 'tipomanifesto': 'lce'})
-        db['CARGA.Manifesto'].insert(
+        db['CARGA.Manifesto'].insert_one(
             {'manifesto': 22, 'tipomanifesto': 'bce'})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 1, 'escala': 1})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 2, 'escala': 2})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 3, 'escala': 3})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 4, 'escala': 4})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 41, 'escala': 41})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 21, 'escala': 21})
-        db['CARGA.EscalaManifesto'].insert({'manifesto': 22, 'escala': 22})
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 1, 'escala': 1})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 2, 'escala': 2})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 3, 'escala': 3})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 4, 'escala': 4})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 41, 'escala': 41})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 21, 'escala': 21})
+        db['CARGA.EscalaManifesto'].insert_one({'manifesto': 22, 'escala': 22})
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 4,
              'dataatracacao': data_escaneamento_menos6,
              'horaatracacao': '00:00:01'})
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 41,
              'dataatracacao': data_escaneamento_menos2,
              'horaatracacao': '00:00:01'})
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 1, 'dataatracacao': data_escaneamento_menos2,
              'horaatracacao': '00:00:01'})
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 2, 'dataatracacao': data_escaneamento_menos4,
              'horaatracacao': '00:00:01'})
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 22, 'dataatracacao': data_escaneamento_menos2,
              'horaatracacao': '00:00:01'})
         # Exportação
-        db['CARGA.AtracDesatracEscala'].insert(
+        db['CARGA.AtracDesatracEscala'].insert_one(
             {'escala': 21, 'dataatracacao': data_escaneamento_mais8,
              'horaatracacao': '00:00:01'})
         create_indexes(db)
@@ -299,7 +299,7 @@ class TestCase(unittest.TestCase):
         assert vazio['vazio'] is True
         assert vazio['atracacao']['escala'] == 22
         assert vazio['container'][0]['manifesto'] == 22
-        self.db['fs.files'].update(
+        self.db['fs.files'].update_one(
             {'metadata.numeroinformado': 'cheioe',
              'metadata.dataescaneamento': self.data_escaneamento},
             {'$set': {'metadata.carga': vazio}}
@@ -329,7 +329,7 @@ class TestCase(unittest.TestCase):
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
         assert processados == 5
-        semcarga = self.db['fs.files'].find({'metadata.carga': None}).count()
+        semcarga = self.db['fs.files'].count_documents({'metadata.carga': None})
         assert semcarga == 3
         processados = carga.dados_carga_grava_fsfiles(
             self.db,
@@ -339,7 +339,7 @@ class TestCase(unittest.TestCase):
     def test_grava_fsfiles_xml(self):
         processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 1
-        semxml = self.db['fs.files'].find({'metadata.xml': None}).count()
+        semxml = self.db['fs.files'].count_documents({'metadata.xml': None})
         assert semxml == 7
         processados = xmli.dados_xml_grava_fsfiles(self.db)
         assert processados == 0

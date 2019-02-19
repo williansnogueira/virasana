@@ -191,7 +191,7 @@ def create_indexes(db):
     for linha in cursor:
         dataatracacaoiso = converte_datahora_atracacao(linha)
         # print(linha['_id'], dataatracacao, dataatracacaoiso)
-        db['CARGA.AtracDesatracEscala'].update(
+        db['CARGA.AtracDesatracEscala'].update_one(
             {'_id': linha['_id']}, {
                 '$set': {'dataatracacaoiso': dataatracacaoiso}}
         )
@@ -540,14 +540,14 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
             if dados_carga != {}:
                 if update:
                     # print(dados_carga)
-                    db['fs.files'].update(
+                    db['fs.files'].update_one(
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': dados_carga}}
                     )
                 acum += 1
             else:
                 if force_update:
-                    db['fs.files'].update(
+                    db['fs.files'].update_one(
                         {'_id': linha['_id']},
                         {'$set': {'metadata.carga': 'NA'}}
                     )

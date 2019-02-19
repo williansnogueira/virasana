@@ -3,11 +3,10 @@ import sys
 from datetime import datetime
 
 import chardet
-from gridfs import GridFS
-
 # from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 from ajna_commons.utils.sanitiza import sanitizar, unicode_sanitizar
+from gridfs import GridFS
 
 if sys.platform == 'win32':  # pragma: no cover
     import lxml.etree as ET
@@ -17,7 +16,6 @@ else:
     #    import lxml.etree as ET
     # else:
     import defusedxml.ElementTree as ET
-
 
 FALTANTES = {'metadata.xml.date': None,
              'metadata.contentType': 'image/jpeg'
@@ -146,7 +144,10 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
          'metadata.contentType': 'image/jpeg'
          }).limit(batch_size)
     fs = GridFS(db)
-    total = file_cursor.count()
+    total = db['fs.files'].count_documents({'metadata.xml': None,
+                                            'metadata.dataescaneamento': {'$gt': data_inicio},
+                                            'metadata.contentType': 'image/jpeg'
+                                            })
     acum = 0
     for linha in file_cursor:
         filename = linha.get('filename')
@@ -188,7 +189,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                 print('Erro de encoding', e, err)
         if dados_xml != {}:
             if update:
-                db['fs.files'].update(
+                db['fs.files'].update_one(
                     {'_id': linha['_id']},
                     {'$set': {'metadata.xml': dados_xml}}
                 )

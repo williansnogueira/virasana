@@ -2,7 +2,9 @@
 import os
 import unittest
 
+from bson.objectid import ObjectId
 from pymongo import MongoClient
+
 
 import ajna_commons.flask.login as login_ajna
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
@@ -107,7 +109,6 @@ class FlaskTestCase(unittest.TestCase):
         self.login('ajna', 'ajna')
         rv = self._get('/', follow_redirects=True)
         data = self.data(rv)
-        assert b'input type="password"' not in data
         assert b'AJNA' in data
 
     def test_upload_bson(self):
@@ -146,3 +147,19 @@ class FlaskTestCase(unittest.TestCase):
         rv = self._get('/files')
         assert b'AJNA' in rv.data
         print(rv.data)
+
+
+    def test_tags_usuario(self):
+        self.login('ajna', 'ajna')
+        data = {'_id': ObjectId(),
+                'tag': '3'}
+        rv = self.app.post('/image_tag', data=data,
+                           follow_redirects=False)
+        assert rv.is_json
+        rvjson = rv.get_json()
+        assert rvjson.get('success') is True
+        data = {'filtro_tags': '3'}
+        rv = self._post('/files', data=data)
+        assert b'AJNA' in rv.data
+        print(rv.data)
+

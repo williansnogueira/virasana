@@ -27,10 +27,10 @@
                     </div>
                     <img src="image/{{ myfile['_id'] }}" width="500" height="250"/>
                     <div class="col-md-6">
-                        <img src="mini1/{{ myfile['_id'] }}" width="250" height="180" alt="Sem miniatura" />
+                        <img src="mini1/{{ myfile['_id'] }}" width="250" height="180" alt="Sem miniatura"/>
                     </div>
                     <div class="col-md-6">
-                        <img src="mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner" />
+                        <img src="mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner"/>
                     </div>
                     {% endif %}
                 </div>
@@ -40,13 +40,61 @@
                 </div>
             </div>
             {% if myfile %}
+            <h3>Anotações</h3>
+            <div id="anotacoes">
+                <h4>Tags</h4>
+                {% if myfile['metadata']['ocorrencias'] %}
+                <ul>
+                    <li>Tags: {{ myfile['metadata']['tags'] }}</li>
+                    {% for tag in myfile['metadata']['tags'] %}
+                    <li> {{ tag }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <h4>Ocorrências</h4>
+                <form id="frmocorrencias" class="form-group">
+                    <div class="form-group col-sm-4">
+                        <input id="txtocorrencia" class="form-control" type="text" placeholder="Texto da ocorrência">
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <button id="btnaddocorrencia" type="button" class="btn btn-default btn-info">Adicionar</button>
+                    </div>
+                </form>
+                <div id="list" class="row col-sm-6">
+                    <div class="table">
+                        <table class="inlineTable table table-bordered table-hover table-responsive"
+                               id="ocorrencias_table">
+                            <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Texto</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if ocorrencias %}
+                            {% for ocorrencia in ocorrencias %}
+                            <tr>
+                                <td>{{ocorrencia.usuario}}</td>
+                                <td>{{ocorrencia.texto}}</td>
+                                <td align="center">
+                                    <input type="button" class="btn  btn-danger" value="x"
+                                           onclick="exclui_ocorrencia('{{ocorrencia.texto}}')"/>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <h3>Dados do arquivo de Imagem</h3>
             <div id="file">
                 <ul>
                     <li>File Name: {{ myfile['filename'] }}</li>
                     <li>Upload Date: {{ myfile['upload_date'] }}</li>
                     {% for key, value in myfile['metadata'].items() %}
-                    {% if (value is not mapping) and (value is iterable and value is not string)  %}
+                    {% if (value is not mapping) and (value is not iterable or value is string) %}
                     <li> {{ key }}: {{ value }}</li>
                     {% endif %} {% endfor %}
                 </ul>
@@ -85,7 +133,9 @@
                         {% endfor %} {% else %} {% for linha in value %}
                         <ul>{% for campo, valor in linha.items() %}
                             <li> {{ campo }}: {{ valor }}</li>
-                            {% endfor %} </ul>{% endfor %} {% endif %}
+                            {% endfor %}
+                        </ul>
+                        {% endfor %} {% endif %}
                     </ul>
                     {% endif %} {% endfor %}
                 </ul>
@@ -110,5 +160,39 @@
                 active: 0
             });
         });
-    });
+        $(function() {
+            var add_ocorrencia = function(e) {
+              $.getJSON("ocorrencia/add", {
+                texto: $('#ocorrencia').val(),
+                _id: "{{ myfile['_id'] }}"
+              }, function(ocorrencias) {
+                table_ocorrencias(filtros);
+                $('#txtocorrencia').focus().select();
+              });
+              return false;
+            };
+            $('button#btnaddocorrencia').bind('click', add_ocorrencia);
+        });
+        function exclui_ocorrencia(texto) {
+                $.getJSON("ocorrencia/del", {
+                    _id: "{{ myfile['_id'] }}",
+                    texto: $('#ocorrencia').val(),
+                }, function(ocorrencias) {
+                  table_ocorrencias(ocorrencias);
+                });
+        };
+        function table_ocorrencias(ocorrencias){
+            $("#ocorrencias_table tbody tr").remove();
+            $.each(ocorrencias.ocorrencias, function(i, ocorrencia) {
+                $('<tr>').append(
+                $('<td>').text(ocorrencia.usuario),
+                $('<td>').text(ocorrencia.texto),
+                $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_ocorrencia("'+ ocorrencia.id + '")" />')
+                ).appendTo('#ocorrencias_table');
+            });
+        };
+     });
+
+
+
 </script> {% endblock %}

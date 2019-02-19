@@ -38,6 +38,7 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
                                  summary)
+from virasana.models.models import Ocorrencias, Tags
 from virasana.utils.auditoria import FILTROS_AUDITORIA
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
@@ -46,16 +47,11 @@ from virasana.workers.tasks import raspa_dir, trata_bson
 # TODO: Criar tabela para tags???
 
 tags_usuario_desc = [
-    ('0' , '0 - Selecione tag desejada'),
+    ('0', '0 - Selecione tag desejada'),
     ('1', 'Cocaína'),
     ('2', 'Armas'),
     ('3', 'Auditando'),
-    ('4', 'Test4'),
-    ('5', 'Test5'),
-    ('6', 'Test6'),
-    ('7', 'Test7'),
-    ('8', 'Test8'),
-    ('9', 'Test9'),
+    ('4', 'Seleção de Risco'),
 ]
 
 app = Flask(__name__, static_url_path='/static')
@@ -346,11 +342,11 @@ def image_tag():
     """Função para inserção de tag na imagem
 
     Faz update no fs.files, inserindo em um array com o nome do usuário ativo
-    a string passada.
+    e a tag passada.
 
     Args:
         _id: ObjectId do arquivo
-        _tag:
+        tag: String (app usa lista de códigos com tupla (id, desc))
 
     Returns:
         json['success']: True ou False
@@ -361,16 +357,69 @@ def image_tag():
     data = {'success': False}
     try:
         db = app.config['mongodb']
-        db['fs.files'].update_one(
-            {'_id': ObjectId(_id)},
-            {'$set':
-                 {current_user.id: {'$addToSet': tag}}
-             },
-            upsert=False
-        )
-        data['success'] = True
+        tags = Tags(db)
+        data['success'] = tags.add(_id=ObjectId(_id),
+                                   usuario=current_user.id,
+                                   tag=tag)
+        data['tags'] = tags.list(ObjectId(_id))
     except Exception as err:
         logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
+
+    return jsonify(data)
+
+
+@login_required
+@csrf.exempt
+@app.route('/ocorrencia/add', methods=['POST'])
+def ocorrencia_add():
+    _id = request.form.get('_id')
+    texto = request.form.get('texto')
+    return image_ocorrencia(_id, texto)
+
+
+@login_required
+@csrf.exempt
+@app.route('/ocorrencia/del', methods=['POST'])
+def ocorrencia_del():
+    _id = request.form.get('_id')
+    texto = request.form.get('texto')
+    return image_ocorrencia(_id, texto, True)
+
+
+def image_ocorrencia(_id, texto, exclui=False):
+    """Função para inserção de ocorrência na imagem
+
+    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
+    e a ocorrência passada, ou exclui este texto.
+
+    Args:
+        _id: ObjectId do arquivo
+        texto: String (texto)
+        exclui: bool (False)
+
+    Returns:
+        json['success']: True ou False
+
+    """
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        ocorrencias = Ocorrencias(db)
+        if exclui:
+            data['success'] = ocorrencias.delete(_id=ObjectId(_id),
+                                              usuario=current_user.id,
+                                              texto=texto)
+        else:
+            data['success'] = ocorrencias.add(_id=ObjectId(_id),
+                                                 usuario=current_user.id,
+                                                 texto=texto)
+        data['ocorrencias'] = ocorrencias.list(ObjectId(_id))
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
 
     return jsonify(data)
 
@@ -600,7 +649,7 @@ def valida_form_files(form, filtro):
                 order = filtro_auditoria['order']
         tags_escolhidas = form.filtro_tags.data
         print('****************************', tags_escolhidas)
-        if tags_escolhidas and tags_escolhidas!=['0']:
+        if tags_escolhidas and tags_escolhidas != ['0']:
             tags_escolhidas = [current_user.id + ':' + tag for tag in tags_escolhidas]
             filtro.update({'tags': {'$in': tags_escolhidas}})
         if numero == 'None':
@@ -657,7 +706,7 @@ def files():
         count = db['fs.files'].count_documents(filtro, limit=40 * PAGE_ROWS)
         print(count)
         # count = 100
-        npaginas = (count-1) // PAGE_ROWS + 1
+        npaginas = (count - 1) // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \

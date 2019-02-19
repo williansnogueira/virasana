@@ -2,16 +2,15 @@
 import os
 import unittest
 
+import ajna_commons.flask.login as login_ajna
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
-
-import ajna_commons.flask.login as login_ajna
-from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from virasana.views import configure_app
 
 conn = MongoClient(host=MONGODB_URI)
-mongodb = conn[DATABASE]
+mongodb = conn['unit_test']
 app = configure_app(mongodb)
 # Aceitar autenticação com qualquer username == password
 login_ajna.DBUser.dbsession = None
@@ -148,18 +147,33 @@ class FlaskTestCase(unittest.TestCase):
         assert b'AJNA' in rv.data
         print(rv.data)
 
-
     def test_tags_usuario(self):
-        self.login('ajna', 'ajna')
-        data = {'_id': ObjectId(),
-                'tag': '3'}
-        rv = self.app.post('/image_tag', data=data,
-                           follow_redirects=False)
-        assert rv.is_json
-        rvjson = rv.get_json()
-        assert rvjson.get('success') is True
-        data = {'filtro_tags': '3'}
-        rv = self._post('/files', data=data)
-        assert b'AJNA' in rv.data
-        print(rv.data)
+        _id = mongodb['fs.files'].insert_one({'teste': True}).inserted_id
+        try:
 
+            self.login('ajna', 'ajna')
+            data = {'_id': ObjectId(),
+                    'tag': '3'}
+            rv = self.app.post('/image_tag', data=data,
+                               follow_redirects=False)
+            assert rv.is_json
+            rvjson = rv.get_json()
+            assert rvjson.get('success') is True
+        finally:
+            mongodb['fs.files'].delete_one({'_id': ObjectId(_id)})
+
+
+    def test_ocorrencias_usuario(self):
+        _id = mongodb['fs.files'].insert_one({'teste': True}).inserted_id
+        try:
+
+            self.login('ajna', 'ajna')
+            data = {'_id': ObjectId(_id),
+                    'texto': '3'}
+            rv = self.app.post('/ocorrencia/add', data=data,
+                               follow_redirects=False)
+            assert rv.is_json
+            rvjson = rv.get_json()
+            assert rvjson.get('success') is True
+        finally:
+            mongodb['fs.files'].delete_one({'_id': ObjectId(_id)})

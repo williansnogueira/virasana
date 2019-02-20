@@ -43,23 +43,54 @@
             <h3>Anotações</h3>
             <div id="anotacoes">
                 <h4>Tags</h4>
-                {% if myfile['metadata']['ocorrencias'] %}
-                <ul>
-                    <li>Tags: {{ myfile['metadata']['tags'] }}</li>
-                    {% for tag in myfile['metadata']['tags'] %}
-                    <li> {{ tag }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                <h4>Ocorrências</h4>
-                <form id="frmocorrencias" class="form-group">
+                <div class="row">
+                <form id="frmtags" class="form-group">
+                    <div class="form-group col-sm-6">
+                        {{ form_tags.tags(class='form-control') }}
+                    </div>
                     <div class="form-group col-sm-4">
-                        <input id="txtocorrencia" class="form-control" type="text" placeholder="Texto da ocorrência">
+                        <button id="btnaddtag" type="button" class="btn btn-default btn-info">Adicionar</button>
+                    </div>
+                </form>
+                </div>
+                <div id="listtag" class="row">
+                    <div class="table">
+                        <table class="inlineTable table table-bordered table-hover table-responsive"
+                               id="tags_table">
+                            <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Tag</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if myfile['metadata']['tags'] %}
+                            {% for tag in myfile['metadata']['tags'] %}
+                            <tr>
+                                <td>{{tag.usuario}}</td>
+                                <td>{{tag.tag}}</td>
+                                <td align="center">
+                                    <input type="button" class="btn  btn-danger" value="x"
+                                           onclick="exclui_tag('{{tag.tag}}')"/>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <h4>Ocorrências</h4>
+                <div class="row">
+                <form id="frmocorrencias" class="form-group">
+                    <div class="form-group col-sm-6">
+                        <input id="ocorrencia" class="form-control" type="text" placeholder="Texto da ocorrência">
                     </div>
                     <div class="form-group col-sm-4">
                         <button id="btnaddocorrencia" type="button" class="btn btn-default btn-info">Adicionar</button>
                     </div>
                 </form>
+                </div>
                 <div id="list" class="row col-sm-6">
                     <div class="table">
                         <table class="inlineTable table table-bordered table-hover table-responsive"
@@ -71,14 +102,14 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% if ocorrencias %}
-                            {% for ocorrencia in ocorrencias %}
+                            {% if myfile['metadata']['ocorrencias'] %}
+                            {% for ocorrencia in myfile['metadata']['ocorrencias'] %}
                             <tr>
                                 <td>{{ocorrencia.usuario}}</td>
                                 <td>{{ocorrencia.texto}}</td>
                                 <td align="center">
                                     <input type="button" class="btn  btn-danger" value="x"
-                                           onclick="exclui_ocorrencia('{{ocorrencia.texto}}')"/>
+                                           onclick="exclui_ocorrencia('{{ocorrencia.id_ocorrencia}}')"/>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -153,6 +184,44 @@
 {% endblock %} {% block scripts %} {{super()}}
 <script src="/static/js/jquery-ui.min.js"></script>
 <script type="text/javascript">
+    var exclui_ocorrencia = function(pid_ocorrencia) {
+            console.log(pid_ocorrencia);
+            $.getJSON("ocorrencia/del", {
+                _id: "{{ myfile['_id'] }}",
+                id_ocorrencia: pid_ocorrencia,
+            }, function(ocorrencias) {
+              table_ocorrencias(ocorrencias);
+            });
+    };
+    function table_ocorrencias(ocorrencias){
+        $("#ocorrencias_table tbody tr").remove();
+        $.each(ocorrencias.ocorrencias, function(i, ocorrencia) {
+            $('<tr>').append(
+            $('<td>').text(ocorrencia.usuario),
+            $('<td>').text(ocorrencia.texto),
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick=exclui_ocorrencia("'+ocorrencia.id_ocorrencia+'") />')
+            ).appendTo('#ocorrencias_table');
+        });
+    };
+    var exclui_tag = function(atag) {
+            console.log(atag);
+            $.getJSON("tag/del", {
+                _id: "{{ myfile['_id'] }}",
+                tag: atag,
+            }, function(tags) {
+              table_tags(tags);
+            });
+    };
+    function table_tags(tags){
+        $("#tags_table tbody tr").remove();
+        $.each(tags.tags, function(i, tag) {
+            $('<tr>').append(
+            $('<td>').text(tag.usuario),
+            $('<td>').text(tag.tag),
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick=exclui_tag("'+tag.tag+'") />')
+            ).appendTo('#tags_table');
+        });
+    };
     $(document).ready(function () {
         $(function () {
             $("#accordion").accordion({
@@ -166,31 +235,26 @@
                 texto: $('#ocorrencia').val(),
                 _id: "{{ myfile['_id'] }}"
               }, function(ocorrencias) {
-                table_ocorrencias(filtros);
+                table_ocorrencias(ocorrencias);
                 $('#txtocorrencia').focus().select();
               });
               return false;
             };
             $('button#btnaddocorrencia').bind('click', add_ocorrencia);
         });
-        function exclui_ocorrencia(texto) {
-                $.getJSON("ocorrencia/del", {
-                    _id: "{{ myfile['_id'] }}",
-                    texto: $('#ocorrencia').val(),
-                }, function(ocorrencias) {
-                  table_ocorrencias(ocorrencias);
-                });
-        };
-        function table_ocorrencias(ocorrencias){
-            $("#ocorrencias_table tbody tr").remove();
-            $.each(ocorrencias.ocorrencias, function(i, ocorrencia) {
-                $('<tr>').append(
-                $('<td>').text(ocorrencia.usuario),
-                $('<td>').text(ocorrencia.texto),
-                $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_ocorrencia("'+ ocorrencia.id + '")" />')
-                ).appendTo('#ocorrencias_table');
-            });
-        };
+        $(function() {
+            var add_tag = function(e) {
+              $.getJSON("tag/add", {
+                tag: $('#tags option:selected') .val(),
+                _id: "{{ myfile['_id'] }}"
+              }, function(tags) {
+                table_tags(tags);
+                $('#tags').focus().select();
+              });
+              return false;
+            };
+            $('button#btnaddtag').bind('click', add_tag);
+        });
      });
 
 

@@ -47,11 +47,15 @@ from virasana.workers.tasks import raspa_dir, trata_bson
 # TODO: Criar tabela para tags???
 
 tags_usuario_desc = [
-    ('0', '0 - Selecione tag desejada'),
+    ('0', ' Selecione tag desejada'),
     ('1', 'Cocaína'),
     ('2', 'Armas'),
     ('3', 'Auditando'),
     ('4', 'Seleção de Risco'),
+    ('5', 'Erro de predição - detecção contêiner'),
+    ('6', 'Erro de predição - vazio'),
+    ('7', 'Erro de predição - peso'),
+    ('8', 'Erro de predição - outro'),
 ]
 
 app = Flask(__name__, static_url_path='/static')
@@ -305,6 +309,14 @@ def json_get(_id=None):
     return json.dumps(grid_data.metadata, sort_keys=True, indent=4, default=json_util.default)
 
 
+tags_text = sorted(tags_usuario_desc, key=lambda x: x[0])
+tags_text = [(tag[0], tag[0]+' - '+tag[1]) for tag in tags_text ]
+class TagsForm(FlaskForm):
+    tags = SelectField(u'Tags de usuário',
+                       choices=tags_text,
+                       default=[0])
+
+
 @app.route('/file/<_id>')
 @app.route('/file')
 @login_required
@@ -315,6 +327,7 @@ def file(_id=None):
     """
     db = app.config['mongodb']
     fs = GridFS(db)
+    form_tags = TagsForm()
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
         logger.warn('Filename %s ' % filename)
@@ -329,10 +342,12 @@ def file(_id=None):
         summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
     else:
         summary_ = summary_carga = 'Arquivo não encontrado.'
+
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
-                           summary_carga=summary_carga)
+                           summary_carga=summary_carga,
+                           form_tags=form_tags)
 
 
 @app.route('/image_tag', methods=['POST'])
@@ -372,23 +387,34 @@ def image_tag():
 
 @login_required
 @csrf.exempt
-@app.route('/ocorrencia/add', methods=['POST'])
+@app.route('/ocorrencia/add', methods=['POST', 'GET'])
 def ocorrencia_add():
-    _id = request.form.get('_id')
-    texto = request.form.get('texto')
+    _id = request.values.get('_id')
+    texto = request.values.get('texto')
     return image_ocorrencia(_id, texto)
 
 
 @login_required
 @csrf.exempt
-@app.route('/ocorrencia/del', methods=['POST'])
+@app.route('/ocorrencia/del', methods=['POST', 'GET'])
 def ocorrencia_del():
-    _id = request.form.get('_id')
-    texto = request.form.get('texto')
-    return image_ocorrencia(_id, texto, True)
+    _id = request.values.get('_id')
+    id_ocorrencia = request.values.get('id_ocorrencia')
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        ocorrencias = Ocorrencias(db)
+        data['success'] = ocorrencias.delete(_id=ObjectId(_id),
+                                             id_ocorrencia=id_ocorrencia)
+        data['ocorrencias'] = ocorrencias.list(ObjectId(_id))
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
+    return jsonify(data)
 
 
-def image_ocorrencia(_id, texto, exclui=False):
+def image_ocorrencia(_id, texto):
     """Função para inserção de ocorrência na imagem
 
     Faz update no fs.files, inserindo em um array com o nome do usuário ativo
@@ -407,20 +433,56 @@ def image_ocorrencia(_id, texto, exclui=False):
     try:
         db = app.config['mongodb']
         ocorrencias = Ocorrencias(db)
-        if exclui:
-            data['success'] = ocorrencias.delete(_id=ObjectId(_id),
-                                              usuario=current_user.id,
-                                              texto=texto)
-        else:
-            data['success'] = ocorrencias.add(_id=ObjectId(_id),
-                                                 usuario=current_user.id,
-                                                 texto=texto)
+        data['success'] = ocorrencias.add(_id=ObjectId(_id),
+                                          usuario=current_user.id,
+                                          texto=texto)
         data['ocorrencias'] = ocorrencias.list(ObjectId(_id))
     except Exception as err:
         logger.error(err, exc_info=True)
         data['error'] = str(err)
         # raise
+    return jsonify(data)
 
+
+@login_required
+@csrf.exempt
+@app.route('/tag/add', methods=['POST', 'GET'])
+def tag_add():
+    _id = request.values.get('_id')
+    tag = request.values.get('tag')
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        tags = Tags(db)
+        data['success'] = tags.add(_id=ObjectId(_id),
+                                   usuario=current_user.id,
+                                   tag=tag)
+        data['tags'] = tags.list(ObjectId(_id))
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
+    return jsonify(data)
+
+
+@login_required
+@csrf.exempt
+@app.route('/tag/del', methods=['POST', 'GET'])
+def tag_del():
+    _id = request.values.get('_id')
+    tag = request.values.get('tag')
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        tags = Tags(db)
+        data['success'] = tags.delete(_id=ObjectId(_id),
+                                      usuario=current_user.id,
+                                      tag=tag)
+        data['tags'] = tags.list(ObjectId(_id))
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
     return jsonify(data)
 
 

@@ -10,7 +10,8 @@ class Ocorrencias():
             {'_id': ObjectId(_id)},
             {'$addToSet':
                  {'metadata.ocorrencias':
-                      {'usuario': usuario,
+                      {'id_ocorrencia': ObjectId(),
+                       'usuario': usuario,
                        'texto': texto
                        }
                   }
@@ -23,7 +24,15 @@ class Ocorrencias():
         if not imagem:
             return None
         # print(imagem)
-        return imagem['metadata']['ocorrencias']
+        ocorrencias = []
+        for ocorrencia in imagem['metadata']['ocorrencias']:
+            ocorrencias.append(
+                {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
+                 'usuario': ocorrencia['usuario'],
+                 'texto': ocorrencia['texto']}
+            )
+
+        return ocorrencias
 
     def list_usuario(self, _id, usuario):
         ocorrencias = self.list(_id)
@@ -32,11 +41,13 @@ class Ocorrencias():
             ocorrencias = [ocorrencia for ocorrencia in ocorrencias if ocorrencia['usuario'] == usuario]
         return ocorrencias
 
-    def delete(self, _id, usuario, texto):
-        ocorrencias = self.list(_id)
+    def delete(self, _id, id_ocorrencia):
+        imagem = self._db['fs.files'].find_one({'_id': ObjectId(_id)})
+        if not imagem:
+            return False
+        ocorrencias = imagem['metadata']['ocorrencias']
         copy_ocorrencias = [ocorrencia for ocorrencia in ocorrencias
-                            if (ocorrencia['usuario'] == usuario and
-                                ocorrencia['texto'] == texto)]
+                            if (str(ocorrencia.get('id_ocorrencia')) == id_ocorrencia)]
         for uma_ocorrencia in copy_ocorrencias:
             self._db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},

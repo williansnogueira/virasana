@@ -38,14 +38,18 @@ class ModelTestCase(unittest.TestCase):
         assert len(lista_ocorrencias) == 2
         lista_ocorrencias = ocorrencias.list_usuario(self.inserted_id, 'ajna')
         assert len(lista_ocorrencias) == 1
-        assert lista_ocorrencias == [{'texto': 'Ocorrencia 3', 'usuario': 'ajna'}]
+        assert lista_ocorrencias[0]['texto'] == 'Ocorrencia 3'
+        assert lista_ocorrencias[0]['usuario'] == 'ajna'
 
     def test3_delete_ocorrencias(self):
         ocorrencias = Ocorrencias(mongodb)
         ocorrencias.add(self.inserted_id, 'ivan', 'Ocorrencia 1')
         ocorrencias.add(self.inserted_id, 'ivan', 'Ocorrencia 2')
         ocorrencias.add(self.inserted_id, 'ajna', 'Ocorrencia 3')
-        sucesso = ocorrencias.delete(self.inserted_id, 'ajna', 'Ocorrencia 3')
+        lista_ocorrencias = ocorrencias.list_usuario(self.inserted_id, 'ajna')
+        id_ocorrencia = lista_ocorrencias[0]['id_ocorrencia']
+        print(id_ocorrencia)
+        sucesso = ocorrencias.delete(self.inserted_id, id_ocorrencia)
         assert sucesso is True
         lista_ocorrencias = ocorrencias.list_usuario(self.inserted_id, 'ajna')
         assert lista_ocorrencias == []

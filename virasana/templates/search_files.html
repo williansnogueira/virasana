@@ -41,10 +41,10 @@
                     </div>
                     <div class="col-sm-2">
                         <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
-                        <button onclick="next_page(-1)" id="btn_page" type="button" class="btn btn-default btn-info"> < </button>
-                        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_page" type="button" class="btn btn-default btn-info"> << </button>
-                        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page" type="button" class="btn btn-default btn-info"> >> </button>
-                        <button onclick="next_page(1)" id="btn_page" type="button" class="btn btn-default btn-info"> > </button>
+                        <button onclick="next_page(-1)" id="btn_page1" type="button" class="btn btn-default btn-info"> < </button>
+                        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2" type="button" class="btn btn-default btn-info"> << </button>
+                        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3" type="button" class="btn btn-default btn-info"> >> </button>
+                        <button onclick="next_page(1)" id="btn_page4" type="button" class="btn btn-default btn-info"> > </button>
                     </div>
                 </div>
             </div>

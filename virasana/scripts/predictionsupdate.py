@@ -33,9 +33,9 @@ import time
 from collections import namedtuple
 
 import click
+from ajna_commons.utils.images import mongo_image, recorta_imagem
 from bson import ObjectId
 
-from ajna_commons.utils.images import mongo_image, recorta_imagem
 from virasana.db import mongodb as db
 from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
                                        interpreta_pred)
@@ -222,27 +222,27 @@ THREADS = 4
 @click.command()
 @click.option('--modelo', help='Modelo de predição a ser consultado',
               required=True)
-@click.option('--campo', help='Nome do campo a atualizar.' +
-                              'Se omitido, usa o nome do modelo.',
+@click.option('--campo', help='Nome do campo a atualizar.'
+                              + 'Se omitido, usa o nome do modelo.',
               default='')
 @click.option('--tamanho',
               help='Tamanho do lote (padrão ' + str(BATCH_SIZE) + ')',
               default=BATCH_SIZE)
 @click.option('--qtde',
-              help='Quantidade de consultas paralelas (padrão ' +
-                   str(THREADS) + ')',
+              help='Quantidade de consultas paralelas (padrão '
+                   + str(THREADS) + ')',
               default=THREADS)
 @click.option('--sovazios', is_flag=True,
               help='Processar somente vazios')
 @click.option('--force', is_flag=True,
               help='Tentar mesmo se consulta anterior a este registro falhou.')
 @click.option('--update', default=None,
-              help='Reescrever dados existentes.' +
-                   'Passa por cima de dados existentes - especificar ' +
-                   'data inicial (para não começar sempre do mesmo ponto)' +
-                   ' no formato DD/MM/AAAA. Se update for selecionado, o' +
-                   ' parâmetro --t passa a ser a quantidade de dias a serem ' +
-                   ' processados.')
+              help='Reescrever dados existentes.'
+                   + 'Passa por cima de dados existentes - especificar '
+                   + 'data inicial (para não começar sempre do mesmo ponto)'
+                   + ' no formato DD/MM/AAAA. Se update for selecionado, o'
+                   + ' parâmetro --t passa a ser a quantidade de dias a serem '
+                   + ' processados.')
 def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:

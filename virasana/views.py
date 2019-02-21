@@ -31,7 +31,7 @@ from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
 from wtforms import (BooleanField, DateField, IntegerField, SelectField,
-                     SelectMultipleField, StringField)
+                     StringField)
 from wtforms.validators import optional
 
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
@@ -181,7 +181,7 @@ def api_upload():
         if todir == 'True':
             # Apenas salva em sistema de arquivo para carga posterior
             with open(os.path.join(BSON_DIR, file.filename), 'b') as out:
-                file.write()
+                file.write(out)
             return jsonify(data)
 
         # else
@@ -295,7 +295,10 @@ def json_get(_id=None):
     db = app.config['mongodb']
     fs = GridFS(db)
     grid_data = fs.get(ObjectId(_id))
-    return json.dumps(grid_data.metadata, sort_keys=True, indent=4, default=json_util.default)
+    return json.dumps(grid_data.metadata,
+                      sort_keys=True,
+                      indent=4,
+                      default=json_util.default)
 
 
 class TagsForm(FlaskForm):
@@ -686,8 +689,10 @@ class FilesForm(FlaskForm):
                                    choices=filtros_auditoria_desc,
                                    default=0)
     filtro_tags = SelectField(u'Tags de usuário',
-                                      choices=sorted(Tags.list_tags(), key=lambda x: x[1]),
-                                      default=[0])
+                              choices=sorted(
+                                  Tags.list_tags(), key=lambda x: x[1]
+                              ),
+                              default=[0])
 
 
 def recupera_user_filtros():
@@ -724,7 +729,7 @@ def valida_form_files(form, filtro):
         tag_escolhida = form.filtro_tags.data
         print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
-            filtro_tag = {'usuario': current_user.id, 'tag':tag_escolhida}
+            filtro_tag = {'usuario': current_user.id, 'tag': tag_escolhida}
             filtro.update({'metadata.tags': {'$elemMatch': filtro_tag}})
         if numero == 'None':
             numero = None

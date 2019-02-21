@@ -1,19 +1,16 @@
-
 import datetime
-# Tescases for padma.py
-# import json
 import os
 import unittest
-from io import BytesIO
 
+import ajna_commons.flask.login as login_ajna
 import gridfs
 import pytest
-# from celery import states
+from ajna_commons.flask.conf import BACKEND, BROKER
+from ajna_commons.flask.conf import MONGODB_URI
+from ajna_commons.models.bsonimage import BsonImage, BsonImageList
 from pymongo import MongoClient
 
-from ajna_commons.flask.conf import BACKEND, BROKER
-from ajna_commons.models.bsonimage import BsonImage, BsonImageList
-from app_test import app
+from virasana.views import configure_app
 from virasana.workers.tasks import celery
 
 TEST_BSON = os.path.join(os.path.dirname(
@@ -46,6 +43,11 @@ class FlaskCeleryBsonTestCase(unittest.TestCase):
         self.worker = celery_worker
 
     def setUp(self):
+        conn = MongoClient(host=MONGODB_URI)
+        mongodb = conn['unit_test']
+        app = configure_app(mongodb)
+        # Aceitar autenticação com qualquer username == password
+        login_ajna.DBUser.dbsession = None
         app.testing = True
         self.app = app.test_client()
         self._bsonimage = BsonImage(

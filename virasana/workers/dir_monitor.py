@@ -32,7 +32,7 @@ else:
     try:
         if not os.path.exists(BSON_DIR):
             os.mkdir(BSON_DIR)
-    except:
+    except OSError:
         BSON_DIR = os.path.join('/home', 'ajna', 'virasana', 'BSON')
 
 SYNC = True

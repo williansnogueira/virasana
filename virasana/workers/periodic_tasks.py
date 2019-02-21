@@ -7,7 +7,8 @@ Aqui ficam as rotinas que serão chamadas periodicamente.
 
 """
 
-from virasana.workers.tasks import celery, processa_bson, processa_carga, processa_predictions, processa_stats
+from virasana.workers.tasks import celery, processa_bson, processa_carga,\
+    processa_predictions
 
 
 @celery.on_after_configure.connect
@@ -23,5 +24,3 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(61 * 60.0, processa_predictions.s())  # 61 min
     sender.add_periodic_task(6 * 3603.0, processa_carga.s())  # 6h
     # sender.add_periodic_task(12 * 3600.00, processa_stats.s())  # 12h
-
-

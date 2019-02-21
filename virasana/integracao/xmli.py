@@ -74,6 +74,7 @@ def xml_todict(xml) -> dict:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError as err:  # pragma: no cover
+        print(err)
         print('*****************XML**********************')
         print(xml)
         print('*****************XML END')
@@ -101,7 +102,7 @@ def xml_todict(xml) -> dict:
                 try:
                     text = text.split('.')[0]
                     text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
-                except ValueError as err:
+                except ValueError:
                     pass
             result[field.lower()] = text
     lista_conteineres = []
@@ -144,10 +145,11 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
          'metadata.contentType': 'image/jpeg'
          }).limit(batch_size)
     fs = GridFS(db)
-    total = db['fs.files'].count_documents({'metadata.xml': None,
-                                            'metadata.dataescaneamento': {'$gt': data_inicio},
-                                            'metadata.contentType': 'image/jpeg'
-                                            })
+    total = db['fs.files'].count_documents(
+        {'metadata.xml': None,
+         'metadata.dataescaneamento': {'$gt': data_inicio},
+         'metadata.contentType': 'image/jpeg'
+         })
     acum = 0
     for linha in file_cursor:
         filename = linha.get('filename')

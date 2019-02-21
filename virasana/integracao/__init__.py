@@ -225,9 +225,9 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
         logger.debug('Inicio consulta data %s Filtro:%s Hint:%s'
                      % (data, filtro_data, campos))
         linha = db['fs.files'].find(
-            filter=filtro_data
-            , projection=data
-            # , hint=campos
+            filter=filtro_data,
+            projection=data,
+            # hint=campos
         ).sort(data, 1).limit(1)
         try:
             linha = next(linha)
@@ -284,7 +284,12 @@ def atualiza_total_diario(db):
     db['fs.files'].aggregate([
         {'$match': {'metadata.contentType': 'image/jpeg'}},
         {'$project':
-             {'yearMonthDay': {'$dateToString': {format: "%Y-%m-%d", date: "$metadata.dataescaneamento"}}},
+             {'yearMonthDay': {'$dateToString':
+                                   {'format': '%Y-%m-%d',
+                                    'date': '$metadata.dataescaneamento'
+                                    }
+                               }
+              }
          },
         {'$group':
              {'_id': '$yearMonthDay',

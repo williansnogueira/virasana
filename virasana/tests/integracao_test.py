@@ -95,8 +95,8 @@ class TestCase(unittest.TestCase):
         fs = GridFS(db)
         metadata = {'contentType': 'text/xml',
                     'dataescaneamento': data_escaneamento}
-        fs.put(b'<DataForm><Login>IvanSB</Login>' +
-               b'<ContainerId>comxml</ContainerId></DataForm>',
+        fs.put(b'<DataForm><Login>IvanSB</Login>'
+               + b'<ContainerId>comxml</ContainerId></DataForm>',
                filename='comxml.xml', metadata=metadata)
         # Cria documentos simulando registros importados do CARGA
         db['CARGA.Container'].insert_one(
@@ -141,7 +141,8 @@ class TestCase(unittest.TestCase):
         db['CARGA.Conhecimento'].insert_one({'conhecimento': 3, 'tipo': 'bl'})
         db['CARGA.Conhecimento'].insert_one({'conhecimento': 4, 'tipo': 'bl'})
         db['CARGA.Conhecimento'].insert_one({'conhecimentoe': 5, 'tipo': 'bl'})
-        db['CARGA.Conhecimento'].insert_one({'conhecimento': 21, 'tipo': 'mbl'})
+        db['CARGA.Conhecimento'].insert_one(
+            {'conhecimento': 21, 'tipo': 'mbl'})
         db['CARGA.ManifestoConhecimento'].insert_one(
             {'conhecimento': 1, 'manifesto': 1})
         db['CARGA.ManifestoConhecimento'].insert_one(
@@ -329,7 +330,8 @@ class TestCase(unittest.TestCase):
             self.db,
             data_inicio=self.data_escaneamento - timedelta(days=3))
         assert processados == 5
-        semcarga = self.db['fs.files'].count_documents({'metadata.carga': None})
+        semcarga = self.db['fs.files'].count_documents(
+            {'metadata.carga': None})
         assert semcarga == 3
         processados = carga.dados_carga_grava_fsfiles(
             self.db,

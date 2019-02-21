@@ -38,7 +38,8 @@ class ImageSearch():
         """
         self.db = db
         if not os.path.exists(IMAGE_INDEXES):
-            logger.info('Criando índices... Para recriar exclua arquivo utils/indexes.npy')
+            logger.info(
+                'Criando índices de imagesearch... arquivo utils/indexes.npy')
             gera_indexes()
         self.image_indexes = np.load(IMAGE_INDEXES)
         self.ids_indexes = np.load(IDS_INDEXES)

@@ -3,7 +3,7 @@
 
 def campos_mongo_para_lista(db, filtro: dict,
                             chaves: list,
-                            limit=0)-> list:
+                            limit=0) -> list:
     """Consulta MongoDB retornando lista.
 
     Args:

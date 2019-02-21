@@ -3,7 +3,7 @@ import os
 import unittest
 
 import ajna_commons.flask.login as login_ajna
-from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from ajna_commons.flask.conf import MONGODB_URI
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
@@ -161,7 +161,6 @@ class FlaskTestCase(unittest.TestCase):
             assert rvjson.get('success') is True
         finally:
             mongodb['fs.files'].delete_one({'_id': ObjectId(_id)})
-
 
     def test_ocorrencias_usuario(self):
         _id = mongodb['fs.files'].insert_one({'teste': True}).inserted_id

@@ -54,8 +54,6 @@ class ModelTestCase(unittest.TestCase):
         lista_ocorrencias = ocorrencias.list_usuario(self.inserted_id, 'ajna')
         assert lista_ocorrencias == []
 
-
-
     def test1_add_tag(self):
         tags = Tags(mongodb)
         assert self.inserted_id is not None
@@ -75,7 +73,8 @@ class ModelTestCase(unittest.TestCase):
         assert len(lista_tags) == 2
         lista_tags = tags.list_usuario(self.inserted_id, 'ajna')
         assert len(lista_tags) == 1
-        assert lista_tags == [{'tag': '3', 'usuario': 'ajna'}]
+        assert lista_tags == [
+            {'tag': '3', 'usuario': 'ajna', 'descricao': 'Auditando'}]
 
     def test3_delete_tags(self):
         tags = Tags(mongodb)
@@ -88,7 +87,8 @@ class ModelTestCase(unittest.TestCase):
         assert lista_tags == []
 
     def test4_tagged(self):
-        inserted_id2 = mongodb['fs.files'].insert_one({'teste': True}).inserted_id
+        inserted_id2 = mongodb['fs.files'].insert_one(
+            {'teste': True}).inserted_id
         try:
             tags = Tags(mongodb)
             tags.add(inserted_id2, 'ivan', '1')

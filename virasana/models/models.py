@@ -1,6 +1,21 @@
 from datetime import datetime
 
+import pymongo
 from bson.objectid import ObjectId
+
+CHAVES_MODELS = [
+    'metadata.tags',
+    'metadata.ocorrencias',
+]
+
+
+def create_indexes(db):
+    """Utilitário. Cria índices relacionados aos modelos."""
+    for chave in CHAVES_MODELS:
+        try:
+            db['fs.files'].create_index(chave)
+        except pymongo.errors.OperationFailure:
+            pass
 
 
 class Ocorrencias():
@@ -31,7 +46,7 @@ class Ocorrencias():
         for ocorrencia in imagem['metadata'].get('ocorrencias', []):
             try:
                 ldata = datetime.strftime(ocorrencia['data'], '%d/%m/%Y %H:%M')
-            except:
+            except (ValueError, TypeError):
                 ldata = ''
             ocorrencias.append(
                 {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
@@ -46,7 +61,8 @@ class Ocorrencias():
         ocorrencias = self.list(_id)
         # print('###', ocorrencias)
         if ocorrencias and len(ocorrencias) > 0:
-            ocorrencias = [ocorrencia for ocorrencia in ocorrencias if ocorrencia['usuario'] == usuario]
+            ocorrencias = [ocorrencia for ocorrencia in ocorrencias
+                           if ocorrencia['usuario'] == usuario]
         return ocorrencias
 
     def delete(self, _id, id_ocorrencia):
@@ -54,8 +70,9 @@ class Ocorrencias():
         if not imagem:
             return False
         ocorrencias = imagem['metadata']['ocorrencias']
-        copy_ocorrencias = [ocorrencia for ocorrencia in ocorrencias
-                            if (str(ocorrencia.get('id_ocorrencia')) == id_ocorrencia)]
+        copy_ocorrencias = \
+            [ocorrencia for ocorrencia in ocorrencias
+             if (str(ocorrencia.get('id_ocorrencia')) == id_ocorrencia)]
         for uma_ocorrencia in copy_ocorrencias:
             self._db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
@@ -128,8 +145,8 @@ class Tags():
         if imagem is None:
             return
         delete_tags = [atag for atag in imagem['metadata']['tags']
-                     if (atag['usuario'] == usuario and
-                         atag['tag'] == tag)]
+                       if (atag['usuario'] == usuario and
+                           atag['tag'] == tag)]
         print(delete_tags)
         for uma_tag in delete_tags:
             self._db['fs.files'].update_one(
@@ -145,9 +162,9 @@ class Tags():
             raise ValueError('Usuário e tag não informados.'
                              'Ao menos um dos dois é obrigatório.')
         find_expression = {}
-        if not usuario is None:
+        if usuario is not None:
             find_expression['usuario'] = usuario
-        if not tag is None:
+        if tag is not None:
             find_expression['tag'] = tag
         if (usuario is None or tag is None):
             find_expression = {'$elemMatch': find_expression}
@@ -157,3 +174,12 @@ class Tags():
             limit=limit
         )
         return cursor
+
+
+if __name__ == '__main__':  # pragma: no cover
+    from pymongo import MongoClient
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    print('Criando índices para Modelos')
+    create_indexes(db)

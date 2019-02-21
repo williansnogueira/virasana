@@ -54,21 +54,24 @@
                 </form>
                 </div>
                 <div id="listtag" class="row">
-                    <div class="table">
+                    <div class="col-sm-8">
                         <table class="inlineTable table table-bordered table-hover table-responsive"
                                id="tags_table">
                             <thead>
                             <tr>
                                 <th>Usuário</th>
-                                <th>Tag</th>
+                                <th>Tag cod</th>
+                                <th>Tag texto</th>
+                                <th>&nbsp;</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {% if myfile['metadata']['tags'] %}
-                            {% for tag in myfile['metadata']['tags'] %}
+                            {% if tags %}
+                            {% for tag in tags %}
                             <tr>
                                 <td>{{tag.usuario}}</td>
                                 <td>{{tag.tag}}</td>
+                                <td>{{tag.descricao}}</td>
                                 <td align="center">
                                     <input type="button" class="btn  btn-danger" value="x"
                                            onclick="exclui_tag('{{tag.tag}}')"/>
@@ -78,6 +81,8 @@
                             {% endif %}
                             </tbody>
                         </table>
+                    </div>
+                    <div class="col-sm-4">
                     </div>
                 </div>
                 <h4>Ocorrências</h4>
@@ -91,31 +96,36 @@
                     </div>
                 </form>
                 </div>
-                <div id="list" class="row col-sm-6">
-                    <div class="table">
-                        <table class="inlineTable table table-bordered table-hover table-responsive"
-                               id="ocorrencias_table">
-                            <thead>
-                            <tr>
-                                <th>Usuário</th>
-                                <th>Texto</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% if myfile['metadata']['ocorrencias'] %}
-                            {% for ocorrencia in myfile['metadata']['ocorrencias'] %}
-                            <tr>
-                                <td>{{ocorrencia.usuario}}</td>
-                                <td>{{ocorrencia.texto}}</td>
-                                <td align="center">
-                                    <input type="button" class="btn  btn-danger" value="x"
-                                           onclick="exclui_ocorrencia('{{ocorrencia.id_ocorrencia}}')"/>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            {% endif %}
-                            </tbody>
-                        </table>
+                <div id="list" class="row">
+                    <div class="col-sm-8">
+                        <div class="table">
+                            <table class="inlineTable table table-bordered table-hover table-responsive"
+                                   id="ocorrencias_table">
+                                <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Usuário</th>
+                                    <th>Texto</th>
+                                    <th>&nbsp;</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if ocorrencias %}
+                                {% for ocorrencia in ocorrencias %}
+                                <tr>
+                                    <td>{{ocorrencia.data}}</td>
+                                    <td>{{ocorrencia.usuario}}</td>
+                                    <td>{{ocorrencia.texto}}</td>
+                                    <td align="center">
+                                        <input type="button" class="btn  btn-danger" value="x"
+                                               onclick="exclui_ocorrencia('{{ocorrencia.id_ocorrencia}}')"/>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,6 +207,7 @@
         $("#ocorrencias_table tbody tr").remove();
         $.each(ocorrencias.ocorrencias, function(i, ocorrencia) {
             $('<tr>').append(
+            $('<td>').text(ocorrencia.data),
             $('<td>').text(ocorrencia.usuario),
             $('<td>').text(ocorrencia.texto),
             $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick=exclui_ocorrencia("'+ocorrencia.id_ocorrencia+'") />')
@@ -218,6 +229,7 @@
             $('<tr>').append(
             $('<td>').text(tag.usuario),
             $('<td>').text(tag.tag),
+            $('<td>').text(tag.descricao),
             $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick=exclui_tag("'+tag.tag+'") />')
             ).appendTo('#tags_table');
         });

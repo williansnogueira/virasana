@@ -152,9 +152,9 @@ class FlaskTestCase(unittest.TestCase):
         try:
 
             self.login('ajna', 'ajna')
-            data = {'_id': ObjectId(),
+            data = {'_id': str(_id),
                     'tag': '3'}
-            rv = self.app.post('/image_tag', data=data,
+            rv = self.app.post('/tag/add', data=data,
                                follow_redirects=False)
             assert rv.is_json
             rvjson = rv.get_json()
@@ -168,7 +168,7 @@ class FlaskTestCase(unittest.TestCase):
         try:
 
             self.login('ajna', 'ajna')
-            data = {'_id': ObjectId(_id),
+            data = {'_id': str(_id),
                     'texto': '3'}
             rv = self.app.post('/ocorrencia/add', data=data,
                                follow_redirects=False)

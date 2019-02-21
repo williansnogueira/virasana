@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from bson.objectid import ObjectId
 
 
@@ -12,7 +14,8 @@ class Ocorrencias():
                  {'metadata.ocorrencias':
                       {'id_ocorrencia': ObjectId(),
                        'usuario': usuario,
-                       'texto': texto
+                       'texto': texto,
+                       'data': datetime.now()
                        }
                   }
              }
@@ -25,11 +28,16 @@ class Ocorrencias():
             return None
         # print(imagem)
         ocorrencias = []
-        for ocorrencia in imagem['metadata']['ocorrencias']:
+        for ocorrencia in imagem['metadata'].get('ocorrencias', []):
+            try:
+                ldata = datetime.strftime(ocorrencia['data'], '%d/%m/%Y %H:%M')
+            except:
+                ldata = ''
             ocorrencias.append(
                 {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
                  'usuario': ocorrencia['usuario'],
-                 'texto': ocorrencia['texto']}
+                 'texto': ocorrencia['texto'],
+                 'data': ldata}
             )
 
         return ocorrencias
@@ -59,6 +67,24 @@ class Ocorrencias():
 
 
 class Tags():
+    dict_tags = {
+        '0': ' Selecione tag desejada',
+        '1': 'Cocaína',
+        '2': 'Armas',
+        '3': 'Auditando',
+        '4': 'Seleção de Risco',
+        '5': 'Erro de predição - detecção contêiner',
+        '6': 'Erro de predição - vazio',
+        '7': 'Erro de predição - peso',
+        '8': 'Erro de predição - outro'
+    }
+    tags_text = [(k, k + ' - ' + v) for k, v in dict_tags.items()]
+    tags_text = sorted(tags_text)
+
+    @classmethod
+    def list_tags(cls):
+        return cls.tags_text
+
     def __init__(self, db):
         self._db = db
 
@@ -80,7 +106,15 @@ class Tags():
         if not imagem:
             return None
         # print(imagem)
-        return imagem['metadata']['tags']
+        tags = []
+        for tag in imagem['metadata'].get('tags', []):
+            tags.append(
+                {'usuario': tag['usuario'],
+                 'tag': tag['tag'],
+                 'descricao': Tags.dict_tags.get(tag['tag'], '')
+                 }
+            )
+        return tags
 
     def list_usuario(self, _id, usuario):
         tags = self.list(_id)
@@ -90,11 +124,14 @@ class Tags():
         return tags
 
     def delete(self, _id, usuario, tag):
-        tags = self.list(_id)
-        copy_tags = [atag for atag in tags
+        imagem = self._db['fs.files'].find_one({'_id': ObjectId(_id)})
+        if imagem is None:
+            return
+        delete_tags = [atag for atag in imagem['metadata']['tags']
                      if (atag['usuario'] == usuario and
                          atag['tag'] == tag)]
-        for uma_tag in copy_tags:
+        print(delete_tags)
+        for uma_tag in delete_tags:
             self._db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$pull':

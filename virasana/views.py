@@ -46,17 +46,6 @@ from virasana.workers.tasks import raspa_dir, trata_bson
 
 # TODO: Criar tabela para tags???
 
-tags_usuario_desc = [
-    ('0', ' Selecione tag desejada'),
-    ('1', 'Cocaína'),
-    ('2', 'Armas'),
-    ('3', 'Auditando'),
-    ('4', 'Seleção de Risco'),
-    ('5', 'Erro de predição - detecção contêiner'),
-    ('6', 'Erro de predição - vazio'),
-    ('7', 'Erro de predição - peso'),
-    ('8', 'Erro de predição - outro'),
-]
 
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
@@ -309,11 +298,9 @@ def json_get(_id=None):
     return json.dumps(grid_data.metadata, sort_keys=True, indent=4, default=json_util.default)
 
 
-tags_text = sorted(tags_usuario_desc, key=lambda x: x[0])
-tags_text = [(tag[0], tag[0]+' - '+tag[1]) for tag in tags_text ]
 class TagsForm(FlaskForm):
     tags = SelectField(u'Tags de usuário',
-                       choices=tags_text,
+                       choices=Tags.list_tags(),
                        default=[0])
 
 
@@ -340,106 +327,99 @@ def file(_id=None):
     if grid_data:
         summary_ = dict_to_html(summary(grid_data=grid_data))
         summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
+        tags = Tags(db).list(_id)
+        ocorrencias = Ocorrencias(db).list(_id)
     else:
         summary_ = summary_carga = 'Arquivo não encontrado.'
-
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
                            summary_carga=summary_carga,
-                           form_tags=form_tags)
-
-
-@app.route('/image_tag', methods=['POST'])
-@login_required
-@csrf.exempt
-def image_tag():
-    """Função para inserção de tag na imagem
-
-    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
-    e a tag passada.
-
-    Args:
-        _id: ObjectId do arquivo
-        tag: String (app usa lista de códigos com tupla (id, desc))
-
-    Returns:
-        json['success']: True ou False
-
-    """
-    _id = request.form.get('_id')
-    tag = request.form.get('tag')
-    data = {'success': False}
-    try:
-        db = app.config['mongodb']
-        tags = Tags(db)
-        data['success'] = tags.add(_id=ObjectId(_id),
-                                   usuario=current_user.id,
-                                   tag=tag)
-        data['tags'] = tags.list(ObjectId(_id))
-    except Exception as err:
-        logger.error(err, exc_info=True)
-        data['error'] = str(err)
-        # raise
-
-    return jsonify(data)
+                           form_tags=form_tags, tags=tags,
+                           ocorrencias=ocorrencias)
 
 
 @login_required
 @csrf.exempt
 @app.route('/ocorrencia/add', methods=['POST', 'GET'])
 def ocorrencia_add():
+    """Função para inserção de ocorrência na imagem
+
+    Faz update no fs.files, inserindo em um array o nome do usuário ativo
+    e o texto da ocorrência passada.
+
+    Args:
+        _id: ObjectId do arquivo
+        texto: String (texto)
+
+    Returns:
+        json['success']: True ou False
+
+    """
     _id = request.values.get('_id')
     texto = request.values.get('texto')
-    return image_ocorrencia(_id, texto)
+    try:
+        db = app.config['mongodb']
+        ocorrencias = Ocorrencias(db)
+        success = ocorrencias.add(_id=ObjectId(_id),
+                                  usuario=current_user.id,
+                                  texto=texto)
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        return jsonify({'erro': str(err)})
+    return image_ocorrencia(_id, success)
 
 
 @login_required
 @csrf.exempt
 @app.route('/ocorrencia/del', methods=['POST', 'GET'])
 def ocorrencia_del():
-    _id = request.values.get('_id')
-    id_ocorrencia = request.values.get('id_ocorrencia')
-    data = {'success': False}
-    try:
-        db = app.config['mongodb']
-        ocorrencias = Ocorrencias(db)
-        data['success'] = ocorrencias.delete(_id=ObjectId(_id),
-                                             id_ocorrencia=id_ocorrencia)
-        data['ocorrencias'] = ocorrencias.list(ObjectId(_id))
-    except Exception as err:
-        logger.error(err, exc_info=True)
-        data['error'] = str(err)
-        # raise
-    return jsonify(data)
+    """Função para exclusão de ocorrência na imagem
 
-
-def image_ocorrencia(_id, texto):
-    """Função para inserção de ocorrência na imagem
-
-    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
-    e a ocorrência passada, ou exclui este texto.
+    Faz update no fs.files, excluindo do array a id_ocorrencia
 
     Args:
         _id: ObjectId do arquivo
-        texto: String (texto)
-        exclui: bool (False)
+        id_ocorrencia: String (texto)
+
+    Returns:
+        image_ocorrencia, passando
+        data['success']: True ou False
+
+    """
+    _id = request.values.get('_id')
+    id_ocorrencia = request.values.get('id_ocorrencia')
+    try:
+        db = app.config['mongodb']
+        ocorrencias = Ocorrencias(db)
+        success = ocorrencias.delete(_id=ObjectId(_id),
+                                     id_ocorrencia=id_ocorrencia)
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        return jsonify({'erro': str(err)})
+    return image_ocorrencia(_id, success)
+
+
+def image_ocorrencia(_id, success=True):
+    """Função para listar ocorrências na imagem
+
+    Args:
+        _id: ObjectId do arquivo
+        success: Falso se houve erro em operação anterior
 
     Returns:
         json['success']: True ou False
 
     """
-    data = {'success': False}
+    data = {'success': success}
     try:
         db = app.config['mongodb']
         ocorrencias = Ocorrencias(db)
-        data['success'] = ocorrencias.add(_id=ObjectId(_id),
-                                          usuario=current_user.id,
-                                          texto=texto)
         data['ocorrencias'] = ocorrencias.list(ObjectId(_id))
     except Exception as err:
         logger.error(err, exc_info=True)
         data['error'] = str(err)
+        data['success'] = False
         # raise
     return jsonify(data)
 
@@ -483,6 +463,38 @@ def tag_del():
         logger.error(err, exc_info=True)
         data['error'] = str(err)
         # raise
+    return jsonify(data)
+
+
+def image_tag(_id, tag):
+    """Função para inserção de tag na imagem
+
+    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
+    e a tag passada.
+
+    Args:
+        _id: ObjectId do arquivo
+        tag: String (app usa lista de códigos com tupla (id, desc))
+
+    Returns:
+        json['success']: True ou False
+
+    """
+    _id = request.form.get('_id')
+    tag = request.form.get('tag')
+    data = {'success': False}
+    try:
+        db = app.config['mongodb']
+        tags = Tags(db)
+        data['success'] = tags.add(_id=ObjectId(_id),
+                                   usuario=current_user.id,
+                                   tag=tag)
+        data['tags'] = tags.list(ObjectId(_id))
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        data['error'] = str(err)
+        # raise
+
     return jsonify(data)
 
 
@@ -673,8 +685,8 @@ class FilesForm(FlaskForm):
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
                                    choices=filtros_auditoria_desc,
                                    default=0)
-    filtro_tags = SelectMultipleField(u'Tags de usuário',
-                                      choices=sorted(tags_usuario_desc, key=lambda x: x[1]),
+    filtro_tags = SelectField(u'Tags de usuário',
+                                      choices=sorted(Tags.list_tags(), key=lambda x: x[1]),
                                       default=[0])
 
 
@@ -709,11 +721,11 @@ def valida_form_files(form, filtro):
             if filtro_auditoria:
                 filtro.update(filtro_auditoria['filtro'])
                 order = filtro_auditoria['order']
-        tags_escolhidas = form.filtro_tags.data
-        print('****************************', tags_escolhidas)
-        if tags_escolhidas and tags_escolhidas != ['0']:
-            tags_escolhidas = [current_user.id + ':' + tag for tag in tags_escolhidas]
-            filtro.update({'tags': {'$in': tags_escolhidas}})
+        tag_escolhida = form.filtro_tags.data
+        print('****************************', tag_escolhida)
+        if tag_escolhida and tag_escolhida != '0':
+            filtro_tag = {'usuario': current_user.id, 'tag':tag_escolhida}
+            filtro.update({'metadata.tags': {'$elemMatch': filtro_tag}})
         if numero == 'None':
             numero = None
         if start and end:

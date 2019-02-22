@@ -43,10 +43,12 @@ if __name__=='__main__':
             if time.time() - s0 > (15*60):
                 print("Iniciando atualizações...")
                 doisdias = datetime.now() - timedelta(days=2)
-                num5 = xmli.dados_xml_grava_fsfiles(db, 2000, doisdias)
-                predictions_update('ssd', 'bbox', 500, 4)
-                predictions_update('index', 'index', 500, 4)
-                predictions_update('vaziosvm', 'vazio', 500, 4)
-                predictions_update('peso', 'peso', 500, 4)
+                num5 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
+                predictions_update('ssd', 'bbox', '500', '4')
+                predictions_update('index', 'index', '500', '4')
+                predictions_update('vaziosvm', 'vazio', '500', '4')
+                predictions_update('peso', 'peso', '500', '4')
                 s0 = time.time()
 
+
+# def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):

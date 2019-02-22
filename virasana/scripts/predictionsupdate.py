@@ -282,6 +282,45 @@ def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
 
 
+
+
+def predictions_update2(modelo, campo, tamanho, qtde):
+    """Consulta padma e grava predições de retorno no MongoDB."""
+    if not campo:
+        campo = modelo
+    cursor = monta_filtro(campo, False, None, tamanho)
+    if not cursor:
+        return False
+    registros_processados = 0
+    registros_vazios = 0
+    s_inicio = time.time()
+    images = []
+    loop = asyncio.get_event_loop()
+    for registro in cursor:
+        _id = registro['_id']
+        pred_gravado = registro.get('metadata').get('predictions')
+        if pred_gravado == []:
+            registros_vazios += 1
+            print('Pulando registros com anterior insucesso ' +
+                  ' (vazios:[]). Registro % d ' % registros_vazios)
+            continue
+        registros_processados += 1
+        if registros_processados == 1:
+            print('Iniciando varredura de registros')
+        image = mongo_image(db, _id)
+        images.extend(get_images(model=modelo, _id=_id, image=image,
+                                 predictions=pred_gravado))
+        if registros_processados % qtde == 0:
+            s0 = time.time()
+            loop.run_until_complete(fazconsulta(images, modelo, campo))
+            images = []
+            s1 = time.time()
+            print('Sequência real ..............  ', registros_processados,
+                  '{0:.2f}'.format(s1 - s0), 'segundos')
+    # Processa pilha restante...
+    loop.run_until_complete(fazconsulta(images, modelo, campo))
+    mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
+
 if __name__ == '__main__':
     s0 = time.time()
     predictions_update()

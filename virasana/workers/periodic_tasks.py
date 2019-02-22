@@ -11,12 +11,12 @@ import time
 from datetime import datetime, timedelta
 from virasana.workers.tasks import celery, processa_bson, processa_carga,\
     processa_predictions
-from ajna_commons.flask.conf import (BACKEND, BROKER, BSON_REDIS, DATABASE,
-                                     MONGODB_URI, redisdb)
+from ajna_commons.flask.conf import (DATABASE,
+                                     MONGODB_URI)
 from pymongo import MongoClient
 
 from virasana.integracao import xmli
-from virasana.scripts.predictionsupdate import predictions_update
+from virasana.scripts.predictionsupdate import predictions_update2
 
 
 @celery.on_after_configure.connect
@@ -44,10 +44,10 @@ if __name__=='__main__':
                 print("Iniciando atualizações...")
                 doisdias = datetime.now() - timedelta(days=2)
                 num5 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
-                predictions_update('ssd', 'bbox', '500', '4')
-                predictions_update('index', 'index', '500', '4')
-                predictions_update('vaziosvm', 'vazio', '500', '4')
-                predictions_update('peso', 'peso', '500', '4')
+                predictions_update2('ssd', 'bbox', 500, 4)
+                predictions_update2('index', 'index', 500, 4)
+                predictions_update2('vaziosvm', 'vazio', 500, 4)
+                predictions_update2('peso', 'peso', 500, 4)
                 s0 = time.time()
 
 

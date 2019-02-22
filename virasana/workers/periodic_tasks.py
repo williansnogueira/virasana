@@ -37,7 +37,7 @@ def setup_periodic_tasks(sender, **kwargs):
 if __name__=='__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
-        s0 = time.time() + timedelta(days=1)
+        s0 = time.time() - (15*60)
         while True:
             time.sleep(2)
             if time.time() - s0 > (15*60):

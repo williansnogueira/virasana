@@ -91,8 +91,12 @@ def xml_todict(xml) -> dict:
             # raise ET.ParseError('XML intratável??')
 
             # return result
-    alerta = xml.find('>al<') == -1
-    result['alerta'] = alerta
+    alerta = \
+        (xml.find('>al<') != -1) or \
+        (xml.find('>ALER') != -1) or \
+        (xml.find('>aler') != -1) or \
+        (xml.find('>Aler') != -1)
+        result['alerta'] = alerta
     for field in FIELDS:
         for tag in root.iter(field):
             text = ''

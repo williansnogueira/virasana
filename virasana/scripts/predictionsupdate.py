@@ -282,8 +282,6 @@ def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
 
 
-
-
 def predictions_update2(modelo, campo, tamanho, qtde):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
@@ -320,6 +318,7 @@ def predictions_update2(modelo, campo, tamanho, qtde):
     # Processa pilha restante...
     loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
+
 
 if __name__ == '__main__':
     s0 = time.time()

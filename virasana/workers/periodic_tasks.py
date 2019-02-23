@@ -43,7 +43,7 @@ if __name__ == '__main__':
         while True:
             time.sleep(2)
             if time.time() - s0 > (30 * 60):
-                print("Iniciando atualizações...")
+                print('Iniciando atualizações...')
                 doisdias = datetime.now() - timedelta(days=2)
                 num5 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
                 predictions_update2('ssd', 'bbox', 500, 4)
@@ -52,5 +52,3 @@ if __name__ == '__main__':
                 predictions_update2('vaziosvm', 'vazio', 500, 4)
                 predictions_update2('peso', 'peso', 500, 4)
                 s0 = time.time()
-
-# def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):

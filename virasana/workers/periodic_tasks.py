@@ -9,14 +9,16 @@ Aqui ficam as rotinas que serão chamadas periodicamente.
 
 import time
 from datetime import datetime, timedelta
-from virasana.workers.tasks import celery, processa_bson, processa_carga,\
-    processa_predictions
+
 from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI)
 from pymongo import MongoClient
 
 from virasana.integracao import xmli
+from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
+from virasana.workers.tasks import celery, processa_bson, processa_carga, \
+    processa_predictions
 
 
 @celery.on_after_configure.connect
@@ -34,21 +36,21 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(12 * 3600.00, processa_stats.s())  # 12h
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
-        s0 = time.time() - (15*60)
+        s0 = time.time() - (30 * 60)
         while True:
             time.sleep(2)
-            if time.time() - s0 > (15*60):
+            if time.time() - s0 > (30 * 60):
                 print("Iniciando atualizações...")
                 doisdias = datetime.now() - timedelta(days=2)
                 num5 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
                 predictions_update2('ssd', 'bbox', 500, 4)
                 predictions_update2('index', 'index', 500, 4)
+                gera_indexes()
                 predictions_update2('vaziosvm', 'vazio', 500, 4)
                 predictions_update2('peso', 'peso', 500, 4)
                 s0 = time.time()
-
 
 # def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):

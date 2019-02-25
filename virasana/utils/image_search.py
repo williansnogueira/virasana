@@ -43,6 +43,8 @@ class ImageSearch():
             gera_indexes()
         self.image_indexes = np.load(IMAGE_INDEXES)
         self.ids_indexes = np.load(IDS_INDEXES)
+        logger.info('Índice de %s imagens ' % len(self.image_indexes) +
+                    'Para buscas de similaridade carregado em ImageSearch')
         self.chunk = chunk
         self.cache_size = cache_size
         self.cache = {}

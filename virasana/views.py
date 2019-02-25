@@ -881,6 +881,17 @@ def padma_proxy(image_id):
         result = r.text
     return result
 
+@app.route('/recarrega_imageindex')
+@login_required
+def recarrega_imageindex():
+    """Recarrega image_index"""
+    try:
+        img_search = ImageSearch(app.config['mongodb'])
+        app.config['img_search'] = img_search
+    except (IOError, FileNotFoundError) as err:
+        jsonify({'sucess': False, 'erro': str(err)})
+    return jsonify({'sucess': True})
+
 
 @nav.navigation()
 def mynavbar():

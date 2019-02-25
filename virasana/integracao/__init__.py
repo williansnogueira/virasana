@@ -15,6 +15,7 @@ sobre a base para informar os usuários.
 
 """
 import logging
+import pickle
 import os
 from collections import defaultdict, OrderedDict
 from datetime import datetime
@@ -26,13 +27,14 @@ from ajna_commons.flask.log import logger
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import OperationFailure
 
+from ajna_commons.flask.login import DBUser
 from virasana.integracao import carga
 from virasana.integracao import xmli
 
+USERNAME = 'virasana_service'
+VIRASANA_PASS_FILE = os.path.join(os.path.dirname(__file__), USERNAME)
 IMAGENS = {'metadata.contentType': 'image/jpeg'}
-
 XML = {'metadata.contentType': 'text/xml'}
-
 DATA = 'metadata.dataescaneamento'
 
 STATS_LIVE = 30  # Tempo em minutos para manter cache de stats
@@ -468,6 +470,30 @@ def peso_container_balanca(db, numero: list):
 
     """
     pass
+
+
+def get_service_password():
+    """Retorna virasana_service password.
+
+    Se não existir, cria password randômico e cria/atualiza usuário no DB.
+    """
+    password = None
+    try:
+        with open(VIRASANA_PASS_FILE, 'rb') as secret:
+            try:
+                password = pickle.load(secret)
+            except pickle.PickleError:
+                password = None
+    except FileNotFoundError:
+        password = None
+    if password is None:
+        password = str(os.urandom(24))
+        db = MongoClient(host=MONGODB_URI)[DATABASE]
+        DBUser.dbsession = db
+        DBUser.add(USERNAME, password)
+        with open(VIRASANA_PASS_FILE, 'wb') as out:
+            pickle.dump(password, out, pickle.HIGHEST_PROTOCOL)
+    return USERNAME, password
 
 
 if __name__ == '__main__':

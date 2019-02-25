@@ -4,8 +4,6 @@ Funções para consultar PADMA e gravar predições no metadata
 do GridFS.
 
 """
-import os
-import pickle
 from json.decoder import JSONDecodeError
 
 import pymongo
@@ -13,10 +11,8 @@ import requests
 
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI, PADMA_URL
 from ajna_commons.flask.log import logger
-from ajna_commons.flask.login import DBUser
+from virasana.integracao import get_service_password
 
-USERNAME = 'virasana_service'
-VIRASANA_PASS_FILE = os.path.join(os.path.dirname(__file__), USERNAME)
 BBOX_MODELS = ['ssd']
 CHAVES_PADMA = [
     'metadata.predictions.vazio',
@@ -41,30 +37,6 @@ def create_indexes(db):
 
 
 token = None
-
-
-def get_service_password():
-    """Retorna virasana_service password.
-
-    Se não existir, cria password randômico e cria/atualiza usuário no DB.
-    """
-    password = None
-    try:
-        with open(VIRASANA_PASS_FILE, 'rb') as secret:
-            try:
-                password = pickle.load(secret)
-            except pickle.PickleError:
-                password = None
-    except FileNotFoundError:
-        password = None
-    if password is None:
-        password = str(os.urandom(24))
-        db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
-        DBUser.dbsession = db
-        DBUser.add(USERNAME, password)
-        with open(VIRASANA_PASS_FILE, 'wb') as out:
-            pickle.dump(password, out, pickle.HIGHEST_PROTOCOL)
-    return USERNAME, password
 
 
 def get_token(session, url):
@@ -95,7 +67,7 @@ def login(username, senha, session=None):
         username=username,
         senha=senha,
         csrf_token=csrf_token)
-    )
+                     )
     return r
 
 

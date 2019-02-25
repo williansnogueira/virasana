@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from zipfile import ZipFile
 
 import pymongo
-
 from ajna_commons.conf import ENCODE
 from ajna_commons.flask.log import logger
 
@@ -607,10 +606,29 @@ def nlinhas_zip_dir(path):
     return OrderedDict(sorted(contador.items()))
 
 
+def cria_campo_pesos_carga(db, batch_size=1):
+    """Cria campo com peso total informado para contêiner no CARGA."""
+    filtro = {'metadata.contentType': 'image/jpeg',
+              'metadata.carga.vazio': False,
+              'metadata.carga.pesototal': {'$exists': False}}
+    file_cursor = db['fs.files'].find(filtro)
+    for linha in file_cursor.limit(batch_size):
+        carga = linha.get('metadata').get('carga')
+        _id = linha['_id']
+        container = carga.get('container')
+        if container:
+            tara = float(container[0].get('taracontainer').replace(',', '.'))
+            peso = float(container[0].get('pesobrutoitem').replace(',', '.'))
+            pesototal = tara + peso
+            db['fs.files'].update_one(
+                {'_id': _id},
+                {'$set': {'metadata.carga.pesototal': pesototal}}
+            )
+
+
 if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
-
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     print('Criando índices para CARGA')
     create_indexes(db)

@@ -617,7 +617,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
               'metadata.carga.pesototal': {'$exists': False}}
     file_cursor = db['fs.files'].find(filtro)
     for linha in file_cursor.limit(batch_size):
-        pesopred = linha.get('metadata').get('predictions').get('peso')
+        pesopred = linha.get('metadata').get('predictions')[0].get('peso')
         carga = linha.get('metadata').get('carga')
         _id = linha['_id']
         container = carga.get('container')

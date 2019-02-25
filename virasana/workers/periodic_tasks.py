@@ -6,7 +6,7 @@ Gerenciados por celery_.sh
 Aqui ficam as rotinas que serão chamadas periodicamente.
 
 """
-
+import sys
 import time
 from datetime import datetime, timedelta
 
@@ -40,7 +40,8 @@ if __name__ == '__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         s0 = time.time() - (30 * 60)
-        while True:
+        daemonize = '--daemon' in sys.argv
+        while daemonize:
             time.sleep(2)
             if time.time() - s0 > (30 * 60):
                 print('Iniciando atualizações...')

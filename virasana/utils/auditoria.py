@@ -8,13 +8,18 @@ FILTROS_AUDITORIA = {
           'descricao': 'Contêineres informados como vazios mas detectados ' +
           'como não vazios (ordem decrescente de peso detectado)'
           },
-    '2': {'filtro': {'metadata.carga.vazio': False,
+    '2': {'filtro':{'metadata.carga.vazio': False,
                      'metadata.predictions.vazio': True},
           'order': [('metadata.predictions.peso', 1)],
           'descricao': 'Contêineres informados como contendo carga mas ' +
           'detectados como vazios (ordem de peso detectado)'
+          },
+   '3': {'filtro': {'metadata.alertapeso': True},
+          'order': [('metadata.diferencapeso', 1)],
+          'descricao': 'Contêineres com maiores divergências de peso'
           }
 }
+
 
 
 class Auditoria():

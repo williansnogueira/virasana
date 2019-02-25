@@ -39,6 +39,9 @@ CHAVES_CARGA = [
     'metadata.carga.ncm.ncm',
     'metadata.carga.atracacao.dataatracacao',
     'metadata.carga.atracacao.horaatracacao',
+    'metadata.carga.pesototal',
+    'metadata.diferencapeso',
+    'metadata.alertapeso'
 ]
 
 
@@ -610,9 +613,11 @@ def cria_campo_pesos_carga(db, batch_size=1):
     """Cria campo com peso total informado para contêiner no CARGA."""
     filtro = {'metadata.contentType': 'image/jpeg',
               'metadata.carga.vazio': False,
+              'metadata.predictions.peso': {'$exists': True},
               'metadata.carga.pesototal': {'$exists': False}}
     file_cursor = db['fs.files'].find(filtro)
     for linha in file_cursor.limit(batch_size):
+        pesopred = linha.get('metadata').get('predictions').get('peso')
         carga = linha.get('metadata').get('carga')
         _id = linha['_id']
         container = carga.get('container')
@@ -620,15 +625,21 @@ def cria_campo_pesos_carga(db, batch_size=1):
             tara = float(container[0].get('taracontainer').replace(',', '.'))
             peso = float(container[0].get('pesobrutoitem').replace(',', '.'))
             pesototal = tara + peso
+            peso_dif = abs(pesopred - pesototal)
+            peso_dif_relativo = peso_dif / (pesopred + pesototal) / 2
+            alertapeso = peso_dif > 2000 or peso_dif_relativo > .4
             db['fs.files'].update_one(
                 {'_id': _id},
-                {'$set': {'metadata.carga.pesototal': pesototal}}
+                {'$set': {'metadata.carga.pesototal': pesototal,
+                          'metadata.diferencapeso': peso_dif,
+                          'metadata.alertapeso': alertapeso}}
             )
 
 
 if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     print('Criando índices para CARGA')
     create_indexes(db)

@@ -3,10 +3,10 @@ import os
 from datetime import datetime, timedelta
 
 import numpy as np
+from ajna_commons.flask.log import logger
 from bson.objectid import ObjectId
 from sklearn.metrics.pairwise import euclidean_distances
 
-from ajna_commons.flask.log import logger
 from virasana.scripts.gera_indexes import gera_indexes
 
 # Local onde as arrays geradas ficam gravadas
@@ -48,6 +48,9 @@ class ImageSearch():
         self.chunk = chunk
         self.cache_size = cache_size
         self.cache = {}
+
+    def get_size(self):
+        return len(self.image_indexes)
 
     def get_distances(self, search_index):
         """Retorna lista de cache_size _ids ordenados por similaridade."""

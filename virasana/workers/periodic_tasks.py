@@ -108,5 +108,5 @@ if __name__ == '__main__':
         while daemonize:
             time.sleep(2)
             if time.time() - s0 > (30 * 60):
-                periodic_updates()
+                periodic_updates(db)
                 s0 = time.time()

@@ -3,6 +3,7 @@
 import csv
 import io
 import os
+import time
 import typing
 from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
@@ -616,7 +617,11 @@ def cria_campo_pesos_carga(db, batch_size=1):
               'metadata.predictions.peso': {'$exists': True},
               'metadata.carga.pesototal': {'$exists': False}}
     file_cursor = db['fs.files'].find(filtro)
+    total = 0
+    processados = 0
+    s0 = time.time()
     for linha in file_cursor.limit(batch_size):
+        total += 1
         pesopred = linha.get('metadata').get('predictions')[0].get('peso')
         carga = linha.get('metadata').get('carga')
         _id = linha['_id']
@@ -634,6 +639,16 @@ def cria_campo_pesos_carga(db, batch_size=1):
                           'metadata.diferencapeso': peso_dif,
                           'metadata.alertapeso': alertapeso}}
             )
+            processados += 1
+    elapsed = time.time() - s0
+    logger.info(
+        'Resultado cria_campo_pesos_carga. ' +
+        'Pesquisados: %s ' % str(total) +
+        'Encontrados: %s ' % str(processados) +
+        'Tempo total: {:0.2f}s '.format(elapsed) +
+        '{:0.5f}s por registro'.format(elapsed / total)
+    )
+    return total
 
 
 if __name__ == '__main__':  # pragma: no cover

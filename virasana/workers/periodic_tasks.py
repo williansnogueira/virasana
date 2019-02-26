@@ -92,7 +92,7 @@ def periodic_updates(db):
     doisdias = datetime.now() - timedelta(days=2)
     xml2 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
     carga.dados_carga_grava_fsfiles(db, 3000, doisdias)
-    carga.cria_campo_pesos_carga(db, 1)
+    carga.cria_campo_pesos_carga(db, 1000)
     predictions_update2('ssd', 'bbox', 3000, 4)
     predictions_update2('index', 'index', 3000, 4)
     gera_indexes()

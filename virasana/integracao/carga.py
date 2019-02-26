@@ -57,7 +57,7 @@ def summary(grid_data=None, registro=None):
         dict com descrição e valor de campos. (str: str)
 
     """
-    result = {}
+    result = OrderedDict()
     if grid_data:
         # print(grid_data)
         meta = grid_data.metadata.get('carga')
@@ -86,6 +86,8 @@ def summary(grid_data=None, registro=None):
             result['Número contêiner - tara'] = conteiner_pesos
         else:
             result['CONTÊINER COM CARGA'] = ''
+            if meta.get('pesototal'):
+                result['PESO TOTAL'] = '{:0.2f}'.format(meta.get('pesototal'))
             result['Conhecimento - Manifesto - Escala'] = \
                 'CE %s - %s - %s' % \
                 (meta.get('conhecimento')[0].get('conhecimento'),
@@ -619,6 +621,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
     file_cursor = db['fs.files'].find(filtro)
     total = 0
     processados = 0
+    divergentes = 0
     s0 = time.time()
     for linha in file_cursor.limit(batch_size):
         total += 1
@@ -632,19 +635,23 @@ def cria_campo_pesos_carga(db, batch_size=1):
             pesototal = tara + peso
             peso_dif = abs(pesopred - pesototal)
             peso_dif_relativo = peso_dif / (pesopred + pesototal) / 2
-            alertapeso = peso_dif > 2000 or peso_dif_relativo > .4
+            alertapeso = (peso_dif > 2000 and peso_dif_relativo > .15) \
+                         or peso_dif_relativo > .4
             db['fs.files'].update_one(
                 {'_id': _id},
                 {'$set': {'metadata.carga.pesototal': pesototal,
                           'metadata.diferencapeso': peso_dif,
                           'metadata.alertapeso': alertapeso}}
             )
+            if alertapeso:
+                divergentes += 1
             processados += 1
     elapsed = time.time() - s0
     logger.info(
         'Resultado cria_campo_pesos_carga. ' +
         'Pesquisados: %s ' % str(total) +
         'Encontrados: %s ' % str(processados) +
+        'Com alerta: %s ' % str(divergentes) +
         'Tempo total: {:0.2f}s '.format(elapsed) +
         '{:0.5f}s por registro'.format(elapsed / total)
     )

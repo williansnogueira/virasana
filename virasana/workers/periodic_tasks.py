@@ -12,10 +12,10 @@ from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
 
 import requests
-from pymongo import MongoClient
-
 from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI, VIRASANA_URL)
+from pymongo import MongoClient
+
 from virasana.integracao import carga, get_service_password, xmli
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
@@ -65,8 +65,7 @@ def login(username, senha, session=None):
     r = session.post(url, data=dict(
         username=username,
         senha=senha,
-        csrf_token=csrf_token)
-                     )
+        csrf_token=csrf_token))
     return r
 
 
@@ -90,10 +89,10 @@ def reload_indexes():
 def periodic_updates(db):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
-    xml2 = xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
+    xmli.dados_xml_grava_fsfiles(db, 3000, doisdias)
     carga.dados_carga_grava_fsfiles(db, 3000, doisdias)
     carga.cria_campo_pesos_carga(db, 1000)
-    predictions_update2('ssd', 'bbox', 3000, 4)
+    # predictions_update2('ssd', 'bbox', 3000, 4)
     predictions_update2('index', 'index', 3000, 4)
     gera_indexes()
     predictions_update2('vaziosvm', 'vazio', 3000, 4)

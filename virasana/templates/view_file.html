@@ -164,19 +164,26 @@
             <div id="carga">
                 {% if myfile['metadata']['carga'] %}
                 <ul>
-                    {% for key, value in myfile['metadata']['carga'].items() %} {% if key == 'vazio' %}
+                    {% for key, value in myfile['metadata']['carga'].items() %}
+                    {% if key == 'vazio' %}
                     <h5>{% if value %}VAZIO{% else %}CHEIO{% endif %}</h5>
+                    {% elif key == 'pesototal' %}
+                    <h5>{{key}}: {{value}}</h5>
                     {% else %}
                     <li>{{key}}</li>
                     <ul>
                         {% if key == 'atracacao' %} {% for campo, valor in value.items() %}
                         <li> {{ campo }}: {{ valor }}</li>
-                        {% endfor %} {% else %} {% for linha in value %}
+                        {% endfor %} {% else %}
+                        {% if value is iterable %}
+                        {% for linha in value %}
                         <ul>{% for campo, valor in linha.items() %}
                             <li> {{ campo }}: {{ valor }}</li>
                             {% endfor %}
                         </ul>
-                        {% endfor %} {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                        {% endif %}
                     </ul>
                     {% endif %} {% endfor %}
                 </ul>

@@ -8,9 +8,9 @@ from json.decoder import JSONDecodeError
 
 import pymongo
 import requests
-
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI, PADMA_URL
 from ajna_commons.flask.log import logger
+
 from virasana.integracao import get_service_password
 
 BBOX_MODELS = ['ssd']
@@ -63,11 +63,12 @@ def login(username, senha, session=None):
     url = PADMA_URL + '/login'
     csrf_token = get_token(session, url)
     # print('token*********', csrf_token)
-    r = session.post(url, data=dict(
-        username=username,
-        senha=senha,
-        csrf_token=csrf_token)
-                     )
+    r = session.post(
+        url, data=dict(
+            username=username,
+            senha=senha,
+            csrf_token=csrf_token)
+    )
     return r
 
 

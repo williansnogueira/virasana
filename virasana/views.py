@@ -334,6 +334,7 @@ def file(_id=None):
         ocorrencias = Ocorrencias(db).list(_id)
     else:
         summary_ = summary_carga = 'Arquivo não encontrado.'
+        ocorrencias = []
     return render_template('view_file.html',
                            myfile=grid_data,
                            summary=summary_,
@@ -880,6 +881,7 @@ def padma_proxy(image_id):
                           files=data, headers=headers)
         result = r.text
     return result
+
 
 @app.route('/recarrega_imageindex')
 @login_required

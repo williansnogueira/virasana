@@ -39,22 +39,20 @@ class Ocorrencias():
 
     def list(self, _id):
         imagem = self._db['fs.files'].find_one({'_id': ObjectId(_id)})
-        if not imagem:
-            return None
-        # print(imagem)
         ocorrencias = []
-        for ocorrencia in imagem['metadata'].get('ocorrencias', []):
-            try:
-                ldata = datetime.strftime(ocorrencia['data'], '%d/%m/%Y %H:%M')
-            except (ValueError, TypeError):
-                ldata = ''
-            ocorrencias.append(
-                {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
-                 'usuario': ocorrencia['usuario'],
-                 'texto': ocorrencia['texto'],
-                 'data': ldata}
-            )
-
+        if imagem:
+            for ocorrencia in imagem['metadata'].get('ocorrencias', []):
+                try:
+                    ldata = datetime.strftime(ocorrencia['data'],
+                                              '%d/%m/%Y %H:%M')
+                except (ValueError, TypeError):
+                    ldata = ''
+                ocorrencias.append(
+                    {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
+                     'usuario': ocorrencia['usuario'],
+                     'texto': ocorrencia['texto'],
+                     'data': ldata}
+                )
         return ocorrencias
 
     def list_usuario(self, _id, usuario):

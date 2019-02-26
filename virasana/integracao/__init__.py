@@ -168,7 +168,7 @@ def summary(grid_data=None, registro=None):
         dict com descrição e valor de campos. (str: str)
 
     """
-    result = {}
+    result = OrderedDict()
     if grid_data:
         meta = grid_data.metadata
         upload = grid_data.uploadDate.strftime('%Y-%m-%d %H:%M')
@@ -184,6 +184,9 @@ def summary(grid_data=None, registro=None):
         'dataescaneamento').strftime('%Y-%m-%d %H:%M')
     result['Data de Carregamento da imagem no sistema'] = upload
     result['Nome Recinto'] = meta.get('recinto')
+    if meta.get('alertapeso') is True:
+        result['Alerta para diferença de peso'] = \
+            '{:0.2f}'.format(meta.get('diferencapeso'))
     return result
 
 

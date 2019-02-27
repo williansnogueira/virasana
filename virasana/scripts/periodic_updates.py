@@ -59,7 +59,7 @@ def login(username, senha, session=None):
 
 def reload_indexes():
     headers = {}
-    result = {'predictions': [], 'success': False}
+    result = {'success': False}
     s = requests.Session()
     username, password = get_service_password()
     r = login(username, password, s)
@@ -81,11 +81,11 @@ def periodic_updates(db, lote=2000):
     carga.dados_carga_grava_fsfiles(db, lote, doisdias)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)
-    predictions_update2('index', 'index', lote, 4)
+    predictions_update2('index', 'index', lote, 8)
     gera_indexes()
     print(reload_indexes())
     predictions_update2('vaziosvm', 'vazio', lote, 4)
-    predictions_update2('peso', 'peso', lote, 4)
+    predictions_update2('peso', 'peso', lote, 16)
 
 
 if __name__ == '__main__':

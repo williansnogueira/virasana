@@ -67,7 +67,7 @@ def reload_indexes():
         r = s.get(VIRASANA_URL + '/recarrega_imageindex', headers=headers)
         if r.status_code == 200:
             result = r.json()
-        # print(r.json())
+        print(r.json())
     except JSONDecodeError as err:
         print('Erro em reload_index(JSON inválido) %s HTTP Code:%s ' %
               (err, r.status_code))

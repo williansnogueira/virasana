@@ -64,10 +64,11 @@ def reload_indexes():
     username, password = get_service_password()
     r = login(username, password, s)
     try:
+        print(VIRASANA_URL + '/recarrega_imageindex')
         r = s.get(VIRASANA_URL + '/recarrega_imageindex', headers=headers)
         if r.status_code == 200:
             result = r.json()
-        print(r.json())
+        print(result)
     except JSONDecodeError as err:
         print('Erro em reload_index(JSON inválido) %s HTTP Code:%s ' %
               (err, r.status_code))

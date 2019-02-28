@@ -15,8 +15,8 @@ sobre a base para informar os usuários.
 
 """
 import logging
-import pickle
 import os
+import pickle
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 
@@ -24,10 +24,10 @@ import plotly
 import plotly.graph_objs as go
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from ajna_commons.flask.log import logger
+from ajna_commons.flask.login import DBUser
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import OperationFailure
 
-from ajna_commons.flask.login import DBUser
 from virasana.integracao import carga
 from virasana.integracao import xmli
 
@@ -97,22 +97,24 @@ def create_indexes(db):
                                  ('metadata.recinto', ASCENDING)])
 
 
-def gridfs_count(db, filtro={}, limit=10000):
+def gridfs_count(db, filtro={}, limit=2000, campos=[]):
     """Aplica filtro, retorna contagem."""
-    campos = []
-    logger.debug('integracao.gridfs_count filtro:%s hint:%s' %
-                 (filtro, campos))
     if filtro:
-        campos = [(key, 1) for key in filtro.keys()]
-        print(campos)
+        if not campos:
+            campos = [(key, 1) for key in filtro.keys()]
+        logger.debug('integracao.gridfs_count filtro:%s hint:%s' %
+                     (filtro, campos))
         try:
-            return db['fs.files'].count_documents(
-                filter=filtro,
-                hint=campos,
-                limit=limit)
-        except OperationFailure:
-            return db['fs.files'].count_documents(
-                filter=filtro, limit=limit)
+            params = dict(filter=filtro,
+                          hint=campos)
+            if limit:
+                params['limit'] = limit
+            print(params)
+            return db['fs.files'].count_documents(**params)
+        except OperationFailure as err:
+            logger.error(err)
+            params.pop('hint')
+            return db['fs.files'].count_documents(**params)
     return db['fs.files'].count_documents({})
 
 
@@ -190,22 +192,40 @@ def summary(grid_data=None, registro=None):
     return result
 
 
+def get_data(db, data, filtro_data, campos, ordem=1):
+    linha = db['fs.files'].find(
+        filter=filtro_data,
+        projection={data: 1},
+        # hint=campos
+    ).sort(data, ordem).limit(1)
+    data_path = data
+    try:
+        linha = next(linha)
+        for data_path in data.split('.'):
+            if linha:
+                linha = linha.get(data_path)
+        if isinstance(linha, datetime):
+            linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
+        return linha, data_path
+    except StopIteration:  # Não há registro nas datas filtradas
+        return 'Inexistente para o período', data_path
+
+
 def stats_resumo_imagens(db, datainicio=None, datafim=None):
     """Números gerais do Banco de Dados e suas integrações.
 
     Estatísticas gerais sobre as imagens
     """
-    stats = {}
+    stats = OrderedDict()
     filtro = IMAGENS
     if datainicio and datafim:
-        logger.debug('Data inicio % s ' % datainicio)
-        logger.debug('Data fim % s ' % datafim)
+        logger.debug('STATS IMAGENS Inicio %s Fim %s.' % (datainicio, datafim))
         filtro['metadata.dataescaneamento'] = {
             '$gt': datainicio, '$lt': datafim}
     logger.debug('Consultando Totais')
     now_atual = datetime.now()
     stats['Data do levantamento'] = now_atual
-    total = gridfs_count(db, filtro)
+    total = gridfs_count(db, filtro, limit=None)
     logger.debug('Total %s ' % filtro)
     stats['Total de imagens'] = total
     filtro_carga = dict(filtro, **carga.FALTANTES)
@@ -218,40 +238,23 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     logger.debug('Total %s ' % filtro_xml)
     # DATAS
     logger.debug('Totais consultados')
-    datas = {'imagem': DATA,
-             'XML': xmli.DATA,
-             'Carga': carga.DATA}
+    datas = OrderedDict()
+    datas['imagem'] = DATA
+    datas['XML'] = xmli.DATA
+    datas['Carga'] = carga.DATA
     for base, data in datas.items():
         filtro_data = dict(filtro)
-        if data != DATA:
+        if filtro_data.get(data):
+            filtro_data[data].update({'$ne': None})
+        else:
             filtro_data[data] = {'$ne': None}
         campos = [(key, 1) for key in filtro_data.keys()]
-        print('*********************', campos)
-        logger.debug('Inicio consulta data %s Filtro:%s Hint:%s'
+        logger.debug('Inicio consulta data projection:%s Filtro:%s Hint:%s'
                      % (data, filtro_data, campos))
-        linha = db['fs.files'].find(
-            filter=filtro_data,
-            projection=data,
-            # hint=campos
-        ).sort(data, 1).limit(1)
-        try:
-            linha = next(linha)
-            for data_path in data.split('.'):
-                if linha:
-                    linha = linha.get(data_path)
-            if isinstance(linha, datetime):
-                linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
-            stats['Menor ' + data_path + ' ' + base] = linha
-            linha = db['fs.files'].find(filtro_data).sort(data, -1).limit(1)
-            linha = next(linha)
-            for data_path in data.split('.'):
-                if linha:
-                    linha = linha.get(data_path)
-            if isinstance(linha, datetime):
-                linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
-            stats['Maior ' + data_path + ' ' + base] = linha
-        except StopIteration:  # Não há registro nas datas filtradas
-            pass
+        adata, data_path = get_data(db, data, filtro_data, campos)
+        stats['Menor ' + data_path + ' ' + base] = adata
+        adata, data_path = get_data(db, data, filtro_data, campos, -1)
+        stats['Maior ' + data_path + ' ' + base] = adata
     # Qtde por Terminal
     logger.debug('Inicio consulta recintos 1. Filtro: %s ' % filtro)
     cursor = db['fs.files'].aggregate(
@@ -263,8 +266,9 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     recintos = dict()
     for recinto in cursor:
         recintos[recinto['_id']] = recinto['count']
-    ordered = OrderedDict(
-        {key: recintos[key] for key in sorted(recintos)})
+    ordered = OrderedDict()
+    for key in sorted(recintos.keys()):
+        ordered[key] = recintos[key]
     stats['recinto'] = ordered
     logger.debug('Inicio consulta recintos 2')
     cursor = db['stat_recinto'].find()
@@ -503,10 +507,10 @@ if __name__ == '__main__':
     os.environ['DEBUG'] = '1'
     logger.setLevel(logging.DEBUG)
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    # logger.info('Criando índices para metadata')
-    # create_indexes(db)
-    # logger.info('Atualizando estatísticas')
-    # atualiza_stats(db)
+    logger.info('Criando índices para metadata')
+    create_indexes(db)
+    logger.info('Atualizando estatísticas')
+    atualiza_stats(db)
     logger.info('Exibindo estatísticas')
     datainicio = datetime(2017, 7, 1)
     datafim = datetime.now()

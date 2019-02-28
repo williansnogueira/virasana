@@ -830,6 +830,7 @@ def stats():
         start = datetime.combine(form.start.data, datetime.min.time())
         end = datetime.combine(form.end.data, datetime.max.time())
         stats_cache = stats_resumo_imagens(db, start, end)
+        # logger.debug(stats_cache)
     return render_template('stats.html',
                            stats=stats_cache,
                            oform=form)
@@ -842,6 +843,7 @@ def pie_plotly():
     global stats_cache
     if stats_cache:
         stats = stats_cache['recinto']
+        # print(stats)
         output = plot_pie_plotly(list(stats.values()), list(stats.keys()))
         return output
     return ''
@@ -852,10 +854,11 @@ def pie_plotly():
 def bar_plotly():
     """Renderiza gráfico no plotly e serializa via HTTP/HTML."""
     global stats_cache
-    print('stats_cache', stats_cache)
+    # print('stats_cache', stats_cache)
     if stats_cache:
         recinto = request.args.get('recinto')
         stats = stats_cache['recinto_mes'].get(recinto)
+        # print(stats_cache['recinto_mes'])
         if stats:
             output = plot_bar_plotly(list(stats.values()), list(stats.keys()))
             return output
@@ -891,9 +894,10 @@ def recarrega_imageindex():
     try:
         img_search = ImageSearch(app.config['mongodb'])
         app.config['img_search'] = img_search
-        result['sucess'] = True
         result['size'] = img_search.get_size()
+        result['sucess'] = True
     except (IOError, FileNotFoundError) as err:
+        logger.error(err)
         result['sucess'] = False
         result['erro'] = str(err)
     return jsonify(result)

@@ -653,7 +653,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
         'Encontrados: %s ' % str(processados) +
         'Com alerta: %s ' % str(divergentes) +
         'Tempo total: {:0.2f}s '.format(elapsed) +
-        '{:0.5f}s por registro'.format(elapsed / total)
+        '{:0.5f}s por registro'.format((elapsed / total) if total else 0)
     )
     return total
 

@@ -11,6 +11,8 @@ Este arquivo pode ser chamado em um prompt de comando no Servidor ou
 programado para rodar via crontab, conforme exempo em /periodic_updates.sh
 
 """
+import logging
+import os
 import sys
 import time
 from datetime import datetime, timedelta
@@ -19,9 +21,11 @@ from json.decoder import JSONDecodeError
 import requests
 from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI, VIRASANA_URL)
+from ajna_commons.flask.log import logger
 from pymongo import MongoClient
 
-from virasana.integracao import carga, get_service_password, xmli
+from virasana.integracao import atualiza_stats, \
+    carga, get_service_password, xmli
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
 
@@ -80,6 +84,7 @@ def periodic_updates(db, lote=2000):
     doisdias = datetime.now() - timedelta(days=2)
     xmli.dados_xml_grava_fsfiles(db, lote, doisdias)
     carga.dados_carga_grava_fsfiles(db, lote, doisdias)
+    atualiza_stats(db)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)
     predictions_update2('index', 'index', lote, 8)
@@ -90,6 +95,8 @@ def periodic_updates(db, lote=2000):
 
 
 if __name__ == '__main__':
+    os.environ['DEBUG'] = '1'
+    logger.setLevel(logging.DEBUG)
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         daemonize = '--daemon' in sys.argv

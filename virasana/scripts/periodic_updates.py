@@ -79,7 +79,7 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=500):
+def periodic_updates(db, lote=200):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)

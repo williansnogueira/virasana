@@ -79,7 +79,7 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=200):
+def periodic_updates(db, lote=500):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)
@@ -107,8 +107,8 @@ if __name__ == '__main__':
         while daemonize:
             logger.info('Dormindo 10 minutos... ')
             logger.info('Tempo decorrido %s segundos.' % (time.time() - s0))
-            time.sleep(10)
-            if time.time() - s0 > 600:
+            time.sleep(30)
+            if time.time() - s0 > 300:
                 logger.info('Periódico chamado rodada %s' % counter)
                 counter += 1
                 periodic_updates(db)

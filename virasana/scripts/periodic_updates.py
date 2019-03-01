@@ -101,14 +101,14 @@ if __name__ == '__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         daemonize = '--daemon' in sys.argv
-        periodic_updates(db)
-        s0 = time.time()
+        # periodic_updates(db)
+        s0 = time.time() - 600
         counter = 1
         while daemonize:
-            time.sleep(10)
             logger.info('Dormindo 10 minutos... ')
-            logger.info('Tempo decorrido %s segundos.' % (time.time() - s0 ))
-            if time.time() - s0 > 6000:
+            logger.info('Tempo decorrido %s segundos.' % (time.time() - s0))
+            time.sleep(10)
+            if time.time() - s0 > 600:
                 logger.info('Periódico chamado rodada %s' % counter)
                 counter += 1
                 periodic_updates(db)

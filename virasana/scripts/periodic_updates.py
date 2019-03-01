@@ -79,7 +79,7 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=2000):
+def periodic_updates(db, lote=500):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     xmli.dados_xml_grava_fsfiles(db, lote, doisdias)

@@ -79,12 +79,12 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=200):
+def periodic_updates(db, lote=300):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)
-    xmli.dados_xml_grava_fsfiles(db, lote, doisdias)
-    carga.dados_carga_grava_fsfiles(db, lote, cincodias)
+    xmli.dados_xml_grava_fsfiles(db, lote*2, doisdias)
+    carga.dados_carga_grava_fsfiles(db, lote*5, cincodias)
     atualiza_stats(db)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)
@@ -92,7 +92,7 @@ def periodic_updates(db, lote=200):
     gera_indexes()
     print(reload_indexes())
     predictions_update2('vaziosvm', 'vazio', lote, 4)
-    predictions_update2('peso', 'peso', lote, 16)
+    predictions_update2('peso', 'peso', lote*2, 16)
 
 
 if __name__ == '__main__':

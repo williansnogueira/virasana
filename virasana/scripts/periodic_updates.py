@@ -79,7 +79,7 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=1000):
+def periodic_updates(db, lote=200):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)
@@ -105,6 +105,6 @@ if __name__ == '__main__':
         s0 = time.time()
         while daemonize:
             time.sleep(2)
-            if time.time() - s0 > (30 * 60):
+            if time.time() - s0 > (10 * 60):
                 periodic_updates(db)
                 s0 = time.time()

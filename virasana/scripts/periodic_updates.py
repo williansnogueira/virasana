@@ -79,11 +79,12 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=500):
+def periodic_updates(db, lote=1000):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
+    cincodias = datetime.now() - timedelta(days=5)
     xmli.dados_xml_grava_fsfiles(db, lote, doisdias)
-    carga.dados_carga_grava_fsfiles(db, lote, doisdias)
+    carga.dados_carga_grava_fsfiles(db, lote, cincodias)
     atualiza_stats(db)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)

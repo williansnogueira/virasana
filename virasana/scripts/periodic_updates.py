@@ -106,7 +106,7 @@ if __name__ == '__main__':
         counter = 1
         while daemonize:
             time.sleep(2)
-            if time.time() - s0 > (10 * 60):
+            if time.time() - s0 > (5 * 60):
                 logger.info('Periódico chamado rodada %s' % counter)
                 counter += 1
                 periodic_updates(db)

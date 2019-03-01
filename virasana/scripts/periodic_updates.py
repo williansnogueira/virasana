@@ -79,7 +79,7 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=200):
+def periodic_updates(db, lote=500):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)
@@ -92,7 +92,7 @@ def periodic_updates(db, lote=200):
     gera_indexes()
     print(reload_indexes())
     predictions_update2('vaziosvm', 'vazio', lote, 4)
-    predictions_update2('peso', 'peso', lote * 2, 16)
+    predictions_update2('peso', 'peso', lote, 16)
 
 
 if __name__ == '__main__':
@@ -105,9 +105,11 @@ if __name__ == '__main__':
         s0 = time.time()
         counter = 1
         while daemonize:
-            logger.info('Periódico chamado sleep 20 %s' % counter)
-            time.sleep(20)
-            logger.info('Periódico chamado rodada %s' % counter)
-            counter += 1
-            periodic_updates(db)
-            s0 = time.time()
+            time.sleep(10)
+            logger.info('Dormindo 10 minutos... ')
+            logger.info('Tempo decorrido %s segundos.' % (time.time() - s0 ))
+            if time.time() - s0 > 6000:
+                logger.info('Periódico chamado rodada %s' % counter)
+                counter += 1
+                periodic_updates(db)
+                s0 = time.time()

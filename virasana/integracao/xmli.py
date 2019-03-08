@@ -89,6 +89,7 @@ def xml_todict(xml) -> dict:
             print(str(err))
             return result
     alerta = \
+        (xml.find('>AL<') != -1) or \
         (xml.find('>al<') != -1) or \
         (xml.find('>ALER') != -1) or \
         (xml.find('>aler') != -1) or \

@@ -148,6 +148,7 @@ class FlaskTestCase(unittest.TestCase):
         print(rv.data)
 
     def test_tags_usuario(self):
+        self.login('ajna', 'ajna')
         _id = mongodb['fs.files'].insert_one({'teste': True}).inserted_id
         try:
 
@@ -163,6 +164,7 @@ class FlaskTestCase(unittest.TestCase):
             mongodb['fs.files'].delete_one({'_id': ObjectId(_id)})
 
     def test_ocorrencias_usuario(self):
+        self.login('ajna', 'ajna')
         _id = mongodb['fs.files'].insert_one({'teste': True}).inserted_id
         try:
 

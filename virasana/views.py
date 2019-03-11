@@ -432,6 +432,19 @@ def image_ocorrencia(_id, success=True):
 @csrf.exempt
 @app.route('/tag/add', methods=['POST', 'GET'])
 def tag_add():
+    """Função para inserção de tag na imagem
+
+    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
+    e a tag passada.
+
+    Args:
+        _id: ObjectId do arquivo
+        tag: String (app usa lista de códigos com tupla (id, desc))
+
+    Returns:
+        json['success']: True ou False
+
+    """
     _id = request.values.get('_id')
     tag = request.values.get('tag')
     data = {'success': False}
@@ -453,6 +466,19 @@ def tag_add():
 @csrf.exempt
 @app.route('/tag/del', methods=['POST', 'GET'])
 def tag_del():
+    """Função para exclusão de tag na imagem
+
+    Faz update no fs.files, excluindo do array o nome do usuário ativo
+    e a tag passada, se existir.
+
+    Args:
+        _id: ObjectId do arquivo
+        tag: String (app usa lista de códigos com tupla (id, desc))
+
+    Returns:
+        json['success']: True ou False
+
+    """
     _id = request.values.get('_id')
     tag = request.values.get('tag')
     data = {'success': False}
@@ -469,37 +495,6 @@ def tag_del():
         # raise
     return jsonify(data)
 
-
-def image_tag(_id, tag):
-    """Função para inserção de tag na imagem
-
-    Faz update no fs.files, inserindo em um array com o nome do usuário ativo
-    e a tag passada.
-
-    Args:
-        _id: ObjectId do arquivo
-        tag: String (app usa lista de códigos com tupla (id, desc))
-
-    Returns:
-        json['success']: True ou False
-
-    """
-    _id = request.form.get('_id')
-    tag = request.form.get('tag')
-    data = {'success': False}
-    try:
-        db = app.config['mongodb']
-        tags = Tags(db)
-        data['success'] = tags.add(_id=ObjectId(_id),
-                                   usuario=current_user.id,
-                                   tag=tag)
-        data['tags'] = tags.list(ObjectId(_id))
-    except Exception as err:
-        logger.error(err, exc_info=True)
-        data['error'] = str(err)
-        # raise
-
-    return jsonify(data)
 
 
 @app.route('/image')

@@ -19,11 +19,11 @@ from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
 
 import requests
+from pymongo import MongoClient
+
 from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI, VIRASANA_URL)
 from ajna_commons.flask.log import logger
-from pymongo import MongoClient
-
 from virasana.integracao import atualiza_stats, \
     carga, get_service_password, xmli
 from virasana.scripts.gera_indexes import gera_indexes
@@ -79,11 +79,12 @@ def reload_indexes():
     return result
 
 
-def periodic_updates(db, lote=2000):
+def periodic_updates(db, lote=500):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
-    xmli.dados_xml_grava_fsfiles(db, lote, doisdias)
-    carga.dados_carga_grava_fsfiles(db, lote, doisdias)
+    cincodias = datetime.now() - timedelta(days=5)
+    xmli.dados_xml_grava_fsfiles(db, lote * 2, doisdias)
+    carga.dados_carga_grava_fsfiles(db, lote * 5, cincodias)
     atualiza_stats(db)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)
@@ -100,10 +101,15 @@ if __name__ == '__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         daemonize = '--daemon' in sys.argv
-        periodic_updates(db)
-        s0 = time.time()
+        # periodic_updates(db)
+        s0 = time.time() - 600
+        counter = 1
         while daemonize:
-            time.sleep(2)
-            if time.time() - s0 > (30 * 60):
+            logger.info('Dormindo 10 minutos... ')
+            logger.info('Tempo decorrido %s segundos.' % (time.time() - s0))
+            time.sleep(30)
+            if time.time() - s0 > 300:
+                logger.info('Periódico chamado rodada %s' % counter)
+                counter += 1
                 periodic_updates(db)
                 s0 = time.time()

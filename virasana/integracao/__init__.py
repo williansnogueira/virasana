@@ -230,11 +230,13 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     stats['Total de imagens'] = total
     filtro_carga = dict(filtro, **carga.FALTANTES)
     stats['Imagens com info do Carga'] = total - \
-                                         gridfs_count(db, filtro_carga)
+                                         gridfs_count(db, filtro_carga,
+                                                      limit=None)
     logger.debug('Total %s ' % filtro_carga)
     filtro_xml = dict(filtro, **xmli.FALTANTES)
     stats['Imagens com info do XML'] = total - \
-                                       gridfs_count(db, filtro_xml)
+                                       gridfs_count(db, filtro_xml
+                                                    , limit=None)
     logger.debug('Total %s ' % filtro_xml)
     # DATAS
     logger.debug('Totais consultados')

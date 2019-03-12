@@ -109,6 +109,7 @@ def xml_todict(xml) -> dict:
         (xml.find('>aler') != -1) or \
         (xml.find('>Aler') != -1)
     result['alerta'] = alerta
+
     allfields = [*FIELDS, *XML_DEPARA.keys()]
     for field in allfields:
         for tag in root.iter(field):

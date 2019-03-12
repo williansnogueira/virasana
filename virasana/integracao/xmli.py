@@ -31,13 +31,15 @@ TAGS_NUMERO = ['ContainerId', 'container_no', 'ContainerID1']
 TAGS_DATA = ['Date', 'SCANTIME', 'ScanTime']
 
 # Abaixo um dicionário para traduzir tags de XMLs em outro padrão
+# para um nome comum - NOME DIFERENTE: NOME COMUM
 XML_DEPARA = {
-    'ContainerId': ['container_no', 'ContainerID1'],
-    'Date': ['SCANTIME', 'ScanTime'],
-    'Login': ['OPERATORID'],
-    'Custom2': ['TYPE']
+    'container_no': 'ContainerId',
+    'ContainerID1': 'ContainerId',
+    'SCANTIME': 'Date',
+    'ScanTime': 'Date',
+    'OPERATORID': 'Login',
+    'TYPE': 'Custom2'
 }
-
 
 # Fields to be converted to ISODate
 DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
@@ -107,8 +109,8 @@ def xml_todict(xml) -> dict:
         (xml.find('>aler') != -1) or \
         (xml.find('>Aler') != -1)
     result['alerta'] = alerta
-
-    for field in FIELDS:
+    allfields = [*FIELDS, *XML_DEPARA.keys()]
+    for field in allfields:
         for tag in root.iter(field):
             text = ''
             if tag.text:
@@ -125,13 +127,17 @@ def xml_todict(xml) -> dict:
                 except ValueError as err:
                     logger.info(err)
                     pass
-            result[field.lower()] = text
+            akey = XML_DEPARA.get(field)
+            if akey is None:
+                akey = field
+            result[akey.lower()] = text
     lista_conteineres = []
-    for tag in root.iter('ContainerId'):
-        numero = tag.text
-        if numero is not None:
-            numero = numero.replace('?', 'X')
-            lista_conteineres.append(numero.casefold())
+    for atag in TAGS_NUMERO:
+        for tag in root.iter(atag):
+            numero = tag.text
+            if numero is not None:
+                numero = numero.replace('?', 'X')
+                lista_conteineres.append(numero.casefold())
     result['container'] = lista_conteineres
     return result
 

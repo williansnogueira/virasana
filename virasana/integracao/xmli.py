@@ -25,7 +25,19 @@ FALTANTES = {'metadata.xml.date': None,
 # data adicionados ontem ao AVATAR.
 FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
           'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
-          'UpdateCount', 'LastStateDateTime')
+          'UpdateCount', 'LastStateDateTime', 'Custom1', 'Custom2')
+
+TAGS_NUMERO = ['ContainerId', 'container_no', 'ContainerID1']
+TAGS_DATA = ['Date', 'SCANTIME', 'ScanTime']
+
+# Abaixo um dicionário para traduzir tags de XMLs em outro padrão
+XML_DEPARA = {
+    'ContainerId': ['container_no', 'ContainerID1'],
+    'Date': ['SCANTIME', 'ScanTime'],
+    'Login': ['OPERATORID'],
+    'Custom2': ['TYPE']
+}
+
 
 # Fields to be converted to ISODate
 DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
@@ -94,6 +106,7 @@ def xml_todict(xml) -> dict:
         (xml.find('>aler') != -1) or \
         (xml.find('>Aler') != -1)
     result['alerta'] = alerta
+
     for field in FIELDS:
         for tag in root.iter(field):
             text = ''
@@ -101,9 +114,15 @@ def xml_todict(xml) -> dict:
                 text = sanitizar(tag.text)
             if field in DATE_FIELDS:
                 try:
-                    text = text.split('.')[0]
+                    if 'Z' in text:
+                        parse_str = '%Y-%m-%dT%H:%M:%S.%z'
+                    elif '_' in text:
+                        parse_str = '%Y-%m-%d_%H-%M-%S'
+                    else:
+                        parse_str = '%Y-%m-%d %H-%M-%S'
                     text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
-                except ValueError:
+                except ValueError as err:
+                    logger.info(err)
                     pass
             result[field.lower()] = text
     lista_conteineres = []

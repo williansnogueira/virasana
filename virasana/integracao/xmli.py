@@ -127,6 +127,8 @@ def xml_todict(xml) -> dict:
                                 (text, parse_str, err))
                     try:
                         text = text.split('.')[0]
+                        text = text.replace('Z', '')
+                        text = text.replace('z', '')
                         parse_str = '%Y-%m-%d %H:%M:%S'
                         text = datetime.strptime(text, parse_str)
                     except ValueError as err:

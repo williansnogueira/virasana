@@ -11,7 +11,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Celery',
-        'cv2',
         'defusedxml',
         'Flask',
         'Flask-BootStrap',
@@ -22,6 +21,7 @@ setup(
         'Flask-wtf',
         'gunicorn',
         'matplotlib',
+        'opencv-python',
         'pymongo',
         'plotly',
         'pandas',

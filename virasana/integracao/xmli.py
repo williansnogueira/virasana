@@ -126,7 +126,7 @@ def xml_todict(xml) -> dict:
                         parse_str = '%Y-%m-%d %H-%M-%S'
                     text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
                 except ValueError as err:
-                    logger.info(err)
+                    logger.info('parser: %s err: %s' % (parse_str, err))
                     pass
             akey = XML_DEPARA.get(field)
             if akey is None:

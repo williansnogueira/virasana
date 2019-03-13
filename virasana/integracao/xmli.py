@@ -122,7 +122,7 @@ def xml_todict(xml) -> dict:
                     for char in 'tT_':
                         text = text.replace(char, ' ')
                     parse_str = '%Y-%m-%d %H-%M-%S'
-                    text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
+                    text = datetime.strptime(text, parse_str)
                 except ValueError as err:
                     logger.info('text: %s parser: %s err: %s' %
                                 (text, parse_str, err))

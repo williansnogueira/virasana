@@ -136,7 +136,7 @@ def xml_todict(xml) -> dict:
             if akey is None:
                 akey = field
             result[akey.lower()] = text
-    lista_conteinpythoneres = []
+    lista_conteineres = []
     for atag in TAGS_NUMERO:
         for tag in root.iter(atag):
             numero = tag.text

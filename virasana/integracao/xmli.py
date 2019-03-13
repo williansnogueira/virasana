@@ -199,8 +199,11 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                 xml_filename = filename[:posi]
             else:
                 xml_filename = filename[:-11]
-        xml_filename = xml_filename + '.xml'
-        xml_document = db['fs.files'].find_one({'filename': xml_filename})
+        final_filename = xml_filename + '.xml'
+        xml_document = db['fs.files'].find_one({'filename': final_filename})
+        if not xml_document:
+            final_filename = xml_filename + '.XML'
+            xml_document = db['fs.files'].find_one({'filename': final_filename})
         if not xml_document:
             print(xml_filename, ' não encontrado')
             continue

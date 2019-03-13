@@ -1,0 +1,31 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+<div id="main" class="container-fluid">
+    <div id="top" class="row">
+    </div>
+    <div id="img_enhance" class="row">
+        <h3>Resumo</h3>
+        <div class="col-md-6">
+            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+        </div>
+        <div class="col-md-6">
+            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+        </div>
+        <div class="col-md-6">
+            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+        </div>
+        <div class="col-md-6">
+            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+        </div>
+    </div>
+</div>
+<div id="bottom" class="row">
+    <div class="col-md-12">
+        AJNA - Receita Federal do Brasil 2017
+    </div>
+</div>
+</div>
+<!-- /#main -->
+{% endblock %} {% block scripts %} {{super()}}
+<script src="/static/js/jquery-ui.min.js"></script>
+<script type="text/javascript">
+</script> {% endblock %}

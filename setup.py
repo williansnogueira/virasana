@@ -11,6 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Celery',
+        'cv2',
         'defusedxml',
         'Flask',
         'Flask-BootStrap',

@@ -343,6 +343,16 @@ def file(_id=None):
                            ocorrencias=ocorrencias)
 
 
+@app.route('/view_image/<_id>')
+@login_required
+def file(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe o arquivo e filtros para melhoria da visão.
+    """
+    return render_template('view_image.html', _id=_id)
+
+
 @login_required
 @csrf.exempt
 @app.route('/ocorrencia/add', methods=['POST', 'GET'])
@@ -494,7 +504,6 @@ def tag_del():
         data['error'] = str(err)
         # raise
     return jsonify(data)
-
 
 
 @app.route('/image')

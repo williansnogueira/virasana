@@ -118,7 +118,7 @@ def xml_todict(xml) -> dict:
                 text = sanitizar(tag.text)
             if field in DATE_FIELDS:
                 try:
-                    if 'Z' in text:
+                    if 'Z' in text or 'z' in text:
                         parse_str = '%Y-%m-%dT%H:%M:%S.%z'
                     elif '_' in text:
                         parse_str = '%Y-%m-%d_%H-%M-%S'

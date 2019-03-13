@@ -32,8 +32,8 @@ from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
 from wtforms import (BooleanField, DateField, FloatField, IntegerField,
-                     SelectField, StringField)
-from wtforms.validators import optional
+                     PasswordField, SelectField, StringField)
+from wtforms.validators import DataRequired, optional
 
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, plot_bar_plotly,
@@ -304,7 +304,6 @@ def json_get(_id=None):
 
 class TagsForm(FlaskForm):
     tags = SelectField(u'Tags de usuário',
-                       choices=Tags.list_tags(),
                        default=[0])
 
 
@@ -318,7 +317,9 @@ def file(_id=None):
     """
     db = app.config['mongodb']
     fs = GridFS(db)
+    tags_object = Tags(db)
     form_tags = TagsForm()
+    form_tags.tags.choices = tags_object.tags_text
     if request.args.get('filename'):
         filename = mongo_sanitizar(request.args.get('filename'))
         logger.warn('Filename %s ' % filename)
@@ -331,7 +332,7 @@ def file(_id=None):
     if grid_data:
         summary_ = dict_to_html(summary(grid_data=grid_data))
         summary_carga = dict_to_html(carga.summary(grid_data=grid_data))
-        tags = Tags(db).list(_id)
+        tags = tags_object.list(_id)
         ocorrencias = Ocorrencias(db).list(_id)
     else:
         summary_ = summary_carga = 'Arquivo não encontrado.'
@@ -753,7 +754,7 @@ class FilesForm(FlaskForm):
         filtros_auditoria_desc.append((key, value['descricao']))
     numero = StringField(u'Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=90))
+                      default=date.today() - timedelta(days=10))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
@@ -761,9 +762,6 @@ class FilesForm(FlaskForm):
                                    choices=filtros_auditoria_desc,
                                    default=0)
     filtro_tags = SelectField(u'Tags de usuário',
-                              choices=sorted(
-                                  Tags.list_tags(), key=lambda x: x[1]
-                              ),
                               default=[0])
 
 
@@ -829,16 +827,20 @@ def files():
     npaginas = 1
     pagina_atual = 1
     order = None
+    tags_object = Tags(db)
     form_files = FilesForm()
+    form_files.filtro_tags.choices = tags_object.tags_text
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
         print('****************************', request.form)
         form_files = FilesForm(**request.form)
+        form_files.filtro_tags.choices = tags_object.tags_text
         filtro, pagina_atual, order = valida_form_files(form_files, filtro)
     else:
         numero = request.args.get('numero')
         if numero:
             form_files = FilesForm(numero=numero)
+            form_files.filtro_tags.choices = tags_object.tags_text
             filtro['metadata.numeroinformado'] = \
                 {'$regex': '^' + mongo_sanitizar(numero)}
     if filtro:
@@ -973,6 +975,26 @@ def recarrega_imageindex():
         result['erro'] = str(err)
     return jsonify(result)
 
+class PasswordForm(FlaskForm):
+    password = PasswordField('Nova Senha', validators=[DataRequired()])
+
+@app.route('/account', methods=["GET", "POST"])
+@login_required
+def account():
+    """Permite ver usuário e mudar senha"""
+    # TODO: colocar no blueprint de login
+    form = PasswordForm()
+    db = app.config['mongodb']
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = current_user
+            newpassword = form.password.data
+            user.change_password(newpassword)
+            flash('Senha alterada com successo!', 'success')
+            return redirect(url_for('account'))
+
+    return render_template('account.html', form=form)
+
 
 @nav.navigation()
 def mynavbar():
@@ -981,6 +1003,7 @@ def mynavbar():
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),
              View('Estatísticas', 'stats'),
+             View('Mudar senha', 'account'),
              ]
     if current_user.is_authenticated:
         items.append(View('Sair', 'commons.logout'))

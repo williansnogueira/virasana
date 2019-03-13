@@ -82,7 +82,8 @@ class Ocorrencias():
 
 
 class Tags():
-    dict_tags = {
+
+    hardcoded_tags = {
         '0': ' Selecione tag desejada',
         '1': 'Cocaína',
         '2': 'Armas',
@@ -93,15 +94,34 @@ class Tags():
         '7': 'Erro de predição - peso',
         '8': 'Erro de predição - outro'
     }
-    tags_text = [(k, k + ' - ' + v) for k, v in dict_tags.items()]
-    tags_text = sorted(tags_text)
 
-    @classmethod
-    def list_tags(cls):
-        return cls.tags_text
+    def mount_tags(self):
+        """Para evitar a criação desmesurada de tags elas serão centralizadas.
+
+        Aqui, se a tabela não existir no banco, cria algumas hard_coded.
+        Depois, o administrador poderá criar novas no BD.
+        """
+        cursor = self._db['Tags'].find()
+        tags = list(cursor)
+        if len(tags) == 0:
+            # Se não existe tabela, cria, preenche e chama de novo mesmo método
+            for id, descricao in self.hardcoded_tags.items():
+                self._db['Tags'].insert_one({'id': id,
+                                       'descricao': descricao})
+            return self.mount_tags()
+        tags_text = []
+        for row in tags:
+            id = row['id']
+            descricao = row['descricao']
+            self.dict_tags[id] = descricao
+            tags_text.append((id, id + '- ' + descricao))
+        self.tags_text = sorted(tags_text)
 
     def __init__(self, db):
         self._db = db
+        self.dict_tags = {}
+        self.tags_text = []
+        self.mount_tags()
 
     def add(self, _id, usuario, tag):
         self._db['fs.files'].update_one(
@@ -126,7 +146,7 @@ class Tags():
             tags.append(
                 {'usuario': tag['usuario'],
                  'tag': tag['tag'],
-                 'descricao': Tags.dict_tags.get(tag['tag'], '')
+                 'descricao': self.dict_tags.get(tag['tag'], '')
                  }
             )
         return tags

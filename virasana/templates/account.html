@@ -1,0 +1,32 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+{% from "_formhelpers.html" import render_field %}
+<div id="main" class="container-fluid">
+    <div id="top" class="row">
+    </div>
+    <div id="account" class="row">
+        <h3>Mudança de senha</h3>
+        <div class="user-profile">
+            <div class="page-header">
+                <h2>Mudança de senha</h2>
+            </div>
+            <form action="{{ url_for('account') }}" method="POST">
+                {{ form.csrf_token }}
+                <dl>
+                    {{ render_field(form.password, placeholder="Entre com a nova senha") }}
+                </dl>
+                <button class="btn btn-sm btn-success" type="submit">Mudar senha</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="bottom" class="row">
+    <div class="col-md-12">
+        AJNA - Receita Federal do Brasil 2017
+    </div>
+</div>
+</div>
+<!-- /#main -->
+{% endblock %} {% block scripts %} {{super()}}
+<script src="/static/js/jquery-ui.min.js"></script>
+<script type="text/javascript">
+</script> {% endblock %}

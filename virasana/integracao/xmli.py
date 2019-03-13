@@ -118,7 +118,7 @@ def xml_todict(xml) -> dict:
                 text = sanitizar(tag.text)
             if field in DATE_FIELDS:
                 try:
-                    text = text.aplit('.')[0]
+                    text = text.split('.')[0]
                     for char in 'tT_':
                         text = text.replace(char, ' ')
                     parse_str = '%Y-%m-%d %H-%M-%S'

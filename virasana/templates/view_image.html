@@ -3,18 +3,43 @@
     <div id="top" class="row">
     </div>
     <div id="img_enhance" class="row">
-        <h3>Resumo</h3>
-        <div class="col-md-6">
-            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+        <h3>Filtros de imagem</h3>
+        <div id="sliders" class="row">
+            <form method="POST" id="imgform" action="/virasana/view_image">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="_id" value="{{ _id }}"/>
+                <div class="slidecontainer col-md-3">
+                    Aumento do contraste (zerar para original)
+                    <input type="range" min="0" max="48" value="{{ imgform.cutoff.data }}" class="slider" id="cutoff" name="cutoff" onchange="this.form.submit()">
+                </div>
+                <div class="slidecontainer col-md-3">
+                    Multiplicador da colorização
+                    <input type="range" min="10" max="40" value="{{ imgform.alpha.data }}" class="slider" id="alpha" name="alpha" onchange="this.form.submit()">
+                </div>
+                <div class="slidecontainer col-md-3">
+                    Exponenciador da colorização
+                    <input type="range" min="10" max="40" value="{{ imgform.beta.data }}" class="slider" id="beta" name="beta" onchange="this.form.submit()">
+                </div>
+                <div class="col-md-3">
+                    <input class="btn btn-default btn-info" type="submit" value="Atualizar" />
+                </div>
+            </form>
         </div>
         <div class="col-md-6">
-            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+            Contraste aumentado
+            <img src="/virasana/contrast?_id={{ _id }}&cutoff={{ imgform.cutoff.data }}" width="90%" alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
-            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+            Contraste realçado
+            <img src="/virasana/contrast_cv2/{{ _id }}" width="90%" alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
-            <img src="mini1/{{ _id }}" width="250" height="180" alt="Sem miniatura"/>
+            Equalização de histograma
+            <img src="/virasana/equalize/{{ _id }}" width="90%" alt="Sem miniatura"/>
+        </div>
+        <div class="col-md-6">
+            Colorização com expansão liner e exponencial de contraste
+            <img src="/virasana/colorize?_id={{ _id }}&alpha={{ imgform.alpha.data }}&beta={{ imgform.beta.data }}" width="90%" alt="Sem miniatura"/>
         </div>
     </div>
 </div>

@@ -15,7 +15,8 @@ import requests
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
-from ajna_commons.utils.images import mongo_image, recorta_imagem
+from ajna_commons.utils import ImgEnhance
+from ajna_commons.utils.images import mongo_image, PIL_tobytes, recorta_imagem
 from ajna_commons.utils.sanitiza import mongo_sanitizar
 from bson import json_util
 from bson.objectid import ObjectId
@@ -30,8 +31,8 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from wtforms import (BooleanField, DateField, IntegerField, SelectField,
-                     StringField)
+from wtforms import (BooleanField, DateField, FloatField, IntegerField,
+                     SelectField, StringField)
 from wtforms.validators import optional
 
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
@@ -343,14 +344,25 @@ def file(_id=None):
                            ocorrencias=ocorrencias)
 
 
+class ImgForm(FlaskForm):
+    cutoff = IntegerField(u'Cut Off', default=20)
+    alpha = FloatField(u'Alpha', default=12)
+    beta = FloatField(u'Beta', default=14)
+
+
 @app.route('/view_image/<_id>')
+@app.route('/view_image', methods=['POST', 'GET'])
 @login_required
-def file(_id=None):
+def view_image(_id=None):
     """Tela para exibição de um 'arquivo' do GridFS.
 
     Exibe o arquivo e filtros para melhoria da visão.
     """
-    return render_template('view_image.html', _id=_id)
+    imgform = ImgForm(request.form)
+    if request.method == 'POST':
+        _id = request.form['_id']
+        imgform.validate_on_submit()
+    return render_template('view_image.html', _id=_id, imgform=imgform)
 
 
 @login_required
@@ -556,14 +568,12 @@ def image_id(_id):
     return 'Sem Imagem'
 
 
-def do_mini(_id, n):
-    """Recupera, recorta a imagem do banco e serializa para stream HTTP."""
+def get_image(_id, n, pil=False):
+    """Recupera, recorta a imagem do banco e retorna."""
     db = app.config['mongodb']
-    print('********n', n)
     fs = GridFS(db)
     _id = ObjectId(_id)
     if fs.exists(_id):
-        print('********n', n)
         grid_data = fs.get(_id)
         if n is not None:
             n = int(n)
@@ -572,8 +582,16 @@ def do_mini(_id, n):
                 bboxes = [pred.get('bbox') for pred in preds]
                 if len(bboxes) >= n + 1 and bboxes[n]:
                     image = grid_data.read()
-                    image = recorta_imagem(image, bboxes[n])
-                    return Response(response=image, mimetype='image/jpeg')
+                    image = recorta_imagem(image, bboxes[n], pil=pil)
+                    return image
+    return None
+
+
+def do_mini(_id, n):
+    """Recupera, recorta a imagem do banco e serializa para stream HTTP."""
+    image = get_image(_id, n)
+    if image:
+        return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
 
 
@@ -587,6 +605,55 @@ def mini(_id, n=0):
 def mini2(_id):
     """Link para imagem do segundo contêiner, se houver."""
     return do_mini(_id, 1)
+
+
+@app.route('/contrast')
+def contrast():
+    _id = request.args.get('_id')
+    n = request.args.get('n', 0)
+    cutoff = request.args.get('cutoff', '10')
+    image = get_image(_id, n, pil=True)
+    if image:
+        cutoff = int(cutoff)
+        image = ImgEnhance.autocontrast(image, cutoff=cutoff)
+        image = PIL_tobytes(image)
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem imagem'
+
+
+@app.route('/contrast_cv2/<_id>')
+def contrast_cv2(_id, n=0):
+    image = get_image(_id, n, pil=True)
+    if image:
+        image = ImgEnhance.enhancedcontrast_cv2(image)
+        image = PIL_tobytes(image)
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem imagem'
+
+@app.route('/equalize/<_id>')
+def equalize(_id, n=0):
+    image = get_image(_id, n, pil=True)
+    if image:
+        image = ImgEnhance.equalize(image)
+        image = PIL_tobytes(image)
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem imagem'
+
+
+@app.route('/colorize')
+def colorize():
+    _id = request.args.get('_id')
+    n = request.args.get('n', 0)
+    alpha = request.args.get('alpha', '12')
+    beta = request.args.get('beta', '14')
+    image = get_image(_id, n, pil=True)
+    if image:
+        alpha = float(alpha) / 10.
+        beta = float(beta) / 10.
+        image = ImgEnhance.expand_tocolor(image, alpha=alpha, beta=beta)
+        image = PIL_tobytes(image)
+        return Response(response=image, mimetype='image/jpeg')
+    return 'Sem imagem'
 
 
 lista_ids = []

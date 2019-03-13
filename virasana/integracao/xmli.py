@@ -205,7 +205,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
             final_filename = xml_filename + '.XML'
             xml_document = db['fs.files'].find_one({'filename': final_filename})
         if not xml_document:
-            print(xml_filename, ' não encontrado')
+            print(final_filename, ' não encontrado')
             continue
         file_id = xml_document.get('_id')
         if not fs.exists(file_id):

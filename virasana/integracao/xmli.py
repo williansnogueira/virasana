@@ -42,7 +42,8 @@ XML_DEPARA = {
 }
 
 # Fields to be converted to ISODate
-DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
+DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime',
+               'SCANTIME', 'ScanTime')
 
 DATA = 'metadata.xml.date'
 

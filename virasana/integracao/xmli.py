@@ -117,21 +117,26 @@ def xml_todict(xml) -> dict:
             if tag.text:
                 text = sanitizar(tag.text)
             if field in DATE_FIELDS:
+                for char in 'tT_':
+                    text = text.replace(char, ' ')
                 try:
-                    text = text.split('.')[0]
-                    for char in 'tT_':
-                        text = text.replace(char, ' ')
-                    parse_str = '%Y-%m-%d %H-%M-%S'
+                    parse_str = '%Y-%m-%d %H:%M:%S.%Z'
                     text = datetime.strptime(text, parse_str)
                 except ValueError as err:
                     logger.info('text: %s parser: %s err: %s' %
                                 (text, parse_str, err))
-                    pass
+                    try:
+                        text = text.split('.')[0]
+                        parse_str = '%Y-%m-%d %H:%M:%S'
+                        text = datetime.strptime(text, parse_str)
+                    except ValueError as err:
+                        logger.info('text: %s parser: %s err: %s' %
+                                    (text, parse_str, err))
             akey = XML_DEPARA.get(field)
             if akey is None:
                 akey = field
             result[akey.lower()] = text
-    lista_conteineres = []
+    lista_conteinpythoneres = []
     for atag in TAGS_NUMERO:
         for tag in root.iter(atag):
             numero = tag.text

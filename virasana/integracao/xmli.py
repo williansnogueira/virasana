@@ -190,7 +190,16 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         filename = linha.get('filename')
         if not filename:
             continue
-        xml_filename = filename[:-11] + '.xml'
+        if filename[:5] == 'XRAY-':
+            posi = filename.find('--Array')
+            xml_filename = filename[5:posi]
+        else:
+            posi = filename.find('_icon')
+            if posi != -1:
+                xml_filename = filename[:posi]
+            else:
+                xml_filename = filename[:-11]
+        xml_filename = xml_filename + '.xml'
         xml_document = db['fs.files'].find_one({'filename': xml_filename})
         if not xml_document:
             print(xml_filename, ' não encontrado')

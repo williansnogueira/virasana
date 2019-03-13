@@ -36,7 +36,7 @@ def consulta(year, month, terminal, arquivo, id):
             data_inicio = datetime(year, month, 1)
             filtro['metadata.dataescaneamento'] = {'$gt': data_inicio}
         if terminal:
-            filtro['metadata.xml.recinto'] = terminal
+            filtro['metadata.recinto'] = terminal
         if arquivo:
             filtro['filename'] = {'$regex': arquivo}
         cursor = db['fs.files'].find(filtro).limit(10)

@@ -42,7 +42,8 @@ XML_DEPARA = {
 }
 
 # Fields to be converted to ISODate
-DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime')
+DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime',
+               'SCANTIME', 'ScanTime')
 
 DATA = 'metadata.xml.date'
 
@@ -117,17 +118,23 @@ def xml_todict(xml) -> dict:
             if tag.text:
                 text = sanitizar(tag.text)
             if field in DATE_FIELDS:
+                for char in 'tT_':
+                    text = text.replace(char, ' ')
                 try:
-                    if 'Z' in text:
-                        parse_str = '%Y-%m-%dT%H:%M:%S.%z'
-                    elif '_' in text:
-                        parse_str = '%Y-%m-%d_%H-%M-%S'
-                    else:
-                        parse_str = '%Y-%m-%d %H-%M-%S'
-                    text = datetime.strptime(text, '%Y-%m-%dt%H:%M:%S')
+                    parse_str = '%Y-%m-%d %H:%M:%S.%Z'
+                    text = datetime.strptime(text, parse_str)
                 except ValueError as err:
-                    logger.info(err)
-                    pass
+                    logger.info('text: %s parser: %s err: %s' %
+                                (text, parse_str, err))
+                    try:
+                        text = text.split('.')[0]
+                        text = text.replace('Z', '')
+                        text = text.replace('z', '')
+                        parse_str = '%Y-%m-%d %H:%M:%S'
+                        text = datetime.strptime(text, parse_str)
+                    except ValueError as err:
+                        logger.info('text: %s parser: %s err: %s' %
+                                    (text, parse_str, err))
             akey = XML_DEPARA.get(field)
             if akey is None:
                 akey = field
@@ -182,6 +189,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
     for linha in file_cursor:
         numero = linha.get('numeroinformado')
         data = linha.get('uploadDate')
+        filename = linha.get('filename')
         # Primeiro procura XML com o mesmo número de container e Upload próximo
         if numero and data:
             data_upload_antes = data - datetime.datetime.timedelta(hours=1)
@@ -192,16 +200,27 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                                 '$lt': data_upload_depois},
                  'metadata.contentType': 'text/xml'
                  })
-        # Primeiro procura XML com o mesmo número de container e Upload próximo
+        # Depois, caso não encontre, tenta por filename
         if not xml_document:
-            filename = linha.get('filename')
             if not filename:
                 continue
-            xml_filename = filename[:-11] + '.xml'
-            xml_document = db['fs.files'].find_one({'filename': xml_filename})
+            if filename[:5] == 'XRAY-':
+                posi = filename.find('--Array')
+                xml_filename = filename[5:posi]
+            else:
+                posi = filename.find('_icon')
+                if posi != -1:
+                    xml_filename = filename[:posi]
+                else:
+                    xml_filename = filename[:-11]
+            final_filename = xml_filename + '.xml'
+            xml_document = db['fs.files'].find_one({'filename': final_filename})
+            if not xml_document:
+                final_filename = xml_filename + '.XML'
+                xml_document = db['fs.files'].find_one({'filename': final_filename})
         if not xml_document:
-            logger.info('Numero %s xml_filename %s não encontrado!!!' %
-                        (numero, xml_filename))
+            logger.info('Numero %s filename %s não encontrado!!!' %
+                        (numero, filename))
             continue
         file_id = xml_document.get('_id')
         if not fs.exists(file_id):

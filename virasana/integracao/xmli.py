@@ -193,7 +193,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         # Primeiro procura XML com o mesmo número de container e Upload próximo
         if numero and data:
             data_upload_antes = data - timedelta(hours=1)
-            data_upload_depois = data - timedelta(hours=1)
+            data_upload_depois = data + timedelta(hours=1)
             xml_document = db['fs.files'].find_one(
                 {'metadata.numeroinformado': numero,
                  'uploadDate': {'$gt': data_upload_antes,
@@ -212,7 +212,11 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                 if posi != -1:
                     xml_filename = filename[:posi]
                 else:
-                    xml_filename = filename[:-11]
+                    posi = filename.find('stamp.jpg')
+                    if posi != -1:
+                        xml_filename = filename[:-11]
+                    else:
+                        xml_filename = filename[:-4]
             final_filename = xml_filename + '.xml'
             xml_document = db['fs.files'].find_one({'filename': final_filename})
             if not xml_document:

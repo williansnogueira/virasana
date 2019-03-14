@@ -165,7 +165,7 @@ def api_upload():
         json['taskid']: ID da task do celery a ser monitorada
 
     """
-    sync = request.form.get('sync', 'False')
+    sync = request.form.get('sync', 'True')
     todir = request.form.get('todir', 'False')
     data = {'success': False,
             'mensagem': 'Task iniciada',

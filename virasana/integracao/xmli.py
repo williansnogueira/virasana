@@ -187,7 +187,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
          })
     acum = 0
     for linha in file_cursor:
-        numero = linha.get('numeroinformado')
+        numero = linha.get('metadata').get('numeroinformado')
         data = linha.get('uploadDate')
         filename = linha.get('filename')
         # Primeiro procura XML com o mesmo número de container e Upload próximo
@@ -195,7 +195,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
             data_upload_antes = data - datetime.datetime.timedelta(hours=1)
             data_upload_depois = data - datetime.datetime.timedelta(hours=1)
             xml_document = db['fs.files'].find_one(
-                {'numeroinformado': numero,
+                {'metadata.numeroinformado': numero,
                  'uploadDate': {'$gt': data_upload_antes,
                                 '$lt': data_upload_depois},
                  'metadata.contentType': 'text/xml'

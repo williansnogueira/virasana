@@ -180,13 +180,28 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
          })
     acum = 0
     for linha in file_cursor:
-        filename = linha.get('filename')
-        if not filename:
-            continue
-        xml_filename = filename[:-11] + '.xml'
-        xml_document = db['fs.files'].find_one({'filename': xml_filename})
+        numero = linha.get('numeroinformado')
+        data = linha.get('uploadDate')
+        # Primeiro procura XML com o mesmo número de container e Upload próximo
+        if numero and data:
+            data_upload_antes = data - datetime.datetime.timedelta(hours=1)
+            data_upload_depois = data - datetime.datetime.timedelta(hours=1)
+            xml_document = db['fs.files'].find_one(
+                {'numeroinformado': numero,
+                 'uploadDate': {'$gt': data_upload_antes,
+                                '$lt': data_upload_depois},
+                 'metadata.contentType': 'text/xml'
+                 })
+        # Primeiro procura XML com o mesmo número de container e Upload próximo
         if not xml_document:
-            print(xml_filename, ' não encontrado')
+            filename = linha.get('filename')
+            if not filename:
+                continue
+            xml_filename = filename[:-11] + '.xml'
+            xml_document = db['fs.files'].find_one({'filename': xml_filename})
+        if not xml_document:
+            logger.info('Numero %s xml_filename %s não encontrado!!!' %
+                        (numero, xml_filename))
             continue
         file_id = xml_document.get('_id')
         if not fs.exists(file_id):

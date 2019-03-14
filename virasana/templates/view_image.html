@@ -10,24 +10,33 @@
                 <input type="hidden" name="_id" value="{{ _id }}"/>
                 <div class="slidecontainer col-md-3">
                     Aumento do contraste (zerar para original)
-                    <input type="range" min="0" max="48" value="{{ imgform.cutoff.data }}" class="slider" id="cutoff" name="cutoff" onchange="this.form.submit()">
+                    <input type="range" min="0" max="48" value="{{ imgform.cutoff.data }}" class="slider" id="cutoff"
+                           name="cutoff" onchange="this.form.submit()">
                 </div>
                 <div class="slidecontainer col-md-3">
                     Multiplicador da colorização
-                    <input type="range" min="10" max="40" value="{{ imgform.alpha.data }}" class="slider" id="alpha" name="alpha" onchange="this.form.submit()">
+                    <input type="range" min="8" max="30" value="{{ imgform.alpha.data }}" class="slider" id="alpha"
+                           name="alpha" onchange="this.form.submit()">
                 </div>
                 <div class="slidecontainer col-md-3">
                     Exponenciador da colorização
-                    <input type="range" min="10" max="40" value="{{ imgform.beta.data }}" class="slider" id="beta" name="beta" onchange="this.form.submit()">
+                    <input type="range" min="8" max="20" value="{{ imgform.beta.data }}" class="slider" id="beta"
+                           name="beta" onchange="this.form.submit()">
                 </div>
-                <div class="col-md-3">
-                    <input class="btn btn-default btn-info" type="submit" value="Atualizar" />
+                <div class="col-md-2">
+                    <input type="checkbox" id="equalize" name="equalize" {% if imgform.equalize.data %} checked {% endif %}
+                           onchange="this.form.submit()"/>
+                    &nbsp;Equalizar colorização
+                </div>
+                <div class="col-md-1">
+                    <input class="btn btn-default btn-info" type="submit" value="Atualizar"/>
                 </div>
             </form>
         </div>
         <div class="col-md-6">
             Contraste aumentado
-            <img src="/virasana/contrast?_id={{ _id }}&cutoff={{ imgform.cutoff.data }}" width="90%" alt="Sem miniatura"/>
+            <img src="/virasana/contrast?_id={{ _id }}&cutoff={{ imgform.cutoff.data }}" width="90%"
+                 alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
             Contraste realçado
@@ -39,7 +48,8 @@
         </div>
         <div class="col-md-6">
             Colorização com expansão liner e exponencial de contraste
-            <img src="/virasana/colorize?_id={{ _id }}&alpha={{ imgform.alpha.data }}&beta={{ imgform.beta.data }}" width="90%" alt="Sem miniatura"/>
+            <img src="/virasana/colorize?_id={{ _id }}&alpha={{ imgform.alpha.data }}&beta={{ imgform.beta.data }}&equalize={{ imgform.equalize.data}}"
+                 width="90%" alt="Sem miniatura"/>
         </div>
     </div>
 </div>

@@ -345,27 +345,6 @@ def file(_id=None):
                            ocorrencias=ocorrencias)
 
 
-class ImgForm(FlaskForm):
-    cutoff = IntegerField(u'Cut Off', default=20)
-    alpha = FloatField(u'Alpha', default=12)
-    beta = FloatField(u'Beta', default=14)
-
-
-@app.route('/view_image/<_id>')
-@app.route('/view_image', methods=['POST', 'GET'])
-@login_required
-def view_image(_id=None):
-    """Tela para exibição de um 'arquivo' do GridFS.
-
-    Exibe o arquivo e filtros para melhoria da visão.
-    """
-    imgform = ImgForm(request.form)
-    if request.method == 'POST':
-        _id = request.form['_id']
-        imgform.validate_on_submit()
-    return render_template('view_image.html', _id=_id, imgform=imgform)
-
-
 @login_required
 @csrf.exempt
 @app.route('/ocorrencia/add', methods=['POST', 'GET'])
@@ -608,6 +587,28 @@ def mini2(_id):
     return do_mini(_id, 1)
 
 
+class ImgForm(FlaskForm):
+    cutoff = IntegerField(u'Cut Off', default=15)
+    alpha = FloatField(u'Alpha', default=12)
+    beta = FloatField(u'Beta', default=10)
+    equalize = BooleanField(u'Equalize')
+
+
+@app.route('/view_image/<_id>')
+@app.route('/view_image', methods=['POST', 'GET'])
+@login_required
+def view_image(_id=None):
+    """Tela para exibição de um 'arquivo' do GridFS.
+
+    Exibe o arquivo e filtros para melhoria da visão.
+    """
+    imgform = ImgForm(request.form)
+    if request.method == 'POST':
+        _id = request.form['_id']
+        imgform.validate_on_submit()
+    return render_template('view_image.html', _id=_id, imgform=imgform)
+
+
 @app.route('/contrast')
 def contrast():
     _id = request.args.get('_id')
@@ -631,6 +632,7 @@ def contrast_cv2(_id, n=0):
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
 
+
 @app.route('/equalize/<_id>')
 def equalize(_id, n=0):
     image = get_image(_id, n, pil=True)
@@ -647,11 +649,12 @@ def colorize():
     n = request.args.get('n', 0)
     alpha = request.args.get('alpha', '12')
     beta = request.args.get('beta', '14')
+    equalize = request.args.get('equalize', False) == 'True'
     image = get_image(_id, n, pil=True)
     if image:
         alpha = float(alpha) / 10.
         beta = float(beta) / 10.
-        image = ImgEnhance.expand_tocolor(image, alpha=alpha, beta=beta)
+        image = ImgEnhance.expand_tocolor(image, alpha=alpha, beta=beta, equalize=equalize)
         image = PIL_tobytes(image)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
@@ -975,8 +978,10 @@ def recarrega_imageindex():
         result['erro'] = str(err)
     return jsonify(result)
 
+
 class PasswordForm(FlaskForm):
     password = PasswordField('Nova Senha', validators=[DataRequired()])
+
 
 @app.route('/account', methods=["GET", "POST"])
 @login_required

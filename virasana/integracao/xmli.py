@@ -1,6 +1,6 @@
 """Funções para leitura e tratamento arquivos XML criados pelos escâneres."""
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import chardet
 # from ajna_commons.conf import ENCODE
@@ -192,8 +192,8 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
         filename = linha.get('filename')
         # Primeiro procura XML com o mesmo número de container e Upload próximo
         if numero and data:
-            data_upload_antes = data - datetime.datetime.timedelta(hours=1)
-            data_upload_depois = data - datetime.datetime.timedelta(hours=1)
+            data_upload_antes = data - timedelta(hours=1)
+            data_upload_depois = data - timedelta(hours=1)
             xml_document = db['fs.files'].find_one(
                 {'metadata.numeroinformado': numero,
                  'uploadDate': {'$gt': data_upload_antes,

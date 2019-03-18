@@ -13,7 +13,7 @@ Args:
 import os
 import click
 
-from virasana.workers.dir_monitor import despacha_dir
+from virasana.workers.dir_monitor import VIRASANA_URL, despacha_dir
 
 BSON_DIR = os.path.join(os.path.dirname(__file__), 'BSON')
 
@@ -21,8 +21,8 @@ BSON_DIR = os.path.join(os.path.dirname(__file__), 'BSON')
 @click.command()
 @click.option('--dir', default=BSON_DIR,
               help='diretório a processar - padrão %s ' % BSON_DIR)
-@click.option('--url', default=BSON_DIR,
-              help='URL do Servidor - padrão %s ' % BSON_DIR)
+@click.option('--url', default=VIRASANA_URL,
+              help='URL do Servidor - padrão %s ' % VIRASANA_URL)
 @click.option('--sync', is_flag=True,
               help='Fazer consulta de forma síncrona')
 def carrega(dir, url, sync):

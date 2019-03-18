@@ -200,6 +200,8 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                                 '$lt': data_upload_depois},
                  'metadata.contentType': 'text/xml'
                  })
+        else:
+            xml_document = None
         # Depois, caso não encontre, tenta por filename
         if not xml_document:
             if not filename:

@@ -27,7 +27,10 @@ BSON_DIR = os.path.join(os.path.dirname(__file__), 'BSON')
               help='Fazer consulta de forma síncrona')
 def carrega(dir, url, sync):
     """Script de linha de comando para integração do arquivo XML."""
-    print(despacha_dir(dir=dir, url=url, sync=sync))
+    dir, erros, exceptions = despacha_dir(dir=dir, url=url, sync=sync)
+    print('Diretorio processado: %s' %  dir +
+          '\nErros: %s' % erros +
+          '\nExceções: %s' % exceptions)
 
 
 if __name__ == '__main__':

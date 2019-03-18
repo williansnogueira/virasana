@@ -126,9 +126,10 @@ def despacha_dir(dir=BSON_DIR, url=VIRASANA_URL, sync=SYNC):
                         os.remove(bsonfile)
                         logger.info('Arquivo ' + bsonfile + ' removido.')
                         cont += 1
-                        logger.info('********* %s' % cont)
+                        logger.info('********* %s arquivos processados' % cont)
                 else:
                     taskid = response_json.get('taskid', '')
+                    logger.info('Task %s enviada para celery' % taskid)
                     sucessos.append(taskid)
                     Thread(target=espera_resposta,
                            args=(TASK_URL + taskid, bsonfile)

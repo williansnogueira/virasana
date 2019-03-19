@@ -11,6 +11,7 @@ Args:
 
 """
 import os
+
 import click
 
 from virasana.workers.dir_monitor import VIRASANA_URL, despacha_dir
@@ -28,7 +29,7 @@ BSON_DIR = os.path.join(os.path.dirname(__file__), 'BSON')
 def carrega(dir, url, sync):
     """Script de linha de comando para integração do arquivo XML."""
     dir, erros, exceptions = despacha_dir(dir=dir, url=url, sync=sync)
-    print('Diretorio processado: %s' %  dir +
+    print('Diretorio processado: %s' % dir +
           '\nErros: %s' % erros +
           '\nExceções: %s' % exceptions)
 

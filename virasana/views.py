@@ -654,7 +654,8 @@ def colorize():
     if image:
         alpha = float(alpha) / 10.
         beta = float(beta) / 10.
-        image = ImgEnhance.expand_tocolor(image, alpha=alpha, beta=beta, equalize=equalize)
+        image = ImgEnhance.expand_tocolor(
+            image, alpha=alpha, beta=beta, equalize=equalize)
         image = PIL_tobytes(image)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
@@ -983,13 +984,12 @@ class PasswordForm(FlaskForm):
     password = PasswordField('Nova Senha', validators=[DataRequired()])
 
 
-@app.route('/account', methods=["GET", "POST"])
+@app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     """Permite ver usuário e mudar senha"""
     # TODO: colocar no blueprint de login
     form = PasswordForm()
-    db = app.config['mongodb']
     if request.method == 'POST':
         if form.validate_on_submit():
             user = current_user

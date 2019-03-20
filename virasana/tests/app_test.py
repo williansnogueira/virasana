@@ -12,8 +12,6 @@ from virasana.views import configure_app
 conn = MongoClient(host=MONGODB_URI)
 mongodb = conn['unit_test']
 app = configure_app(mongodb)
-# Aceitar autenticação com qualquer username == password
-login_ajna.DBUser.dbsession = None
 
 
 class FlaskTestCase(unittest.TestCase):
@@ -27,6 +25,8 @@ class FlaskTestCase(unittest.TestCase):
         else:
             app.testing = True
             self.app = app.test_client()
+        # Aceitar autenticação com qualquer username == password
+        login_ajna.DBUser.dbsession = None
 
     def tearDown(self):
         self.logout()

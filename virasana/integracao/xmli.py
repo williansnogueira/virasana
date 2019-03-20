@@ -187,9 +187,11 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
          })
     acum = 0
     for linha in file_cursor:
+
         numero = linha.get('metadata').get('numeroinformado')
         data = linha.get('uploadDate')
         filename = linha.get('filename')
+        print(numero, data, filename)
         # Primeiro procura XML com o mesmo número de container e Upload próximo
         if numero and data:
             data_upload_antes = data - timedelta(hours=1)
@@ -220,10 +222,12 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
                     else:
                         xml_filename = filename[:-4]
             final_filename = xml_filename + '.xml'
-            xml_document = db['fs.files'].find_one({'filename': final_filename})
+            xml_document = db['fs.files'].find_one(
+                {'filename': final_filename})
             if not xml_document:
                 final_filename = xml_filename + '.XML'
-                xml_document = db['fs.files'].find_one({'filename': final_filename})
+                xml_document = db['fs.files'].find_one(
+                    {'filename': final_filename})
         if not xml_document:
             logger.info('Numero %s filename %s não encontrado!!!' %
                         (numero, filename))
@@ -258,6 +262,7 @@ def dados_xml_grava_fsfiles(db, batch_size=5000,
             except Exception as err:
                 print('Erro de encoding', e, err)
         if dados_xml != {}:
+            print(dados_xml)
             if update:
                 db['fs.files'].update_one(
                     {'_id': linha['_id']},

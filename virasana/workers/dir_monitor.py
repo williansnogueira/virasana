@@ -23,7 +23,6 @@ from celery import states
 
 # VIRASANA_URL = "http://localhost:5001"
 LOGIN_URL = VIRASANA_URL + '/login'
-API_URL = VIRASANA_URL + '/api/uploadbson'
 if platform == 'win32':  # I am on ALFSTS???
     BSON_DIR = os.path.join('P:', 'SISTEMAS', 'roteiros', 'AJNA', 'BSON')
 else:
@@ -63,7 +62,7 @@ def login(username='ajna', senha='ajna'):
     ))
 
 
-def despacha(filename, target=API_URL, sync=SYNC):
+def despacha(filename, target, sync=SYNC):
     """Envia por HTTP POST o arquivo especificado.
 
     Args:
@@ -93,7 +92,7 @@ def despacha(filename, target=API_URL, sync=SYNC):
     return success, rv
 
 
-def despacha_dir(dir=BSON_DIR, url=API_URL, sync=SYNC):
+def despacha_dir(dir=BSON_DIR, url=VIRASANA_URL, sync=SYNC):
     """Envia por HTTP POST todos os arquivos do diretório.
 
     Args:
@@ -105,6 +104,8 @@ def despacha_dir(dir=BSON_DIR, url=API_URL, sync=SYNC):
         diretório usado, lista de erros, lista de exceções
 
     """
+    API_URL = url + '/api/uploadbson'
+    TASK_URL = url + '/api/task/'
     erros = []
     sucessos = []
     exceptions = []
@@ -115,7 +116,7 @@ def despacha_dir(dir=BSON_DIR, url=API_URL, sync=SYNC):
     for filename in os.listdir(dir)[:90]:
         try:
             bsonfile = os.path.join(dir, filename)
-            success, response = despacha(bsonfile, url, sync)
+            success, response = despacha(bsonfile, API_URL, sync)
             if success:
                 # TODO: save on database list of files to delete
                 #  (if light goes out or system fail, continue)
@@ -125,12 +126,13 @@ def despacha_dir(dir=BSON_DIR, url=API_URL, sync=SYNC):
                         os.remove(bsonfile)
                         logger.info('Arquivo ' + bsonfile + ' removido.')
                         cont += 1
-                        logger.info('********* %s' % cont)
+                        logger.info('********* %s arquivos processados' % cont)
                 else:
                     taskid = response_json.get('taskid', '')
+                    logger.info('Task %s enviada para celery' % taskid)
                     sucessos.append(taskid)
                     Thread(target=espera_resposta,
-                           args=(url + '/api/task/' + taskid, bsonfile)
+                           args=(TASK_URL + taskid, bsonfile)
                            ).start()
             else:
                 erros.append(response)

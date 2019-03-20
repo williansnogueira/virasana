@@ -523,7 +523,7 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
     filtro['metadata.dataescaneamento'] = \
         {'$gt': data_inicio}
     #         '$lt': data_inicio + timedelta(days=days * 2)}
-    # print(filtro)
+    print(filtro)
     file_cursor = db['fs.files'].find(filtro).sort(
         'metadata.dataescaneamento', 1)
     acum = 0
@@ -535,13 +535,14 @@ def dados_carga_grava_fsfiles(db, batch_size=1000,
         total += 1
         container = linha.get('metadata').get('numeroinformado')
         data = linha.get('metadata').get('dataescaneamento')
-        # print(container, data)
+        print(container, data)
         if data and container:
             if data < start:
                 start = data
             if data > end:
                 end = data
             dados_carga = busca_info_container(db, container, data, days)
+            print(dados_carga)
             if dados_carga != {}:
                 if update:
                     # print(dados_carga)

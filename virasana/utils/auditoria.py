@@ -58,7 +58,7 @@ class Auditoria():
                 logger.debug(id + ' ' + campos['descricao'])
                 self.db['Auditorias'].insert_one(
                     {'id': id,
-                     'filtro': campos['filtro'],
+                     'filtro': str(campos['filtro']),
                      'order': campos['order'],
                      'descricao': campos['descricao']
                      })

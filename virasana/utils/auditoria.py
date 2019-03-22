@@ -1,8 +1,9 @@
 """Funções para Auditoria/comparação nos metadados de fs.files."""
 import json
 from collections import defaultdict
-
 from ajna_commons.flask.log import logger
+
+from virasana.integracao import carga, xmli
 
 
 class Auditoria():
@@ -33,6 +34,14 @@ class Auditoria():
                          'metadata.predictions.bbox': {'$exists': False}},
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem contêiner detectado'
+              },
+        '5': {'filtro': carga.FALTANTES,
+              'order': [('metadata.dataescaneamento', 1)],
+              'descricao': 'Imagens sem informação do CARGA integrada'
+              },
+        '6': {'filtro': xmli.FALTANTES,
+              'order': [('metadata.dataescaneamento', 1)],
+              'descricao': 'Imagens sem informação do XML integrada'
               }
     }
 

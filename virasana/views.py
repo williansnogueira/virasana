@@ -784,7 +784,7 @@ def valida_form_files(form, filtro, db):
         alerta = form.alerta.data
         pagina_atual = form.pagina_atual.data
         filtro_escolhido = form.filtro_auditoria.data
-        if filtro_escolhido:
+        if filtro_escolhido and filtro_escolhido != '0':
             auditoria_object = Auditoria(db)
             filtro_auditoria = auditoria_object.dict_auditoria.get(filtro_escolhido)
             logger.debug(auditoria_object.dict_auditoria)

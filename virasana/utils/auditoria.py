@@ -9,6 +9,10 @@ class Auditoria():
     """Recebe params, monta consultas de auditoria entre campos fs.files."""
 
     FILTROS_AUDITORIA = {
+        '0':{'filtro': {},
+              'order': [],
+              'descricao': 'Selecione'
+              },
         '1': {'filtro': {'metadata.carga.vazio': True,
                          'metadata.predictions.vazio': False},
               'order': [('metadata.predictions.peso', -1)],

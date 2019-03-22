@@ -824,6 +824,7 @@ def files():
     campos = campos_chave()
     npaginas = 1
     pagina_atual = 1
+    count = 0
     order = None
     tags_object = Tags(db)
     auditoria_object = Auditoria(db)

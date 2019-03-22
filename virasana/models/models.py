@@ -108,7 +108,8 @@ class Tags():
             for id, descricao in self.hardcoded_tags.items():
                 self._db['Tags'].insert_one({'id': id,
                                        'descricao': descricao})
-            return self.mount_tags()
+            self.mount_tags()
+            return
         tags_text = []
         for row in tags:
             id = row['id']

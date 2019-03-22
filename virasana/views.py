@@ -31,22 +31,18 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
-from wtforms import (BooleanField, DateField, FloatField, IntegerField,
-                     PasswordField, SelectField, StringField)
-from wtforms.validators import DataRequired, optional
-
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
                                  summary)
 from virasana.models.models import Ocorrencias, Tags
-from virasana.utils.auditoria import FILTROS_AUDITORIA
+from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
-
-# TODO: Criar tabela para tags???
-
+from wtforms import (BooleanField, DateField, FloatField, IntegerField,
+                     PasswordField, SelectField, StringField)
+from wtforms.validators import DataRequired, optional
 
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
@@ -754,8 +750,6 @@ class FilesForm(FlaskForm):
     filtros_auditoria_desc = [
         ('0', 'Selecione uma opção')
     ]
-    for key, value in FILTROS_AUDITORIA.items():
-        filtros_auditoria_desc.append((key, value['descricao']))
     numero = StringField(u'Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=10))
@@ -784,7 +778,7 @@ def recupera_user_filtros():
     return filtro, user_filtros
 
 
-def valida_form_files(form, filtro):
+def valida_form_files(form, filtro, db):
     """Lê formulário e adiciona campos ao filtro se necessário."""
     order = None
     pagina_atual = None
@@ -796,7 +790,8 @@ def valida_form_files(form, filtro):
         pagina_atual = form.pagina_atual.data
         filtro_escolhido = form.filtro_auditoria.data
         if filtro_escolhido:
-            filtro_auditoria = FILTROS_AUDITORIA.get(filtro_escolhido)
+            auditoria_object = Auditoria(db)
+            filtro_auditoria = auditoria_object.dict_auditoria.get(filtro_escolhido)
             if filtro_auditoria:
                 filtro.update(filtro_auditoria['filtro'])
                 order = filtro_auditoria['order']
@@ -832,14 +827,17 @@ def files():
     pagina_atual = 1
     order = None
     tags_object = Tags(db)
+    auditoria_object = Auditoria(db)
     form_files = FilesForm()
     form_files.filtro_tags.choices = tags_object.tags_text
+    for key, value in auditoria_object.dict_auditoria.items():
+        form_files.filtros_auditoria_desc.append((key, value['descricao']))
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
         print('****************************', request.form)
         form_files = FilesForm(**request.form)
         form_files.filtro_tags.choices = tags_object.tags_text
-        filtro, pagina_atual, order = valida_form_files(form_files, filtro)
+        filtro, pagina_atual, order = valida_form_files(form_files, filtro, db)
     else:
         numero = request.args.get('numero')
         if numero:
@@ -854,7 +852,7 @@ def files():
         if pagina_atual is None:
             pagina_atual = 1
 
-        print(filtro)
+        # print(filtro)
         projection = {'_id': 1, 'filename': 1,
                       'metadata.numeroinformado': 1,
                       'metadata.predictions.bbox': 1,
@@ -867,9 +865,9 @@ def files():
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \
-                .find(filter=filtro, projection=projection) \
-                .sort(order) \
-                .limit(PAGE_ROWS).skip(skip):
+            .find(filter=filtro, projection=projection) \
+            .sort(order) \
+            .limit(PAGE_ROWS).skip(skip):
             linha = {}
             linha['_id'] = grid_data['_id']
             linha['filename'] = grid_data['filename']

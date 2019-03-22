@@ -124,7 +124,10 @@ def converte_datahora_atracacao(atracacao: dict) -> datetime:
     Args:
         atracacao: dict contendo chaves dataatracacao e horaaatracacao
     """
-    data = atracacao['dataatracacao']
+    data = atracacao.get('dataatracacao')
+    if data is None:
+        logger.error('Atracação sem dataatracacao')
+        return None
     hora = atracacao['horaatracacao']
     return datetime.strptime(data + hora, '%d/%m/%Y%H:%M:%S')
 

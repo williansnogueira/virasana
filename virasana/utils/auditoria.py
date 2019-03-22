@@ -49,14 +49,14 @@ class Auditoria():
         Aqui, se a tabela não existir no banco, cria algumas hard_coded.
         Depois, o administrador poderá criar novas no BD.
         """
-        cursor = self._db['Auditorias'].find()
+        cursor = self.db['Auditorias'].find()
         auditorias = list(cursor)
         if len(auditorias) == 0:
             logger.debug('Criando tabela Auditorias...')
             # Se não existe tabela, cria, preenche e chama de novo mesmo método
             for id, campos in self.FILTROS_AUDITORIA.items():
                 logger.debug(id + ' ' + campos['descricao'])
-                self._db['Auditorias'].insert_one(
+                self.db['Auditorias'].insert_one(
                     {'id': id,
                      'filtro': campos['filtro'],
                      'order': campos['order'],

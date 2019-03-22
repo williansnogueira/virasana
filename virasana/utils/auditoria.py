@@ -41,6 +41,7 @@ class Auditoria():
         self.db = db
         self.relatorios = {}
         self.dict_auditoria = {}
+        self.mount_filtros()
 
     def mount_filtros(self):
         """Para evitar a criação desmesurada de filtros eles serão centralizados.

@@ -1,8 +1,8 @@
 """Funções para Auditoria/comparação nos metadados de fs.files."""
+import json
 from collections import defaultdict
 
 from ajna_commons.flask.log import logger
-
 
 
 class Auditoria():
@@ -59,7 +59,7 @@ class Auditoria():
                 logger.debug(id + ' ' + campos['descricao'])
                 self.db['Auditorias'].insert_one(
                     {'id': id,
-                     'filtro': str(campos['filtro']),
+                     'filtro': json.dumps(campos['filtro']),
                      'order': campos['order'],
                      'descricao': campos['descricao']
                      })
@@ -68,7 +68,7 @@ class Auditoria():
         for row in auditorias:
             id = row['id']
             self.dict_auditoria[id] = {
-                'filtro': row['filtro'],
+                'filtro': json.loads(row['filtro']),
                 'order': row['order'],
                 'descricao': row['descricao']
             }

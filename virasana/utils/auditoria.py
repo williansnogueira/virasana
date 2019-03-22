@@ -1,6 +1,9 @@
 """Funções para Auditoria/comparação nos metadados de fs.files."""
 from collections import defaultdict
 
+from ajna_commons.flask.log import logger
+
+
 
 class Auditoria():
     """Recebe params, monta consultas de auditoria entre campos fs.files."""
@@ -45,11 +48,13 @@ class Auditoria():
         Aqui, se a tabela não existir no banco, cria algumas hard_coded.
         Depois, o administrador poderá criar novas no BD.
         """
-        cursor = self._db['Auditoria'].find()
+        cursor = self._db['Auditorias'].find()
         auditorias = list(cursor)
         if len(auditorias) == 0:
+            logger.debug('Criando tabela Auditorias...')
             # Se não existe tabela, cria, preenche e chama de novo mesmo método
             for id, campos in self.FILTROS_AUDITORIA.items():
+                logger.debug(id + ' ' + campos['descricao'])
                 self._db['Auditorias'].insert_one(
                     {'id': id,
                      'filtro': campos['filtro'],
@@ -60,14 +65,12 @@ class Auditoria():
             return
         for row in auditorias:
             id = row['id']
-            filtro = row['filtro']
-            order = row['order']
-            descricao = row['descricao']
             self.dict_auditoria[id] = {
                 'filtro': row['filtro'],
                 'order': row['order'],
                 'descricao': row['descricao']
             }
+        logger.debug(self.dict_auditoria)
 
     def add_relatorio(self, nome: str, relatorio: dict) -> bool:
         """Adiciona um relatório a rodar.

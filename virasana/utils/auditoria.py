@@ -41,6 +41,7 @@ class Auditoria():
         self.db = db
         self.relatorios = {}
         self.dict_auditoria = {}
+        self.filtros_auditoria_desc = []
         self.mount_filtros()
 
     def mount_filtros(self):
@@ -71,6 +72,8 @@ class Auditoria():
                 'order': row['order'],
                 'descricao': row['descricao']
             }
+            self.filtros_auditoria_desc.append((id, row['descricao']))
+        logger.debug(self.filtros_auditoria_desc)
         logger.debug(self.dict_auditoria)
 
     def add_relatorio(self, nome: str, relatorio: dict) -> bool:

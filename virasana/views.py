@@ -833,9 +833,7 @@ def files():
     auditoria_object = Auditoria(db)
     form_files = FilesForm()
     form_files.filtro_tags.choices = tags_object.tags_text
-    form_files.filtros_auditoria_desc = []
-    for key, value in auditoria_object.dict_auditoria.items():
-        form_files.filtros_auditoria_desc.append((key, value['descricao']))
+    form_files.filtros_auditoria_desc = auditoria_object.filtros_auditoria_desc
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
         print('****************************', request.form)

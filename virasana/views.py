@@ -819,6 +819,7 @@ def files():
     """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
     db = app.config['mongodb']
     PAGE_ROWS = 50
+    PAGES = 100
     lista_arquivos = []
     campos = campos_chave()
     npaginas = 1
@@ -857,7 +858,7 @@ def files():
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-        count = db['fs.files'].count_documents(filtro, limit=40 * PAGE_ROWS)
+        count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
         print(count)
         # count = 100
         npaginas = (count - 1) // PAGE_ROWS + 1
@@ -882,7 +883,8 @@ def files():
                            oform=form_files,
                            campos=campos,
                            filtros=user_filtros,
-                           npaginas=npaginas)
+                           npaginas=npaginas,
+                           nregistros=count)
 
 
 class StatsForm(FlaskForm):

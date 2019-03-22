@@ -834,12 +834,14 @@ def files():
         print('****************************', request.form)
         form_files = FilesForm(**request.form)
         form_files.filtro_tags.choices = tags_object.tags_text
+        form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
         filtro, pagina_atual, order = valida_form_files(form_files, filtro, db)
     else:
         numero = request.args.get('numero')
         if numero:
             form_files = FilesForm(numero=numero)
             form_files.filtro_tags.choices = tags_object.tags_text
+            form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
             filtro['metadata.numeroinformado'] = \
                 {'$regex': '^' + mongo_sanitizar(numero)}
     if filtro:

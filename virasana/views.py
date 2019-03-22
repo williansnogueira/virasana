@@ -746,10 +746,6 @@ class FilesForm(FlaskForm):
     search_files.html
 
     """
-
-    filtros_auditoria_desc = [
-        ('0', 'Selecione uma opção')
-    ]
     numero = StringField(u'Número', validators=[optional()], default='')
     start = DateField('Start', validators=[optional()],
                       default=date.today() - timedelta(days=10))
@@ -757,7 +753,6 @@ class FilesForm(FlaskForm):
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
-                                   choices=filtros_auditoria_desc,
                                    default=0)
     filtro_tags = SelectField(u'Tags de usuário',
                               default=[0])
@@ -833,7 +828,7 @@ def files():
     auditoria_object = Auditoria(db)
     form_files = FilesForm()
     form_files.filtro_tags.choices = tags_object.tags_text
-    form_files.filtros_auditoria_desc = auditoria_object.filtros_auditoria_desc
+    form_files.filtros_auditoria.choices = auditoria_object.filtros_auditoria_desc
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
         print('****************************', request.form)

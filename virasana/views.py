@@ -792,6 +792,9 @@ def valida_form_files(form, filtro, db):
         if filtro_escolhido:
             auditoria_object = Auditoria(db)
             filtro_auditoria = auditoria_object.dict_auditoria.get(filtro_escolhido)
+            logger.debug(auditoria_object.dict_auditoria)
+            logger.debug(filtro_escolhido)
+            logger.debug(filtro_auditoria)
             if filtro_auditoria:
                 filtro.update(filtro_auditoria['filtro'])
                 order = filtro_auditoria['order']

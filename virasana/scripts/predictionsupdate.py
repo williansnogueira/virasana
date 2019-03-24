@@ -74,13 +74,11 @@ def monta_filtro(model: str, sovazios: bool,
         filtro['metadata.dataescaneamento'] = {'$gt': dt_inicio, '$lt': dt_fim}
 
     print('Estimando número de registros a processar...')
-    count = db['fs.files'].find(
-        filtro, {'metadata.predictions': 1}
-    ).limit(batch_size).count(with_limit_and_skip=True)
+    count = db['fs.files'].count_documents(filtro, limit=batch_size)
     print(
         count, ' arquivos sem predições com os parâmetros passados...')
     cursor = db['fs.files'].find(
-        filtro, {'metadata.predictions': 1}).limit(batch_size)
+        filtro, {'metadata.predictions': 1}).limit(batch_size)[:batch_size]
     print('Consulta ao banco efetuada, iniciando conexões ao Padma')
     return cursor
 

@@ -93,6 +93,8 @@ def summary(grid_data=None, registro=None):
                 (meta.get('conhecimento')[0].get('conhecimento'),
                  meta.get('manifesto')[0].get('manifesto'),
                  meta.get('atracacao').get('escala'))
+            result['Descrição'] = \
+                 meta.get('conhecimento')[0].get('descricao')
             conteiner_pesos = []
             for conteiner in meta.get('container'):
                 tara = conteiner.get('taracontainer', '0')

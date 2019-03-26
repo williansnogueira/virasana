@@ -25,7 +25,7 @@ from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI, VIRASANA_URL)
 from ajna_commons.flask.log import logger
 from virasana.integracao import atualiza_stats, \
-    carga, get_service_password, xmli
+    carga, get_service_password, info_ade02, xmli
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
 
@@ -83,8 +83,11 @@ def periodic_updates(db, lote=1000):
     print('Iniciando atualizações...')
     doisdias = datetime.now() - timedelta(days=2)
     cincodias = datetime.now() - timedelta(days=5)
+    ontem = datetime.now() - timedelta(days=1)
     xmli.dados_xml_grava_fsfiles(db, lote * 2, doisdias)
     carga.dados_carga_grava_fsfiles(db, lote * 5, cincodias)
+    info_ade02.adquire_pesagens(db, ontem, ontem)
+    info_ade02.pesagens_grava_fsfiles(db, ontem, ontem)
     atualiza_stats(db)
     carga.cria_campo_pesos_carga(db, lote)
     predictions_update2('ssd', 'bbox', lote, 4)

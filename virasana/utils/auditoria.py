@@ -1,16 +1,17 @@
 """Funções para Auditoria/comparação nos metadados de fs.files."""
 import json
 from collections import defaultdict
+
 from ajna_commons.flask.log import logger
 
-from virasana.integracao import carga, xmli
+from virasana.integracao import carga, info_ade02, xmli
 
 
-class Auditoria():
+class Auditoria:
     """Recebe params, monta consultas de auditoria entre campos fs.files."""
 
     FILTROS_AUDITORIA = {
-        '0':{'filtro': {},
+        '0': {'filtro': {},
               'order': [],
               'descricao': 'Selecione'
               },
@@ -42,7 +43,12 @@ class Auditoria():
         '6': {'filtro': xmli.FALTANTES,
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem informação do XML integrada'
+              },
+        '7': {'filtro': info_ade02.FALTANTES,
+              'order': [('metadata.dataescaneamento', 1)],
+              'descricao': 'Imagens sem pesagem integrada'
               }
+
     }
 
     def __init__(self, db):

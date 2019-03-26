@@ -194,6 +194,18 @@
                 </ul>
                 {% endif %}
             </div>
+            <h3>Dados de pesagens - integração recintos aduaneiros</h3>
+            <div id="ade022003">
+                {% if myfile['metadata']['pesagens'] %}
+                    {% for recinto, pesagem in myfile['metadata']['pesagens'].items() %}
+                        <ul>{{ recinto }}
+                            {% for key, value in pesagem.items() %}
+                                <li> {{ key }}: {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
     </div>
     <div id="bottom" class="row">

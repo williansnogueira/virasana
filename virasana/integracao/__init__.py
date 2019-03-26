@@ -30,6 +30,8 @@ from pymongo.errors import OperationFailure
 
 from virasana.integracao import carga
 from virasana.integracao import xmli
+from virasana.integracao import padma
+from virasana.integracao import info_ade02
 
 USERNAME = 'virasana_service'
 VIRASANA_PASS_FILE = os.path.join(os.path.dirname(__file__), USERNAME)
@@ -232,12 +234,18 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     stats['Imagens com info do Carga'] = total - \
                                          gridfs_count(db, filtro_carga,
                                                       limit=None)
-    logger.debug('Total %s ' % filtro_carga)
     filtro_xml = dict(filtro, **xmli.FALTANTES)
     stats['Imagens com info do XML'] = total - \
                                        gridfs_count(db, filtro_xml,
                                                     limit=None)
-    logger.debug('Total %s ' % filtro_xml)
+    filtro_padma = dict(filtro, **padma.FALTANTES)
+    count_padma = gridfs_count(db, filtro_padma, limit=None)
+    stats['Imagens com bbox do Padma'] = total - count_padma
+
+    filtro_pesagem = dict(filtro, **info_ade02.FALTANTES)
+    stats['Imagens com informações de Pesagem'] = total - \
+                                         gridfs_count(db, filtro_pesagem,
+                                                      limit=None)
     # DATAS
     logger.debug('Totais consultados')
     datas = OrderedDict()

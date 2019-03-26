@@ -11,7 +11,10 @@ import requests
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI, PADMA_URL
 from ajna_commons.flask.log import logger
 
-from virasana.integracao import get_service_password
+from virasana.integracao.__init__ import get_service_password
+
+FALTANTES = {'metadata.contentType': 'image/jpeg',
+             'metadata.predictions.bbox': None}
 
 BBOX_MODELS = ['ssd']
 CHAVES_PADMA = [

@@ -31,18 +31,20 @@ from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
 from pymongo import MongoClient
+from wtforms import (BooleanField, DateField, FloatField, IntegerField,
+                     PasswordField, SelectField, StringField)
+from wtforms.validators import DataRequired, optional
+
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
-                                 dict_to_text, plot_bar_plotly,
+                                 dict_to_text, info_ade02, padma,
+                                 plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
-                                 summary)
+                                 summary, xmli)
 from virasana.models.models import Ocorrencias, Tags
 from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
-from wtforms import (BooleanField, DateField, FloatField, IntegerField,
-                     PasswordField, SelectField, StringField)
-from wtforms.validators import DataRequired, optional
 
 app = Flask(__name__, static_url_path='/static')
 csrf = CSRFProtect(app)
@@ -718,7 +720,7 @@ filtros = dict()
 
 def campos_chave():
     """Retorna campos chave para montagem de filtro."""
-    return CHAVES_GRIDFS + carga.CHAVES_CARGA
+    return CHAVES_GRIDFS + carga.CHAVES_CARGA + info_ade02.CHAVES_RECINTO
 
 
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])
@@ -866,9 +868,9 @@ def files():
         # print('**Página:', pagina_atual, skip, type(skip))
         # print(count, skip)
         for grid_data in db['fs.files'] \
-            .find(filter=filtro, projection=projection) \
-            .sort(order) \
-            .limit(PAGE_ROWS).skip(skip):
+                .find(filter=filtro, projection=projection) \
+                .sort(order) \
+                .limit(PAGE_ROWS).skip(skip):
             linha = {}
             linha['_id'] = grid_data['_id']
             linha['filename'] = grid_data['filename']

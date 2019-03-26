@@ -253,11 +253,9 @@ if __name__ == '__main__':  # pragma: no cover
     print('Criando índices para Pesagens')
     print(create_indexes(db))
     print('Adquirindo pesagens do dia')
-    start = datetime(2019, 1, 20)
-    end = datetime(2019, 2, 3)
+    start = datetime.now()
+    end = start
     print(adquire_pesagens(db, start, end))
     print('Integrando pesagens do dia')
     print('Atualizados %s registros de pesagens' %
           pesagens_grava_fsfiles(db, start, end))
-
-# {'metadata.contentType': 'image/jpeg', 'metadata.dataescaneamento': {'$gt': ISODate("2019-02-03"), '$lt': ISODate("2019-02-03")}, 'metadata.recinto': {'$exists': False}}

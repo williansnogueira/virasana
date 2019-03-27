@@ -14,7 +14,7 @@ from ajna_commons.flask.log import logger
 from virasana.integracao.__init__ import get_service_password
 
 FALTANTES = {'metadata.contentType': 'image/jpeg',
-             'metadata.predictions.bbox': None}
+             'metadata.predictions.bbox': {'$exists': False}}
 
 BBOX_MODELS = ['ssd']
 CHAVES_PADMA = [

@@ -3,7 +3,7 @@
 import csv
 import os
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import requests
 from ajna_commons.flask.log import logger
@@ -219,7 +219,8 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     filtro = {'metadata.contentType': 'image/jpeg'}
     #  {'metadata.pesagens': {'$exists': False},
     DELTA = 5
-    filtro['metadata.dataescaneamento'] = {'$gt': data_inicio, '$lt': data_fim + timedelta(days=1)}
+    data_fim = data_fim + timedelta(hours=1, minutes=59, seconds=59)  # Pega atá a última hora do dia
+    filtro['metadata.dataescaneamento'] = {'$gte': data_inicio, '$lte': data_fim}
     projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
     total = db['fs.files'].count_documents(filtro)
     fs_cursor = list(
@@ -227,8 +228,8 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     )
     pesagens_cursor_entrada = list(
         db['PesagensDTE'].find(
-            {'datahoraentradaiso': {'$gt': data_inicio - timedelta(days=DELTA),
-                                    '$lt': data_fim + timedelta(days=DELTA)},
+            {'datahoraentradaiso': {'$gte': data_inicio - timedelta(days=DELTA),
+                                    '$lte': data_fim + timedelta(days=DELTA)},
              'codigoconteinerentrada': {'$exists': True, '$ne': None, '$ne': ''}}
         ).sort('codigoconteinerentrada')
     )
@@ -270,7 +271,7 @@ if __name__ == '__main__':  # pragma: no cover
     print('Criando índices para Pesagens')
     print(create_indexes(db))
     print('Adquirindo pesagens do dia anterior')
-    start = datetime.now() - timedelta(days=1)
+    start = datetime.combine(date.today(), datetime.min.time()) - timedelta(days=1)
     end = start
     print(adquire_pesagens(db, start, end))
     print('Integrando pesagens do dia')

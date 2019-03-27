@@ -15,7 +15,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from json.decoder import JSONDecodeError
 
 import requests
@@ -81,9 +81,10 @@ def reload_indexes():
 
 def periodic_updates(db, lote=1000):
     print('Iniciando atualizações...')
-    doisdias = datetime.now() - timedelta(days=2)
-    cincodias = datetime.now() - timedelta(days=5)
-    ontem = datetime.now() - timedelta(days=1)
+    hoje = datetime.combine(date.today(), datetime.min.time())
+    doisdias =  hoje - timedelta(days=2)
+    cincodias = hoje - timedelta(days=5)
+    ontem = hoje - timedelta(days=1)
     xmli.dados_xml_grava_fsfiles(db, lote * 2, doisdias)
     carga.dados_carga_grava_fsfiles(db, lote * 5, cincodias)
     info_ade02.adquire_pesagens(db, ontem, ontem)

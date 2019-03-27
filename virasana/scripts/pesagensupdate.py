@@ -10,14 +10,14 @@ Args:
 
 """
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import click
 
 from virasana.db import mongodb as db
 from virasana.integracao import info_ade02
 
-today = datetime.today()
+today = date.today()
 str_today = datetime.strftime(today, '%d/%m/%Y')
 yesterday = today - timedelta(days=1)
 str_yesterday = datetime.strftime(yesterday, '%d/%m/%Y')

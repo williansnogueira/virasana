@@ -67,7 +67,10 @@ def summary(grid_data=None, registro=None):
         if not meta:
             raise TypeError('Não foi encontrado registro do CARGA' +
                             ' na função integracao.carga.summary')
-        tipo = meta.get('manifesto')[0].get('tipomanifesto')
+        manifesto = meta.get('manifesto')
+        if isinstance(manifesto, list):
+            manifesto = manifesto[0]
+        tipo = manifesto.get('tipomanifesto')
         tipos = {'lci': 'Importação',
                  'bce': 'Baldeação',
                  'lce': 'Exportação'}
@@ -76,27 +79,36 @@ def summary(grid_data=None, registro=None):
             result['CONTÊINER VAZIO'] = ''
             result['Manifesto - Escala'] = \
                 '%s - %s' % \
-                (meta.get('manifesto')[0].get('manifesto'),
+                (manifesto.get('manifesto'),
                  meta.get('atracacao').get('escala'))
             conteiner_pesos = []
-            for conteiner in meta.get('container'):
+            conteineres = meta.get('container')
+            if not isinstance(conteineres, list):
+                conteineres = [conteineres]
+            for conteiner in conteineres:
                 tara = float(conteiner.get('tara(kg)').replace(',', '.'))
                 conteiner_pesos.append('%s - %dkg' %
                                        (conteiner.get('container'), tara))
             result['Número contêiner - tara'] = conteiner_pesos
         else:
+            conhecimento = meta.get('manifesto')
+            if isinstance(conhecimento, list):
+                conhecimento = conhecimento[0]
             result['CONTÊINER COM CARGA'] = ''
             if meta.get('pesototal'):
                 result['PESO TOTAL'] = '{:0.2f}'.format(meta.get('pesototal'))
             result['Conhecimento - Manifesto - Escala'] = \
                 'CE %s - %s - %s' % \
-                (meta.get('conhecimento')[0].get('conhecimento'),
-                 meta.get('manifesto')[0].get('manifesto'),
+                (conhecimento.get('conhecimento'),
+                 manifesto.get('manifesto'),
                  meta.get('atracacao').get('escala'))
             result['Descrição'] = \
-                meta.get('conhecimento')[0].get('descricaomercadoria')
+                conhecimento.get('descricaomercadoria')
             conteiner_pesos = []
-            for conteiner in meta.get('container'):
+            conteineres = meta.get('container')
+            if not isinstance(conteineres, list):
+                conteineres = [conteineres]
+            for conteiner in conteineres:
                 tara = conteiner.get('taracontainer', '0')
                 tara = float(tara.replace(',', '.'))
                 peso = conteiner.get('pesobrutoitem', '0')
@@ -117,6 +129,7 @@ def summary(grid_data=None, registro=None):
             )
     except Exception as err:
         result['ERRO AO BUSCAR DADOS CARGA'] = str(err)
+        logger.error(err, exc_info=True)
     return result
 
 

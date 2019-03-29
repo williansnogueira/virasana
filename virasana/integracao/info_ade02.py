@@ -223,6 +223,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     acum = 0
     # Trata somente um dia por vez
     while ldata <= data_fim:
+        ldata = ldata + timedelta(days=1)
         ldata_fim = ldata + timedelta(hours=1, minutes=59, seconds=59)  # Pega atá a última hora do dia
         filtro['metadata.dataescaneamento'] = {'$gte': ldata, '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']

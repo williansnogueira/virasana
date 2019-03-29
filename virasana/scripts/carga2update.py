@@ -40,6 +40,7 @@ def update(inicio, fim):
         manifesto_grava_fsfiles(db, ldata, ldata)
         s1 = time.time()
         print('Manifestos atualizados em %s segundos.' % (s1 - s0))
+        ldata = ldata + timedelta(days=1)
 
 
 if __name__ == '__main__':

@@ -287,7 +287,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     cursor = db['stat_recinto'].find()
     recinto_mes = defaultdict(dict)
     for linha in cursor:
-        recinto = linha['_id']['recinto']
+        recinto = linha['_id'].get('recinto')
         if recinto is not None:
             ano_mes = '%04d%02d' % (linha['_id']['year'],
                                     linha['_id']['month'])

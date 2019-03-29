@@ -277,6 +277,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     for recinto in cursor:
         recintos[recinto['_id']] = recinto['count']
     ordered = OrderedDict()
+    print(recintos.keys())
     for key in sorted(recintos.keys()):
         ordered[key] = recintos[key]
     stats['recinto'] = ordered

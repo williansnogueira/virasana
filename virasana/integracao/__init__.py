@@ -205,6 +205,8 @@ def get_data(db, data, filtro_data, campos, ordem=1):
         linha = next(linha)
         for data_path in data.split('.'):
             if linha:
+                if isinstance(linha, list):
+                    linha = linha[0]
                 linha = linha.get(data_path)
         if isinstance(linha, datetime):
             linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')

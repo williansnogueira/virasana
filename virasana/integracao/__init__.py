@@ -288,9 +288,10 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     recinto_mes = defaultdict(dict)
     for linha in cursor:
         recinto = linha['_id']['recinto']
-        ano_mes = '%04d%02d' % (linha['_id']['year'],
-                                linha['_id']['month'])
-        recinto_mes[recinto][ano_mes] = linha['count']
+        if recinto is not None:
+            ano_mes = '%04d%02d' % (linha['_id']['year'],
+                                    linha['_id']['month'])
+            recinto_mes[recinto][ano_mes] = linha['count']
     for recinto, value in recinto_mes.items():
         ordered = OrderedDict(
             {key: value[key] for key in sorted(value)})

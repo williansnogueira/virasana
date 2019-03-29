@@ -1,6 +1,10 @@
 from collections import defaultdict, OrderedDict
 from datetime import timedelta
 
+from ajna_commons.flask.log import logger
+
+from virasana.integracao.carga2 import carga_faltantes
+
 DELTA_VAZIO = 5
 
 
@@ -110,3 +114,38 @@ def monta_mongo_dict(db, dict_manifestos_containeres, dict_faltantes):
         mongo_dict[container] = ldict
 
     return mongo_dict
+
+
+def manifesto_grava_fsfiles(db, data_inicio, data_fim):
+    campo = 'manifesto'
+    dict_faltantes = carga_faltantes(db, data_inicio, data_fim, campo)
+    total_fsfiles = len(dict_faltantes.keys())
+    logger.info('Total de contêineres sem %s de %s a %s: %s' %
+                (campo, data_inicio, data_fim, total_fsfiles))
+
+    dict_manifestos = manifestos_periodo(db, data_inicio, data_fim,
+                                         get_cursor_vazios_mongo)
+    dict_manifestos_containeres = manifestos_unicos_containers(
+        dict_faltantes, dict_manifestos)
+    total_manifestos = len(dict_manifestos_containeres.keys())
+    logger.info('Total de manifestos para estes contêineres de %s a %s: %s' %
+                (data_inicio, data_fim, total_manifestos))
+
+    dados_carga = monta_mongo_dict(db,
+                                   dict_manifestos_containeres,
+                                   dict_faltantes)
+    # dados_carga = {}
+    # print(mongo_dict)
+    for container, carga in dados_carga.items():
+        _id = dict_faltantes[container]
+        print(_id)
+        db['fs.files'].update_one(
+            {'_id': _id},
+            {'$set': {'metadata.carga': carga}}
+        )
+    logger.info(
+        'Resultado manifestos_grava_fsfiles '
+        'Pesquisados %s. '
+        'Encontrados %s .'
+        % (total_fsfiles, len(dados_carga))
+    )

@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from ajna_commons.flask.log import logger
 
-from virasana.integracao.carga2 import carga_faltantes
+from virasana.integracao.carga2 import carga_faltantes, mongo_find_in
 
 DELTA_VAZIO = 5
 
@@ -55,37 +55,6 @@ def manifestos_unicos_containers(dict_faltantes, dict_manifestos):
     return manifestos
 
 
-def mongo_find_in(db, collection: str, fields: list, in_sets: list,
-                  key_field: str):
-    """Realiza um find $in in_set no db.collection e retorna dict.
-
-    Args:
-        db: conexão ao MongoDB com banco de dados selecionado "setted"
-
-        collection: nome da coleção mongo para aplicar a "query"
-
-        field: campo para aplicar a "filter by"
-
-        in_set: lista ou conjunto de valores a passar para o operador "$in"
-
-        key_field: campo para obter valores únicos, agrupa por este campo
-        colocando-o como chave do dicionário de resposta.
-
-    Returns:
-        Dicionário de resultados formatado key:value(Somente campos não nulos)
-        Conjuntos de set_field
-
-    """
-    result = OrderedDict()
-    filtro = {}
-    for field, in_set in zip(fields, in_sets):
-        filtro[field] = {'$in': list(in_set)}
-    # print(filtro)
-    cursor = db[collection].find(filtro)
-    for linha in cursor:
-        result[linha[key_field]] = {str(key): value for key, value in linha.items()
-                                    if value is not None and key != '_id'}
-    return result
 
 
 def monta_mongo_dict(db, dict_manifestos_containeres, dict_faltantes):

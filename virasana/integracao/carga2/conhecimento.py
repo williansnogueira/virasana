@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from ajna_commons.flask.log import logger
 
-from virasana.integracao.carga2 import carga_faltantes
+from virasana.integracao.carga2 import carga_faltantes, mongo_find_in
 
 DELTA_IMPORTACAO = 5
 DELTA_EXPORTACAO = 10
@@ -87,6 +87,38 @@ def conhecimentos_containers_faltantes(dict_faltantes, dict_conhecimentos):
     return dict_conhecimentos_filtrado
 
 
+def monta_mongo_dict(db, dict_conhecimentos_containeres, dict_faltantes):
+    containers_set = set(dict_conhecimentos_containeres.keys())
+    conhecimentos_set = set()
+    for lista in dict_conhecimentos_containeres.values():
+        for item in lista:
+            conhecimentos_set.add(item)
+
+    containers = mongo_find_in(db, 'CARGA.Container', ['conhecimento', 'container'],
+                               [conhecimentos_set, containers_set], 'container')
+    conhecimentos = mongo_find_in(db, 'CARGA.Conhecimento', ['conhecimento'],
+                               [conhecimentos_set], 'conhecimento')
+    ncms = mongo_find_in(db, 'CARGA.NCM', ['conhecimento'],
+                               [conhecimentos_set], 'conhecimento')
+    manifestos = mongo_find_in(db, 'CARGA.Manifesto', ['manifesto'], [manifestos_set], 'manifesto')
+    manifestos_escala = mongo_find_in(db, 'CARGA.EscalaManifesto', ['manifesto'], [manifestos_set], 'manifesto')
+    escalas_set = set([value['escala'] for value in manifestos_escala.values()])
+    escalas = mongo_find_in(db, 'CARGA.Escala', ['escala'], [escalas_set], 'escala')
+    atracacoes = mongo_find_in(db, 'CARGA.AtracDesatracEscala', ['escala'], [escalas_set], 'escala')
+    mongo_dict = {}
+    for container, values in containers.items():
+        ldict = {'vazio': True}
+        ldict['container'] = values
+        manifesto = values['manifesto']
+        escala = manifestos_escala[manifesto]['escala']
+        ldict['manifesto'] = manifestos[manifesto]
+        ldict['escala'] = escalas[escala]
+        ldict['atracacao'] = atracacoes[escala]
+        mongo_dict[container] = ldict
+
+    return mongo_dict
+
+
 def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
     campo = 'escala'
     dict_faltantes = carga_faltantes(db, data_inicio, data_fim, campo)
@@ -105,3 +137,22 @@ def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
     total_conhecimentos = len(dict_conhecimentos_containeres.keys())
     logger.info('Total de conhecimentos para estes contêineres de %s a %s: %s' %
                 (data_inicio, data_fim, total_conhecimentos))
+
+    dados_carga = monta_mongo_dict(db,
+                                   dict_conhecimentos_containeres,
+                                   dict_faltantes)
+    # dados_carga = {}
+    print(dados_carga)
+    for container, carga in dados_carga.items():
+        _id = dict_faltantes[container]
+        print(_id)
+        db['fs.files'].update_one(
+            {'_id': _id},
+            {'$set': {'metadata.carga': carga}}
+        )
+    logger.info(
+        'Resultado conhecimento_grava_fsfiles '
+        'Pesquisados %s. '
+        'Encontrados %s .'
+        % (total_fsfiles, len(dados_carga))
+    )

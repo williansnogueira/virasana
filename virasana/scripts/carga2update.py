@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 
 import click
 
-from integracao.carga2.manifesto import manifesto_grava_fsfiles
+from virasana.integracao.carga2.manifesto import manifesto_grava_fsfiles
 from virasana.db import mongodb as db
 
 today = date.today()

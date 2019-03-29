@@ -49,8 +49,8 @@ class Ocorrencias():
                     ldata = ''
                 ocorrencias.append(
                     {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),
-                     'usuario': ocorrencia['usuario'],
-                     'texto': ocorrencia['texto'],
+                     'usuario': ocorrencia.get('usuario', 'falha'),
+                     'texto': ocorrencia.get('texto', 'falha'),
                      'data': ldata}
                 )
         return ocorrencias

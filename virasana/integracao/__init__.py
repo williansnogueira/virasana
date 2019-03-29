@@ -252,6 +252,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     datas['imagem'] = DATA
     datas['XML'] = xmli.DATA
     datas['Carga'] = carga.DATA
+    datas['Pesagem'] = info_ade02.DATA
     for base, data in datas.items():
         filtro_data = dict(filtro)
         if filtro_data.get(data):

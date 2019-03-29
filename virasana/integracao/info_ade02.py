@@ -38,7 +38,7 @@ FIELDS = ()
 DATE_FIELDS = ('Date', 'UpdateDateTime', 'LastStateDateTime',
                'SCANTIME', 'ScanTime')
 
-DATA = 'metadata.xml.date'
+DATA = 'metadata.pesagens.saida'
 
 CHAVES_RECINTO = [
     'metadata.pesagens.placacavalo',

@@ -45,7 +45,7 @@ class Ocorrencias():
                 try:
                     ldata = datetime.strftime(ocorrencia['data'],
                                               '%d/%m/%Y %H:%M')
-                except (ValueError, TypeError):
+                except (ValueError, TypeError, KeyError):
                     ldata = ''
                 ocorrencias.append(
                     {'id_ocorrencia': str(ocorrencia.get('id_ocorrencia')),

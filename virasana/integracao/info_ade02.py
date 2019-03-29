@@ -219,47 +219,49 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     filtro = {'metadata.contentType': 'image/jpeg'}
     #  {'metadata.pesagens': {'$exists': False},
     DELTA = 5
-    data_fim = data_fim + timedelta(hours=1, minutes=59, seconds=59)  # Pega atá a última hora do dia
-    filtro['metadata.dataescaneamento'] = {'$gte': data_inicio, '$lte': data_fim}
-    projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
-    total = db['fs.files'].count_documents(filtro)
-    fs_cursor = list(
-        db['fs.files'].find(filtro, projection=projection).sort('metadata.numeroinformado')
-    )
-    pesagens_cursor_entrada = list(
-        db['PesagensDTE'].find(
-            {'datahoraentradaiso': {'$gte': data_inicio - timedelta(days=DELTA),
-                                    '$lte': data_fim + timedelta(days=DELTA)},
-             'codigoconteinerentrada': {'$exists': True, '$ne': None, '$ne': ''}}
-        ).sort('codigoconteinerentrada')
-    )
-    pesagens_cursor_saida = list(
-        db['PesagensDTE'].find(
-            {'datahorasaidaiso': {'$gt': data_inicio - timedelta(days=DELTA),
-                                  '$lt': data_fim + timedelta(days=DELTA)},
-             'codigoconteinersaida': {'$exists': True, '$ne': None, '$ne': ''}}
-        ).sort('codigoconteinersaida')
-    )
+    ldata = data_inicio
     acum = 0
-    logger.info(
-        'Processando pesagens para imagens de %s a %s. '
-        'Pesquisando pesagens %s dias antes e depois. '
-        'Imagens encontradas: %s  Pesagens encontradas %s(entrada) %s(saída).'
-        % (data_inicio, data_fim, DELTA, len(fs_cursor),
-           len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
-    )
-    linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
-    linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
-    # acum = len(linhas_entrada) + len(linhas_saida)
-    logger.info(
-        'Resultado pesagens_grava_fsfiles '
-        'Pesquisados %s. '
-        'Encontrados %s entrada %s saida.'
-        % (total, len(linhas_entrada), len(linhas_saida))
-    )
-    acum = 0
-    acum += inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
-    acum += inserepesagens_fsfiles(db, linhas_saida, 'saida')
+    # Trata somente um dia por vez
+    while ldata <= data_fim:
+        ldata_fim = ldata + timedelta(hours=1, minutes=59, seconds=59)  # Pega atá a última hora do dia
+        filtro['metadata.dataescaneamento'] = {'$gte': ldata, '$lte': ldata_fim}
+        projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
+        total = db['fs.files'].count_documents(filtro)
+        fs_cursor = list(
+            db['fs.files'].find(filtro, projection=projection).sort('metadata.numeroinformado')
+        )
+        pesagens_cursor_entrada = list(
+            db['PesagensDTE'].find(
+                {'datahoraentradaiso': {'$gte': ldata - timedelta(days=DELTA),
+                                        '$lte': ldata_fim + timedelta(days=DELTA)},
+                 'codigoconteinerentrada': {'$exists': True, '$ne': None, '$ne': ''}}
+            ).sort('codigoconteinerentrada')
+        )
+        pesagens_cursor_saida = list(
+            db['PesagensDTE'].find(
+                {'datahorasaidaiso': {'$gt': ldata - timedelta(days=DELTA),
+                                      '$lt': ldata_fim + timedelta(days=DELTA)},
+                 'codigoconteinersaida': {'$exists': True, '$ne': None, '$ne': ''}}
+            ).sort('codigoconteinersaida')
+        )
+        logger.info(
+            'Processando pesagens para imagens de %s a %s. '
+            'Pesquisando pesagens %s dias antes e depois. '
+            'Imagens encontradas: %s  Pesagens encontradas %s(entrada) %s(saída).'
+            % (ldata, ldata_fim, DELTA, len(fs_cursor),
+               len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
+        )
+        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
+        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
+        # acum = len(linhas_entrada) + len(linhas_saida)
+        logger.info(
+            'Resultado pesagens_grava_fsfiles '
+            'Pesquisados %s. '
+            'Encontrados %s entrada %s saida.'
+            % (total, len(linhas_entrada), len(linhas_saida))
+        )
+        acum += inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
+        acum += inserepesagens_fsfiles(db, linhas_saida, 'saida')
     return acum
 
 

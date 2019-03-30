@@ -14,6 +14,7 @@ from datetime import date, datetime, timedelta
 
 import click
 
+from virasana.integracao.carga2.conhecimento import conhecimento_grava_fsfiles
 from virasana.integracao.carga2.manifesto import manifesto_grava_fsfiles
 from virasana.db import mongodb as db
 
@@ -40,6 +41,16 @@ def update(inicio, fim):
         manifesto_grava_fsfiles(db, ldata, ldata)
         s1 = time.time()
         print('Manifestos atualizados em %s segundos.' % (s1 - s0))
+        s0 = time.time()
+        print('Integrando Importação dia %s  a %s...' % (ldata, ldata))
+        conhecimento_grava_fsfiles(db, ldata, ldata)
+        s1 = time.time()
+        print('Importacao atualizada em %s segundos.' % (s1 - s0))
+        s0 = time.time()
+        print('Integrando Exportação dia %s  a %s...' % (ldata, ldata))
+        conhecimento_grava_fsfiles(db, ldata, ldata, importacao=False)
+        s1 = time.time()
+        print('Exportacao atualizada em %s segundos.' % (s1 - s0))
         ldata = ldata + timedelta(days=1)
 
 

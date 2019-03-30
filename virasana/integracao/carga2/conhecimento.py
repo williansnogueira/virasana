@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from ajna_commons.flask.log import logger
 
+from virasana.integracao.carga import create_indexes
 from virasana.integracao.carga2 import carga_faltantes, mongo_find_in
 
 DELTA_IMPORTACAO = 5
@@ -96,38 +97,43 @@ def monta_mongo_dict(db, dict_conhecimentos_containeres):
 
     containers = mongo_find_in(db, 'CARGA.Container', ['conhecimento', 'container'],
                                [conhecimentos_set, containers_set], 'container')
+
+    item_set = set()
+    for container in containers.values():
+        item_set.add(container['item'])
     conhecimentos = mongo_find_in(db, 'CARGA.Conhecimento', ['conhecimento'],
                                   [conhecimentos_set], 'conhecimento')
-    ncms = mongo_find_in(db, 'CARGA.NCM', ['conhecimento'],
-                         [conhecimentos_set], 'conhecimento')
+    ncms = mongo_find_in(db, 'CARGA.NCM', ['conhecimento', 'item'],
+                         [conhecimentos_set, item_set], 'conhecimento')
     manifestos_conhecimentos = mongo_find_in(db, 'CARGA.ManifestoConhecimento', ['conhecimento'],
-                                  [conhecimentos_set], 'conhecimento')
+                                             [conhecimentos_set], 'conhecimento')
     manifestos_set = set()
     for conhecimento, linha in manifestos_conhecimentos.items():
-        print(linha)
         manifestos_set.add(linha['manifesto'])
     manifestos = mongo_find_in(db, 'CARGA.Manifesto', ['manifesto'], [manifestos_set], 'manifesto')
-    print(manifestos_set)
-    print(manifestos)
     manifestos_escala = mongo_find_in(db, 'CARGA.EscalaManifesto', ['manifesto'], [manifestos_set], 'manifesto')
     escalas_set = set([value['escala'] for value in manifestos_escala.values()])
     escalas = mongo_find_in(db, 'CARGA.Escala', ['escala'], [escalas_set], 'escala')
     atracacoes = mongo_find_in(db, 'CARGA.AtracDesatracEscala', ['escala'], [escalas_set], 'escala')
     mongo_dict = {}
     for container, values in containers.items():
-        ldict = {'vazio': True}
-        ldict['container'] = values
-        ldict['conhecimento'] = conhecimentos
-        ldict['manifesto'] = manifestos
-        ldict['escala'] = escalas
-        ldict['ncm'] = ncms
+        ldict = {'vazio': False}
+        ldict['container'] = [values]
+        ldict['conhecimento'] = list(conhecimentos.values())
+        ldict['manifesto'] = list(manifestos.values())
+        ldict['escala'] = list(escalas.values())
+        ldict['ncm'] = list(ncms.values())
+        ldict['atracacao'] = list(atracacoes.values())
         mongo_dict[container] = ldict
 
     return mongo_dict
 
 
 def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
-    campo = 'escala'
+    if importacao:
+        campo = 'escala'
+    else:
+        campo = 'conhecimento'
     dict_faltantes = carga_faltantes(db, data_inicio, data_fim, campo)
     total_fsfiles = len(dict_faltantes.keys())
     logger.info('Total de contêineres sem %s de %s a %s: %s' %
@@ -141,15 +147,13 @@ def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
                                                get_cursor)
     dict_conhecimentos_containeres = conhecimentos_containers_faltantes(
         dict_faltantes, dict_conhecimentos)
+
     total_conhecimentos = len(dict_conhecimentos_containeres)
     logger.info('Total de contêineres com conhecimento de %s a %s: %s' %
                 (data_inicio, data_fim, total_conhecimentos))
 
-    dados_carga = monta_mongo_dict(db,
-                                   dict_conhecimentos_containeres,
-                                   dict_faltantes)
+    dados_carga = monta_mongo_dict(db, dict_conhecimentos_containeres)
     # dados_carga = {}
-    print(dados_carga)
     for container, carga in dados_carga.items():
         _id = dict_faltantes[container]
         print(_id)
@@ -165,11 +169,37 @@ def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
     )
 
 
+def compara_dicts(dict1, dict2):
+    for key, value in dict1.items():
+        value_fsfiles = dict2.get(key)
+        if value_fsfiles is None:
+            print('%s não existe' % key)
+            continue
+        if type(value) != type(value_fsfiles):
+            print('Tipos diferentes: novo %s antigo %s. (%s) ' %
+                  (type(value), type(value_fsfiles), key))
+        if isinstance(value, list) and isinstance(value_fsfiles, list):
+            for subvalue1, subvalue2 in zip(value, value_fsfiles):
+                if isinstance(value, dict) and isinstance(value_fsfiles, dict):
+                    compara_dicts(value, value_fsfiles)
+            continue
+        if isinstance(value, dict) and isinstance(value_fsfiles, dict):
+            compara_dicts(value, value_fsfiles)
+            continue
+        if value_fsfiles != value:
+            print('Valores diferentes: %s' % key)
+            print('mongo_dict', value)
+            print('fs.files', value_fsfiles)
+
+
 if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = MongoClient(host=MONGODB_URI)[DATABASE]
+
+    print('Criando índices para CARGA')
+    create_indexes(db)
 
     # Testa mongo_dict
     row = db.fs.files.find_one({'metadata.contentType': 'image/jpeg',
@@ -190,18 +220,8 @@ if __name__ == '__main__':  # pragma: no cover
 
     dados_fsfiles = row['metadata']['carga']
     dados_carga = dados_carga[container]
-    # print(dados_carga)
-    # print(dados_fsfiles)
-    for key, value in dados_carga.items():
-        value_fsfiles = dados_fsfiles.get(key)
-        if value_fsfiles is None:
-            print('%s não existe' % key)
-            continue
-        if type(value) != type(value_fsfiles):
-            print('Tipos diferentes: novo %s antigo %s. (%s) ' %
-                  (type(value), type(value_fsfiles), key))
-        if value_fsfiles != value:
-            print('Valores diferentes: %s' % key)
-            print(value)
-            print(value_fsfiles)
-    assert dados_carga == dados_fsfiles
+    from pprint import pprint
+
+    pprint(dados_carga)
+    pprint(dados_fsfiles)
+    compara_dicts(dados_carga, dados_fsfiles)

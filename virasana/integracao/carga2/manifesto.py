@@ -1,8 +1,9 @@
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from datetime import timedelta
 
 from ajna_commons.flask.log import logger
 
+from virasana.integracao.carga import create_indexes
 from virasana.integracao.carga2 import carga_faltantes, mongo_find_in
 
 DELTA_VAZIO = 5
@@ -55,8 +56,6 @@ def manifestos_unicos_containers(dict_faltantes, dict_manifestos):
     return manifestos
 
 
-
-
 def monta_mongo_dict(db, dict_manifestos_containeres):
     manifestos_set = set(dict_manifestos_containeres.keys())
     containers_set = set()
@@ -87,7 +86,7 @@ def monta_mongo_dict(db, dict_manifestos_containeres):
 
 
 def manifesto_grava_fsfiles(db, data_inicio, data_fim):
-    campo = 'manifesto'
+    campo = 'escala'
     dict_faltantes = carga_faltantes(db, data_inicio, data_fim, campo)
     total_fsfiles = len(dict_faltantes.keys())
     logger.info('Total de contêineres sem %s de %s a %s: %s' %
@@ -101,9 +100,7 @@ def manifesto_grava_fsfiles(db, data_inicio, data_fim):
     logger.info('Total de manifestos para estes contêineres de %s a %s: %s' %
                 (data_inicio, data_fim, total_manifestos))
 
-    dados_carga = monta_mongo_dict(db,
-                                   dict_manifestos_containeres,
-                                   dict_faltantes)
+    dados_carga = monta_mongo_dict(db, dict_manifestos_containeres)
     # dados_carga = {}
     # print(mongo_dict)
     for container, carga in dados_carga.items():
@@ -126,6 +123,9 @@ if __name__ == '__main__':  # pragma: no cover
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = MongoClient(host=MONGODB_URI)[DATABASE]
+
+    print('Criando índices para CARGA')
+    create_indexes(db)
 
     # Testa mongo_dict
     row = db.fs.files.find_one({'metadata.contentType': 'image/jpeg',

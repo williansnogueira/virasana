@@ -40,8 +40,8 @@ if __name__ == '__main__':  # pragma: no cover
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    start = datetime.datetime(2017, 7, 10)
-    end = datetime.datetime(2017, 7, 15)
+    start = datetime.datetime(2019, 3, 20)
+    end = datetime.datetime(2019, 3, 24)
     ldata = start
     while ldata <= end:
         s0 = time.time()

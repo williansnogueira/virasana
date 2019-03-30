@@ -205,6 +205,8 @@ def get_data(db, data, filtro_data, campos, ordem=1):
         linha = next(linha)
         for data_path in data.split('.'):
             if linha:
+                if isinstance(linha, list):
+                    linha = linha[0]
                 linha = linha.get(data_path)
         if isinstance(linha, datetime):
             linha = linha.strftime('%d/%m/%Y %H:%M:%S %z')
@@ -252,6 +254,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     datas['imagem'] = DATA
     datas['XML'] = xmli.DATA
     datas['Carga'] = carga.DATA
+    datas['Pesagem'] = info_ade02.DATA
     for base, data in datas.items():
         filtro_data = dict(filtro)
         if filtro_data.get(data):
@@ -275,8 +278,11 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
           }])
     recintos = dict()
     for recinto in cursor:
-        recintos[recinto['_id']] = recinto['count']
+        rid = recinto['_id']
+        if rid is not None:
+            recintos[rid] = recinto['count']
     ordered = OrderedDict()
+    # print(recintos.keys())
     for key in sorted(recintos.keys()):
         ordered[key] = recintos[key]
     stats['recinto'] = ordered
@@ -284,10 +290,11 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     cursor = db['stat_recinto'].find()
     recinto_mes = defaultdict(dict)
     for linha in cursor:
-        recinto = linha['_id']['recinto']
-        ano_mes = '%04d%02d' % (linha['_id']['year'],
-                                linha['_id']['month'])
-        recinto_mes[recinto][ano_mes] = linha['count']
+        recinto = linha['_id'].get('recinto')
+        if recinto is not None:
+            ano_mes = '%04d%02d' % (linha['_id']['year'],
+                                    linha['_id']['month'])
+            recinto_mes[recinto][ano_mes] = linha['count']
     for recinto, value in recinto_mes.items():
         ordered = OrderedDict(
             {key: value[key] for key in sorted(value)})

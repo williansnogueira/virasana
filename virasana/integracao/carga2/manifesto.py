@@ -57,7 +57,7 @@ def manifestos_unicos_containers(dict_faltantes, dict_manifestos):
 
 
 
-def monta_mongo_dict(db, dict_manifestos_containeres, dict_faltantes):
+def monta_mongo_dict(db, dict_manifestos_containeres):
     manifestos_set = set(dict_manifestos_containeres.keys())
     containers_set = set()
     for lista in dict_manifestos_containeres.values():
@@ -66,6 +66,7 @@ def monta_mongo_dict(db, dict_manifestos_containeres, dict_faltantes):
 
     containers = mongo_find_in(db, 'CARGA.ContainerVazio', ['manifesto', 'container'],
                                [manifestos_set, containers_set], 'container')
+    print(containers)
     manifestos = mongo_find_in(db, 'CARGA.Manifesto', ['manifesto'], [manifestos_set], 'manifesto')
     manifestos_escala = mongo_find_in(db, 'CARGA.EscalaManifesto', ['manifesto'], [manifestos_set], 'manifesto')
     escalas_set = set([value['escala'] for value in manifestos_escala.values()])
@@ -118,3 +119,43 @@ def manifesto_grava_fsfiles(db, data_inicio, data_fim):
         'Encontrados %s .'
         % (total_fsfiles, len(dados_carga))
     )
+
+
+if __name__ == '__main__':  # pragma: no cover
+    from pymongo import MongoClient
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+
+    # Testa mongo_dict
+    row = db.fs.files.find_one({'metadata.contentType': 'image/jpeg',
+                                'metadata.carga.vazio': True},
+                               {'metadata.carga': 1})
+
+    container = row['metadata']['carga']['container'][0]['container']
+    dict_manifestos_containeres = {
+        row['metadata']['carga']['manifesto'][0]['manifesto']: [container]
+    }
+    dict_faltantes = {
+        container: row['_id']
+    }
+    dados_carga = monta_mongo_dict(db,
+                                   dict_manifestos_containeres)
+
+    dados_fsfiles = row['metadata']['carga']
+    dados_carga = dados_carga[container]
+    # print(dados_carga)
+    # print(dados_fsfiles)
+    for key, value in dados_carga.items():
+        value_fsfiles = dados_fsfiles.get(key)
+        if value_fsfiles is None:
+            print('%s não existe' % key)
+            continue
+        if type(value) != type(value_fsfiles):
+            print('Tipos diferentes: novo %s antigo %s. ' %
+                  (type(value), type(value_fsfiles)))
+        if value_fsfiles != value:
+            print('Valores diferentes:')
+            print(value)
+            print(value_fsfiles)
+    assert dados_carga == dados_fsfiles

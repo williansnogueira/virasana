@@ -116,6 +116,7 @@ def manifesto_grava_fsfiles(db, data_inicio, data_fim):
         'Encontrados %s .'
         % (total_fsfiles, len(dados_carga))
     )
+    return len(dados_carga)
 
 
 if __name__ == '__main__':  # pragma: no cover

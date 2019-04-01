@@ -130,11 +130,11 @@ def monta_mongo_dict(db, dict_conhecimentos_containeres):
 
 
 def importacao_grava_fsfiles(db, data_inicio, data_fim):
-    conhecimento_grava_fsfiles(db, data_inicio, data_fim, True)
+    return conhecimento_grava_fsfiles(db, data_inicio, data_fim, True)
 
 
 def exportacao_grava_fsfiles(db, data_inicio, data_fim):
-    conhecimento_grava_fsfiles(db, data_inicio, data_fim, False)
+    return conhecimento_grava_fsfiles(db, data_inicio, data_fim, False)
 
 
 def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
@@ -174,6 +174,7 @@ def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
         'Encontrados %s .'
         % (total_fsfiles, len(dados_carga))
     )
+    return len(dados_carga)
 
 
 def compara_dicts(dict1, dict2):

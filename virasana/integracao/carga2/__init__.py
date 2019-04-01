@@ -15,9 +15,9 @@ FALTANTES = {'metadata.contentType': 'image/jpeg'}
 def carga_faltantes(db, data_inicio, data_fim, tipo=Tipo.MANIFESTO):
     filtro = FALTANTES
     if tipo == Tipo.EXPORTACAO:
-        filtro['metadata.carga.atracacao.conhecimento'] =  {'$exists': False}
+        filtro['metadata.carga.conhecimento.conhecimento'] =  {'$exists': False}
     else:
-        filtro['metadata.carga.atracacao.manifesto'] =  {'$exists': False}
+        filtro['metadata.carga.manifesto.manifesto'] =  {'$exists': False}
     dict_faltantes = OrderedDict()
     filtro = FALTANTES
     data_fim = datetime.datetime.combine(data_fim, datetime.time.max)  # Pega atá a última hora do dia

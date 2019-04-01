@@ -70,9 +70,23 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.numeroinformado')
     db['fs.files'].create_index('metadata.dataescaneamento')
     db['fs.files'].create_index('metadata.contentType')
+    db['fs.files'].create_index('metadata.carga.conhecimento.conhecimento')
+    db['fs.files'].create_index('metadata.carga.manifesto.manifesto')
     db['fs.files'].create_index(
         [('metadata.contentType', ASCENDING),
          ('metadata.dataescaneamento', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING),
+         ('metadata.carga.atracacao.escala', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING),
+         ('metadata.carga.conhecimento.conhecimento', ASCENDING)])
+    db['fs.files'].create_index(
+        [('metadata.contentType', ASCENDING),
+         ('metadata.dataescaneamento', ASCENDING),
+         ('metadata.carga.manifesto.manifesto', ASCENDING)])
     db['fs.files'].create_index(
         [('metadata.contentType', ASCENDING),
          ('metadata.dataescaneamento', ASCENDING),

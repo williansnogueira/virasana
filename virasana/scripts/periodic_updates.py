@@ -25,8 +25,7 @@ from ajna_commons.flask.conf import (DATABASE,
                                      MONGODB_URI, VIRASANA_URL)
 from ajna_commons.flask.log import logger
 
-from virasana.integracao.carga2 import Tipo
-from virasana.integracao.carga2.carga2 import update_ultima_dataatracacaoiso
+from virasana.integracao.carga2.carga2 import do_update_carga
 from virasana.integracao import atualiza_stats, \
     carga, get_service_password, info_ade02, xmli
 from virasana.scripts.gera_indexes import gera_indexes
@@ -90,9 +89,8 @@ def periodic_updates(db, lote=1000):
     ontem = hoje - timedelta(days=1)
     xmli.dados_xml_grava_fsfiles(db, lote * 2, doisdias)
     # TODO: Testar e se funcionar colocar a nova integração do CARGA
-    #  (2 linhas abaixo) e tirar a antiga
-    # for tipo in Tipo:
-    #    update_ultima_dataatracacaoiso(db, tipo)
+    #  (linha comentadao abaixo) e tirar a antiga (próxima linha)
+    # do_update_carga(db)
     carga.dados_carga_grava_fsfiles(db, lote * 5, cincodias)
     info_ade02.adquire_pesagens(db, ontem, ontem)
     info_ade02.pesagens_grava_fsfiles(db, ontem, ontem)

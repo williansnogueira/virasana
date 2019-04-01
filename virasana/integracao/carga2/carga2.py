@@ -93,8 +93,7 @@ def update_ultima_dataatracacaoiso(db, tipo=Tipo.MANIFESTO, range=10):
     logger.info('Tempo total decorrido: %s segundos.' % (s2 - s0))
 
 
-def do_update():
-    db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
+def do_update_carga(db):
     print('Aguarde, criando/atualizando índices')
     create_indexes(db)
     carga.create_indexes(db)
@@ -104,4 +103,5 @@ def do_update():
 
 
 if __name__ == '__main__':  # pragma: no cover
-    do_update()
+    db = pymongo.MongoClient(host=MONGODB_URI)[DATABASE]
+    do_update_carga(db)

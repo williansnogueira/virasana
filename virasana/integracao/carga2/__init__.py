@@ -1,12 +1,23 @@
-from collections import OrderedDict
 import datetime
+from collections import OrderedDict
+from enum import Enum
 
 
-FALTANTES = {'metadata.contentType': 'image/jpeg',
-             'metadata.carga.atracacao.escala': None}
+class Tipo(Enum):
+    MANIFESTO = 1
+    IMPORTACAO = 2
+    EXPORTACAO = 3
 
 
-def carga_faltantes(db, data_inicio, data_fim, campo):
+FALTANTES = {'metadata.contentType': 'image/jpeg'}
+
+
+def carga_faltantes(db, data_inicio, data_fim, tipo=Tipo.MANIFESTO):
+    filtro = FALTANTES
+    if tipo == Tipo.EXPORTACAO:
+        filtro['metadata.carga.atracacao.conhecimento'] =  {'$exists': False}
+    else:
+        filtro['metadata.carga.atracacao.manifesto'] =  {'$exists': False}
     dict_faltantes = OrderedDict()
     filtro = FALTANTES
     data_fim = datetime.datetime.combine(data_fim, datetime.time.max)  # Pega atá a última hora do dia

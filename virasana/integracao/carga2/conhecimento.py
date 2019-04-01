@@ -129,20 +129,27 @@ def monta_mongo_dict(db, dict_conhecimentos_containeres):
     return mongo_dict
 
 
+def importacao_grava_fsfiles(db, data_inicio, data_fim):
+    conhecimento_grava_fsfiles(db, data_inicio, data_fim, True)
+
+
+def exportacao_grava_fsfiles(db, data_inicio, data_fim):
+    conhecimento_grava_fsfiles(db, data_inicio, data_fim, False)
+
+
 def conhecimento_grava_fsfiles(db, data_inicio, data_fim, importacao=True):
     if importacao:
         campo = 'escala'
+        get_cursor = get_cursor_ceimportacao_mongo
     else:
         campo = 'conhecimento'
+        get_cursor = get_cursor_ceexportacao_mongo
+
     dict_faltantes = carga_faltantes(db, data_inicio, data_fim, campo)
     total_fsfiles = len(dict_faltantes.keys())
     logger.info('Total de contêineres sem %s de %s a %s: %s' %
                 (campo, data_inicio, data_fim, total_fsfiles))
 
-    if importacao:
-        get_cursor = get_cursor_ceimportacao_mongo
-    else:
-        get_cursor = get_cursor_ceexportacao_mongo
     dict_conhecimentos = conhecimentos_periodo(db, data_inicio, data_fim,
                                                get_cursor)
     dict_conhecimentos_containeres = conhecimentos_containers_faltantes(

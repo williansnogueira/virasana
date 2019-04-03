@@ -36,10 +36,9 @@ from wtforms import (BooleanField, DateField, FloatField, IntegerField,
 from wtforms.validators import DataRequired, optional
 
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
-                                 dict_to_text, info_ade02, padma,
-                                 plot_bar_plotly,
+                                 dict_to_text, info_ade02, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
-                                 summary, xmli)
+                                 summary)
 from virasana.models.models import Ocorrencias, Tags
 from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
@@ -756,8 +755,12 @@ class FilesForm(FlaskForm):
     pagina_atual = IntegerField('Pagina', default=1)
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
                                    default=0)
+    tag_usuario = BooleanField('Exclusivamente Tag do usuário',
+                               validators=[optional()], default=False)
     filtro_tags = SelectField(u'Tags de usuário',
                               default=[0])
+    texto_ocorrencia = StringField(u'Texto Ocorrência',
+                                   validators=[optional()], default='')
 
 
 def recupera_user_filtros():
@@ -788,18 +791,29 @@ def valida_form_files(form, filtro, db):
         filtro_escolhido = form.filtro_auditoria.data
         if filtro_escolhido and filtro_escolhido != '0':
             auditoria_object = Auditoria(db)
-            filtro_auditoria = auditoria_object.dict_auditoria.get(filtro_escolhido)
-            logger.debug(auditoria_object.dict_auditoria)
-            logger.debug(filtro_escolhido)
-            logger.debug(filtro_auditoria)
+            filtro_auditoria = \
+                auditoria_object.dict_auditoria.get(filtro_escolhido)
+            # logger.debug(auditoria_object.dict_auditoria)
+            # logger.debug(filtro_escolhido)
+            # logger.debug(filtro_auditoria)
             if filtro_auditoria:
                 filtro.update(filtro_auditoria['filtro'])
                 order = filtro_auditoria['order']
         tag_escolhida = form.filtro_tags.data
-        print('****************************', tag_escolhida)
+        tag_usuario = form.tag_usuario
+        # print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
-            filtro_tag = {'usuario': current_user.id, 'tag': tag_escolhida}
+            # filtro_tag = {'usuario': current_user.id, 'tag': tag_escolhida}
+            filtro_tag = {'tag': tag_escolhida}
+            if tag_usuario:
+                filtro_tag.update({'usuario': current_user.id})
             filtro.update({'metadata.tags': {'$elemMatch': filtro_tag}})
+        texto_ocorrencia = form.texto_ocorrencia.data
+        if texto_ocorrencia:
+            filtro.update(
+                {'metadata.ocorrencias': {'$exists': True},
+                 'metadata.ocorrencias.texto': {'$regex': texto_ocorrencia}
+                 })
         if numero == 'None':
             numero = None
         if start and end:
@@ -808,7 +822,7 @@ def valida_form_files(form, filtro, db):
             filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
         if numero:
             filtro['metadata.numeroinformado'] = \
-                {'$regex': '^' + mongo_sanitizar(numero)}
+                {'$regex': '^' + mongo_sanitizar(numero), '$options': 'i'}
         if alerta:
             filtro['metadata.xml.alerta'] = True
         # print(filtro)
@@ -847,7 +861,7 @@ def files():
             form_files.filtro_tags.choices = tags_object.tags_text
             form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
             filtro['metadata.numeroinformado'] = \
-                {'$regex': '^' + mongo_sanitizar(numero)}
+                {'$regex': '^' + mongo_sanitizar(numero) + '$i '}
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
         if order is None:
@@ -855,7 +869,7 @@ def files():
         if pagina_atual is None:
             pagina_atual = 1
 
-        # print(filtro)
+        print(filtro)
         projection = {'_id': 1, 'filename': 1,
                       'metadata.numeroinformado': 1,
                       'metadata.predictions.bbox': 1,

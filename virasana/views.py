@@ -752,6 +752,7 @@ class FilesForm(FlaskForm):
                       default=date.today() - timedelta(days=10))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
+    ranking = BooleanField('Ranking', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
                                    default=0)
@@ -780,6 +781,7 @@ def recupera_user_filtros():
 
 def valida_form_files(form, filtro, db):
     """Lê formulário e adiciona campos ao filtro se necessário."""
+    """Lê formulário e adiciona campos ao filtro se necessário."""
     order = None
     pagina_atual = None
     if form.validate():  # configura filtro básico
@@ -787,6 +789,7 @@ def valida_form_files(form, filtro, db):
         start = form.start.data
         end = form.end.data
         alerta = form.alerta.data
+        ranking = form.ranking.data
         pagina_atual = form.pagina_atual.data
         filtro_escolhido = form.filtro_auditoria.data
         if filtro_escolhido and filtro_escolhido != '0':
@@ -825,7 +828,10 @@ def valida_form_files(form, filtro, db):
                 {'$regex': '^' + mongo_sanitizar(numero), '$options': 'i'}
         if alerta:
             filtro['metadata.xml.alerta'] = True
-        # print(filtro)
+        if ranking:
+            filtro['metadata.ranking'] = {'$exists': True, '$gte': .5}
+            order = [('metadata.ranking', -1)]
+    # print(filtro)
     return filtro, pagina_atual, order
 
 

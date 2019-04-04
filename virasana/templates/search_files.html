@@ -15,8 +15,11 @@
                 <div class="col-sm-4">
                     <label for="date">Período de escaneamento da imagem</label>
                 </div>
-                <div class="col-sm-2">
-                    <label for="alerta">Com alerta?</label>
+                <div class="col-sm-1">
+                    <label for="alerta">Alerta?</label>
+                </div>
+                <div class="col-sm-1">
+                    <label for="ranking">Ranking</label>
                 </div>
                 <div class="col-sm-3">
                     Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
@@ -35,6 +38,9 @@
                     </div>
                     <div class="col-sm-1">
                         <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
+                    </div>
+                    <div class="col-sm-1">
+                        <input class="form-control" type="checkbox" name="ranking" {% if oform.ranking.data %} checked {% endif %} />
                     </div>
                     <div class="col-sm-1">
                         <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> Filtrar </button>

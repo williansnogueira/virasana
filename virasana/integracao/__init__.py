@@ -171,7 +171,8 @@ def dict_to_text(adict: dict):
         elif isinstance(value, list):
             lista.append('\n'.join(value))
         else:
-            lista.append('Linha tipo ' + type(value) + ' não suportada.')
+            # print(key, value)
+            lista.append('Linha tipo ' + str(type(value)) + ' não suportada.')
     return '\n'.join(lista)
 
 

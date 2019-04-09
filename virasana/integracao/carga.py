@@ -45,6 +45,10 @@ CHAVES_CARGA = [
     'metadata.alertapeso'
 ]
 
+TIPOS_CARGA = {
+    'metadata.carga.vazio': bool
+}
+
 
 def summary(grid_data=None, registro=None):
     """Selecionar campos mais importantes para exibição.

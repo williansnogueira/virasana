@@ -38,7 +38,8 @@ from wtforms.validators import DataRequired, optional
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
-                                 summary)
+                                 summary,
+                                 TIPOS_GRIDFS)
 from virasana.models.models import Ocorrencias, Tags
 from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
@@ -722,18 +723,35 @@ def campos_chave():
     return CHAVES_GRIDFS + carga.CHAVES_CARGA + info_ade02.CHAVES_RECINTO
 
 
+def campos_chave_tipos():
+    """Retorna campos chave para montagem de filtro."""
+    return {**TIPOS_GRIDFS, **carga.TIPOS_CARGA}
+
+
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])
 @login_required
 def filtro():
     """Configura filtro personalizado."""
-    user_filtros = filtros[current_user.id]
+    _, user_filtros = recupera_user_filtros()
+    if user_filtros is None:
+        return jsonify([])
     # print(request.form)
     # print(request.args)
     campo = request.args.get('campo')
     if campo:
         valor = request.args.get('valor')
         if valor:  # valor existe, adiciona
-            user_filtros[campo] = mongo_sanitizar(valor)
+            if campos_chave_tipos().get(campo) == bool:
+                valor = valor.lower()
+                user_filtros[campo] = (valor == 's' or valor == 'true' or valor == 'sim')
+            elif campos_chave_tipos().get(campo) == date:
+                print('DATE!!!', valor)
+                ldata = datetime.strptime(valor, '%Y/%m/%d')
+                start = datetime.combine(ldata, datetime.min.time())
+                end = datetime.combine(ldata, datetime.max.time())
+                user_filtros[campo] = {'$lte': end, '$gte': start}
+            else:
+                user_filtros[campo] = mongo_sanitizar(valor)
         else:  # valor não existe, exclui chave
             user_filtros.pop(campo)
     result = [{'campo': k, 'valor': v} for k, v in user_filtros.items()]
@@ -806,7 +824,6 @@ def valida_form_files(form, filtro, db):
         tag_usuario = form.tag_usuario
         # print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
-            # filtro_tag = {'usuario': current_user.id, 'tag': tag_escolhida}
             filtro_tag = {'tag': tag_escolhida}
             if tag_usuario:
                 filtro_tag.update({'usuario': current_user.id})
@@ -822,7 +839,7 @@ def valida_form_files(form, filtro, db):
         if start and end:
             start = datetime.combine(start, datetime.min.time())
             end = datetime.combine(end, datetime.max.time())
-            filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
+            filtro['metadata.dataescaneamento'] = {'$lte': end, '$gte': start}
         if numero:
             filtro['metadata.numeroinformado'] = \
                 {'$regex': '^' + mongo_sanitizar(numero), '$options': 'i'}

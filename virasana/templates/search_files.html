@@ -200,7 +200,7 @@
             $('<tr>').append(
             $('<td>').text(filtro.campo),
             $('<td>').text(filtro.valor),
-            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo("'+ filtro.campo + '")" />')
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo(\''+ filtro.campo + '\')" />')
             ).appendTo('#filtro_personalizado_table');
         });
     

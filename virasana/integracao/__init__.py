@@ -18,7 +18,7 @@ import logging
 import os
 import pickle
 from collections import defaultdict, OrderedDict
-from datetime import datetime
+from datetime import datetime, date
 
 import plotly
 import plotly.graph_objs as go
@@ -55,6 +55,10 @@ CHAVES_GRIDFS = [
     'metadata.dataescaneamento',
     'metadata.contentType'
 ]
+
+TIPOS_GRIDFS = {
+'uploadDate': date
+}
 
 
 def create_indexes(db):

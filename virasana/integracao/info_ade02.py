@@ -232,6 +232,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
         fs_cursor = list(
             db['fs.files'].find(filtro, projection=projection).sort('metadata.numeroinformado')
         )
+        print(filtro)
         pesagens_cursor_entrada = list(
             db['PesagensDTE'].find(
                 {'datahoraentradaiso': {'$gte': ldata - timedelta(days=DELTA),

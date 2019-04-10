@@ -41,6 +41,7 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  summary,
                                  TIPOS_GRIDFS)
 from virasana.models.models import Ocorrencias, Tags
+from virasana.models.text_index import TextSearch
 from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
@@ -73,6 +74,7 @@ def configure_app(mongodb):
         app.config['img_search'] = img_search
     except (IOError, FileNotFoundError):
         pass
+    app.config['text_search'] = TextSearch(mongodb)
     return app
 
 
@@ -688,33 +690,6 @@ def minitest():
     return do_mini(_id, n)
 
 
-@app.route('/similar')
-@login_required
-def similar_():
-    """Chama view de índice de imagens similares por GET.
-
-    Recebe _id e offset(página atual).
-    Para possibilitar rolagem de página.
-
-    """
-    _id = request.args.get('_id', '')
-    offset = int(request.args.get('offset', 0))
-    return similar(_id, offset)
-
-
-@app.route('/similar/<_id>')
-@login_required
-def similar(_id, offset=0):
-    """Retorna índice de imagens similares."""
-    img_search = app.config['img_search']
-    most_similar = img_search.get_chunk(_id, offset)
-    return render_template('similar_files.html',
-                           ids=most_similar,
-                           _id=_id,
-                           offset=offset,
-                           chunk=img_search.chunk)
-
-
 filtros = dict()
 
 
@@ -1002,6 +977,33 @@ def padma_proxy(image_id):
     return result
 
 
+@app.route('/similar')
+@login_required
+def similar_():
+    """Chama view de índice de imagens similares por GET.
+
+    Recebe _id e offset(página atual).
+    Para possibilitar rolagem de página.
+
+    """
+    _id = request.args.get('_id', '')
+    offset = int(request.args.get('offset', 0))
+    return similar(_id, offset)
+
+
+@app.route('/similar/<_id>')
+@login_required
+def similar(_id, offset=0):
+    """Retorna índice de imagens similares."""
+    img_search = app.config['img_search']
+    most_similar = img_search.get_chunk(_id, offset)
+    return render_template('similar_files.html',
+                           ids=most_similar,
+                           _id=_id,
+                           offset=offset,
+                           chunk=img_search.chunk)
+
+
 @app.route('/recarrega_imageindex')
 @login_required
 def recarrega_imageindex():
@@ -1013,6 +1015,50 @@ def recarrega_imageindex():
         result['size'] = img_search.get_size()
         result['sucess'] = True
     except (IOError, FileNotFoundError) as err:
+        logger.error(err)
+        result['sucess'] = False
+        result['erro'] = str(err)
+    return jsonify(result)
+
+
+@app.route('/text_search')
+@login_required
+def text_search():
+    """Tela para busca textual."""
+    return render_template('text_search.html')
+
+
+
+@app.route('/similar_text')
+@login_required
+def similar_text_():
+    """Chama view de índice de palavras similares por GET.
+
+    Recebe text - primeiras letras a filtrar
+
+    """
+    text = request.args.get('text', '')
+    return similar_text(text)
+
+
+@app.route('/similar_text/<text>')
+@login_required
+def similar_text(text):
+    """Retorna índice de imagens similares."""
+    text_search = app.config['text_search']
+    palavras = text_search.get_palavras_como(text)
+    return jsonify(palavras)
+
+
+@app.route('/recarrega_textindex')
+@login_required
+def recarrega_textindex():
+    """Recarrega image_index"""
+    result = {}
+    try:
+        app.config['text_search'] = TextSearch(app.config['mongodb'])
+        result['sucess'] = True
+    except Exception as err:
         logger.error(err)
         result['sucess'] = False
         result['erro'] = str(err)

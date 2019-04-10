@@ -1,0 +1,136 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+<div id="main" class="container-fluid">
+     <div id="top" class="row">
+        <h2>Document ranking</h2>
+           <div class="col-md-2">
+                <h3></h3>
+            </div>
+            <div class="col-md-8">
+                 <div class="ui-widget">
+                       <input id="words" name="words" size="90%" placeholder="Entre um ou mais termos para pesquisar" />
+                        <button class="btn btn-primary" id="btnrank" type="button">
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <a href="help.html" class="btn btn-primary pull-right h2">Help</a>
+            </div>
+     </div> <!-- /#top -->
+     <hr />
+     <div id="list" class="row">
+        <div class="table-responsive col-md-12">
+        <span id="errors"></span>
+        <table class="table table-striped" cellspacing="0" cellpadding="0"
+         id="records_table">
+        <thead>
+            <tr>
+                <th>Score</th>
+                <th>Subitem</th>
+                <th>Descrição completa</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        </table>
+        </div>
+     </div> <!-- /#list -->
+     <div id="bottom" class="row">
+        Copyleft IvanBrasilico 2017 - All stuff GPLv3 Licensed except explicited or from outer sources
+     </div> <!-- /#bottom -->
+ </div>  <!-- /#main -->
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script type="text/javascript">
+  $(function() {
+    var submit_form = function(e) {
+      $.getJSON('/_rank', {
+        words: $('input[name="words"]').val(),
+      }, function(data) {
+        console.log(data);
+        $('#records_table tbody tr').remove();
+       $.each(data, function(i, item) {
+        $('<tr>').append(
+            $('<td>').text(item.score),
+            $('<td>').text(item.title),
+            $('<td>').text(item.contents)
+        ).appendTo('#records_table');
+        });
+       $('input[name="words"]').focus().select();
+      });
+      return false;
+    };
+    $('button#btnrank').bind('click', submit_form);
+    $('input[type="text"]').bind('keydown', function(e) {
+      if (e.keyCode == 13) {
+        submit_form(e);
+      }
+    });
+    $('input[name="words"]').focus();
+  });
+  $( function() {
+    var availableTags;
+    var update_drop_down = function(e) {
+      $.getJSON($SCRIPT_ROOT + '/similar_text', {
+        text: $('input[name="words"]').val(),
+      }, function(data) {
+        console.log(data);
+        availableTags = data;
+        $( "#words" ).autocomplete({
+              source: availableTags
+        });
+      });
+      return false;
+    };
+  });
+$( function() {
+    function split( val ) {
+      return val.split( /,\s*/ );
+    }
+    function extractLast( term ) {
+        var n = term.split(" ");
+        return n[n.length - 1];
+    }
+    $( "#words" )
+      // don't navigate away from the field on tab when selecting an item
+      .on( "keydown", function( event ) {
+        if ( event.keyCode === $.ui.keyCode.TAB &&
+            $( this ).autocomplete( "instance" ).menu.active ) {
+          event.preventDefault();
+        }
+      })
+      .autocomplete({
+        source: function( request, response ) {
+          $.getJSON( "similar_text", {
+            text: extractLast( request.term )
+          }, response );
+        },
+        search: function() {
+          // custom minLength
+          var term = extractLast( this.value );
+          if ( term.length < 2 ) {
+            return false;
+          }
+        },
+        focus: function() {
+          // prevent value inserted on focus
+          return false;
+        },
+        select: function( event, ui ) {
+          var terms = this.value.split(" ")
+          // remove the current input
+          terms.pop();
+          // add the selected item
+          terms.push( ui.item.value );
+          // add placeholder to get the comma-and-space at the end
+          terms.push( "" );
+          this.value = terms.join( " " );
+          return false;
+        }
+      });
+  });
+</script>
+{% endblock %}

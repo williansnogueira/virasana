@@ -151,9 +151,9 @@ def compara_pesagens_imagens(fs_cursor, pesagens_cursor, campo_comparacao):
     if fs_cursor and len(fs_cursor) > 0:
         fs_row = fs_cursor[ind]
         for pesagem in pesagens_cursor:
-            print(pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
+            print(1, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
             while fs_row['metadata']['numeroinformado'].lower() < pesagem[campo_comparacao]:
-                print(pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
+                print(2, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
                 ind += 1
                 if ind >= len(fs_cursor):
                     break

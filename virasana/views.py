@@ -1028,26 +1028,44 @@ def text_search():
     return render_template('text_search.html')
 
 
-
-@app.route('/similar_text')
+@app.route('/vocabulary')
 @login_required
-def similar_text_():
+def vocabulary_():
     """Chama view de índice de palavras similares por GET.
 
-    Recebe text - primeiras letras a filtrar
+    Recebe partialword - primeiras letras a filtrar
 
     """
-    text = request.args.get('text', '')
-    return similar_text(text)
+    partialword = request.args.get('partialword', '')
+    return vocabulary(partialword)
 
 
-@app.route('/similar_text/<text>')
+@app.route('/vocabulary/<partialword>')
 @login_required
-def similar_text(text):
+def vocabulary(partialword):
     """Retorna índice de imagens similares."""
     text_search = app.config['text_search']
-    palavras = text_search.get_palavras_como(text)
+    palavras = text_search.get_palavras_como(partialword)
     return jsonify(palavras)
+
+
+@app.route('/ranked_docs')
+@login_required
+def ranked_docs():
+    """Usa text_search para retornar itens que contém as palavras da frase.
+
+    Recebe partialword - primeiras letras a filtrar
+
+    """
+    phrase = request.args.get('phrase', '')
+    offset = int(request.args.get('offset', '0'))
+    text_search = app.config['text_search']
+    docs = text_search.get_itens_frase(phrase)
+    total = len(docs)
+    if offset >= total:
+        offset = max(0, total - 1)
+    return jsonify({'total': total, 'offset': offset,
+                    'docs': docs[offset:offset + 100]})
 
 
 @app.route('/recarrega_textindex')
@@ -1092,6 +1110,7 @@ def mynavbar():
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),
+             View('Pesquisa textual', 'text_search'),
              View('Estatísticas', 'stats'),
              View('Mudar senha', 'account'),
              ]

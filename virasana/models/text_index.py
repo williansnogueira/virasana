@@ -114,7 +114,7 @@ class TextSearch:
                  datetime.today().month - dataescaneamento.month
             timed_rank = rank
             if date_months_diff > 0:
-                timed_rank = log10(10 + date_months_diff) * rank
+                timed_rank = rank / log10(10 + date_months_diff)
             item['timed_rank'] = timed_rank
             itens.append(item)
         return sorted(itens, key = lambda item: item['timed_rank'], reverse=True)

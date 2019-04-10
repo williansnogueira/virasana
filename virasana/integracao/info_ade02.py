@@ -151,9 +151,9 @@ def compara_pesagens_imagens(fs_cursor, pesagens_cursor, campo_comparacao):
     if fs_cursor and len(fs_cursor) > 0:
         fs_row = fs_cursor[ind]
         for pesagem in pesagens_cursor:
-            print(1, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
+            # print(1, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
             while fs_row['metadata']['numeroinformado'].lower() < pesagem[campo_comparacao]:
-                print(2, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
+                # print(2, pesagem[campo_comparacao], fs_row['metadata']['numeroinformado'].lower())
                 ind += 1
                 if ind >= len(fs_cursor):
                     break
@@ -225,7 +225,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     acum = 0
     # Trata somente um dia por vez
     while ldata <= data_fim:
-        ldata_fim = ldata + timedelta(hours=24, minutes=59, seconds=59)  # Pega atá a última hora do dia
+        ldata_fim = ldata + timedelta(hours=23, minutes=59, seconds=59)  # Pega atá a última hora do dia
         filtro['metadata.dataescaneamento'] = {'$gte': ldata, '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
         total = db['fs.files'].count_documents(filtro)

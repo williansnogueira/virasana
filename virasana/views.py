@@ -38,8 +38,10 @@ from wtforms.validators import DataRequired, optional
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
-                                 summary)
+                                 summary,
+                                 TIPOS_GRIDFS)
 from virasana.models.models import Ocorrencias, Tags
+from virasana.models.text_index import TextSearch
 from virasana.utils.auditoria import Auditoria
 from virasana.utils.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
@@ -72,6 +74,7 @@ def configure_app(mongodb):
         app.config['img_search'] = img_search
     except (IOError, FileNotFoundError):
         pass
+    app.config['text_search'] = TextSearch(mongodb)
     return app
 
 
@@ -687,33 +690,6 @@ def minitest():
     return do_mini(_id, n)
 
 
-@app.route('/similar')
-@login_required
-def similar_():
-    """Chama view de índice de imagens similares por GET.
-
-    Recebe _id e offset(página atual).
-    Para possibilitar rolagem de página.
-
-    """
-    _id = request.args.get('_id', '')
-    offset = int(request.args.get('offset', 0))
-    return similar(_id, offset)
-
-
-@app.route('/similar/<_id>')
-@login_required
-def similar(_id, offset=0):
-    """Retorna índice de imagens similares."""
-    img_search = app.config['img_search']
-    most_similar = img_search.get_chunk(_id, offset)
-    return render_template('similar_files.html',
-                           ids=most_similar,
-                           _id=_id,
-                           offset=offset,
-                           chunk=img_search.chunk)
-
-
 filtros = dict()
 
 
@@ -722,18 +698,35 @@ def campos_chave():
     return CHAVES_GRIDFS + carga.CHAVES_CARGA + info_ade02.CHAVES_RECINTO
 
 
+def campos_chave_tipos():
+    """Retorna campos chave para montagem de filtro."""
+    return {**TIPOS_GRIDFS, **carga.TIPOS_CARGA}
+
+
 @app.route('/filtro_personalizado', methods=['GET', 'POST'])
 @login_required
 def filtro():
     """Configura filtro personalizado."""
-    user_filtros = filtros[current_user.id]
+    _, user_filtros = recupera_user_filtros()
+    if user_filtros is None:
+        return jsonify([])
     # print(request.form)
     # print(request.args)
     campo = request.args.get('campo')
     if campo:
         valor = request.args.get('valor')
         if valor:  # valor existe, adiciona
-            user_filtros[campo] = mongo_sanitizar(valor)
+            if campos_chave_tipos().get(campo) == bool:
+                valor = valor.lower()
+                user_filtros[campo] = (valor == 's' or valor == 'true' or valor == 'sim')
+            elif campos_chave_tipos().get(campo) == date:
+                print('DATE!!!', valor)
+                ldata = datetime.strptime(valor, '%Y/%m/%d')
+                start = datetime.combine(ldata, datetime.min.time())
+                end = datetime.combine(ldata, datetime.max.time())
+                user_filtros[campo] = {'$lte': end, '$gte': start}
+            else:
+                user_filtros[campo] = mongo_sanitizar(valor)
         else:  # valor não existe, exclui chave
             user_filtros.pop(campo)
     result = [{'campo': k, 'valor': v} for k, v in user_filtros.items()]
@@ -752,6 +745,7 @@ class FilesForm(FlaskForm):
                       default=date.today() - timedelta(days=10))
     end = DateField('End', validators=[optional()], default=date.today())
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
+    ranking = BooleanField('Ranking', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
     filtro_auditoria = SelectField(u'Filtros de Auditoria',
                                    default=0)
@@ -780,6 +774,7 @@ def recupera_user_filtros():
 
 def valida_form_files(form, filtro, db):
     """Lê formulário e adiciona campos ao filtro se necessário."""
+    """Lê formulário e adiciona campos ao filtro se necessário."""
     order = None
     pagina_atual = None
     if form.validate():  # configura filtro básico
@@ -787,6 +782,7 @@ def valida_form_files(form, filtro, db):
         start = form.start.data
         end = form.end.data
         alerta = form.alerta.data
+        ranking = form.ranking.data
         pagina_atual = form.pagina_atual.data
         filtro_escolhido = form.filtro_auditoria.data
         if filtro_escolhido and filtro_escolhido != '0':
@@ -803,7 +799,6 @@ def valida_form_files(form, filtro, db):
         tag_usuario = form.tag_usuario
         # print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
-            # filtro_tag = {'usuario': current_user.id, 'tag': tag_escolhida}
             filtro_tag = {'tag': tag_escolhida}
             if tag_usuario:
                 filtro_tag.update({'usuario': current_user.id})
@@ -819,13 +814,16 @@ def valida_form_files(form, filtro, db):
         if start and end:
             start = datetime.combine(start, datetime.min.time())
             end = datetime.combine(end, datetime.max.time())
-            filtro['metadata.dataescaneamento'] = {'$lt': end, '$gt': start}
+            filtro['metadata.dataescaneamento'] = {'$lte': end, '$gte': start}
         if numero:
             filtro['metadata.numeroinformado'] = \
                 {'$regex': '^' + mongo_sanitizar(numero), '$options': 'i'}
         if alerta:
             filtro['metadata.xml.alerta'] = True
-        # print(filtro)
+        if ranking:
+            filtro['metadata.ranking'] = {'$exists': True, '$gte': .5}
+            order = [('metadata.ranking', -1)]
+    # print(filtro)
     return filtro, pagina_atual, order
 
 
@@ -979,6 +977,33 @@ def padma_proxy(image_id):
     return result
 
 
+@app.route('/similar')
+@login_required
+def similar_():
+    """Chama view de índice de imagens similares por GET.
+
+    Recebe _id e offset(página atual).
+    Para possibilitar rolagem de página.
+
+    """
+    _id = request.args.get('_id', '')
+    offset = int(request.args.get('offset', 0))
+    return similar(_id, offset)
+
+
+@app.route('/similar/<_id>')
+@login_required
+def similar(_id, offset=0):
+    """Retorna índice de imagens similares."""
+    img_search = app.config['img_search']
+    most_similar = img_search.get_chunk(_id, offset)
+    return render_template('similar_files.html',
+                           ids=most_similar,
+                           _id=_id,
+                           offset=offset,
+                           chunk=img_search.chunk)
+
+
 @app.route('/recarrega_imageindex')
 @login_required
 def recarrega_imageindex():
@@ -990,6 +1015,68 @@ def recarrega_imageindex():
         result['size'] = img_search.get_size()
         result['sucess'] = True
     except (IOError, FileNotFoundError) as err:
+        logger.error(err)
+        result['sucess'] = False
+        result['erro'] = str(err)
+    return jsonify(result)
+
+
+@app.route('/text_search')
+@login_required
+def text_search():
+    """Tela para busca textual."""
+    return render_template('text_search.html')
+
+
+@app.route('/vocabulary')
+@login_required
+def vocabulary_():
+    """Chama view de índice de palavras similares por GET.
+
+    Recebe partialword - primeiras letras a filtrar
+
+    """
+    partialword = request.args.get('partialword', '')
+    return vocabulary(partialword)
+
+
+@app.route('/vocabulary/<partialword>')
+@login_required
+def vocabulary(partialword):
+    """Retorna índice de imagens similares."""
+    text_search = app.config['text_search']
+    palavras = text_search.get_palavras_como(partialword)
+    return jsonify(palavras)
+
+
+@app.route('/ranked_docs')
+@login_required
+def ranked_docs():
+    """Usa text_search para retornar itens que contém as palavras da frase.
+
+    Recebe partialword - primeiras letras a filtrar
+
+    """
+    phrase = request.args.get('phrase', '')
+    offset = int(request.args.get('offset', '0'))
+    text_search = app.config['text_search']
+    docs = text_search.get_itens_frase(phrase)
+    total = len(docs)
+    if offset >= total:
+        offset = max(0, total - 1)
+    return jsonify({'total': total, 'offset': offset,
+                    'docs': docs[offset:offset + 100]})
+
+
+@app.route('/recarrega_textindex')
+@login_required
+def recarrega_textindex():
+    """Recarrega image_index"""
+    result = {}
+    try:
+        app.config['text_search'] = TextSearch(app.config['mongodb'])
+        result['sucess'] = True
+    except Exception as err:
         logger.error(err)
         result['sucess'] = False
         result['erro'] = str(err)
@@ -1023,6 +1110,7 @@ def mynavbar():
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),
+             View('Pesquisa textual', 'text_search'),
              View('Estatísticas', 'stats'),
              View('Mudar senha', 'account'),
              ]

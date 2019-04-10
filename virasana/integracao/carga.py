@@ -45,6 +45,10 @@ CHAVES_CARGA = [
     'metadata.alertapeso'
 ]
 
+TIPOS_CARGA = {
+    'metadata.carga.vazio': bool
+}
+
 
 def summary(grid_data=None, registro=None):
     """Selecionar campos mais importantes para exibição.
@@ -91,7 +95,7 @@ def summary(grid_data=None, registro=None):
                                        (conteiner.get('container'), tara))
             result['Número contêiner - tara'] = conteiner_pesos
         else:
-            conhecimento = meta.get('manifesto')
+            conhecimento = meta.get('conhecimento')
             if isinstance(conhecimento, list):
                 conhecimento = conhecimento[0]
             result['CONTÊINER COM CARGA'] = ''
@@ -104,6 +108,9 @@ def summary(grid_data=None, registro=None):
                  meta.get('atracacao').get('escala'))
             result['Descrição'] = \
                 conhecimento.get('descricaomercadoria')
+            result['Consignatário'] = \
+                conhecimento.get('cpfcnpjconsignatario') + ' - ' + \
+                conhecimento.get('nomeconsignatario')
             conteiner_pesos = []
             conteineres = meta.get('container')
             if not isinstance(conteineres, list):

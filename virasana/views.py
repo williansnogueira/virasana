@@ -1058,13 +1058,18 @@ def ranked_docs():
 
     """
     phrase = request.args.get('phrase', '')
-    offset = int(request.args.get('offset', '0'))
+    pagina = int(request.args.get('pagina', '1'))
     text_search = app.config['text_search']
     docs = text_search.get_itens_frase(phrase)
     total = len(docs)
+    npaginas = total // 100 + 1
+    if pagina > npaginas:
+        pagina = 1
+    offset = (pagina - 1) * 100
     if offset >= total:
         offset = max(0, total - 1)
-    return jsonify({'total': total, 'offset': offset,
+    return jsonify({'total': total, 'pagina': pagina,
+                    'npaginas': npaginas,
                     'docs': docs[offset:offset + 100]})
 
 

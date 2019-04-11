@@ -2,18 +2,19 @@
 <div id="main" class="container-fluid">
      <div id="top" class="row">
         <h2>Busca textual</h2>
-           <div class="col-md-2">
-                <h3></h3>
-            </div>
-            <div class="col-md-8">
+            <div class="col-md-9">
                  <div class="ui-widget">
                        <input class="form-control" id="words" name="words" size="90%" placeholder="Entre um ou mais termos para pesquisar" />
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                         <button class="btn btn-primary" id="btnrank" type="button">
                             <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                         </button>
+            </div>
+            <div class="col-md-2">
+                <button onclick="next_page(-1)" id="btn_page_back" type="button" class="btn btn-default btn-info"> < </button>
+               <button onclick="next_page(1)" id="btn_page4_next" type="button" class="btn btn-default btn-info"> > </button>
             </div>
      </div> <!-- /#top -->
      <hr />
@@ -21,6 +22,7 @@
         <div class="table">
             <span id="errors"></span>
             Total de documentos encontrados: <label id="total"></label>
+            Página <label id="pagina">1</label> de <label id="npaginas">0</label>
             <table class="inlineTable table table-bordered table-hover table-responsive" cellspacing="0" cellpadding="0"
              id="records_table">
             <thead>
@@ -51,9 +53,12 @@
     var submit_form = function(e) {
       $.getJSON('ranked_docs', {
         phrase: $('input[name="words"]').val(),
+        pagina: $("#pagina").text(),
       }, function(data) {
         console.log(data);
         $("#total").text(data.total);
+        $("#pagina").text(data.pagina);
+        $("#npaginas").text(data.npaginas);
         $('#records_table tbody tr').remove();
        $.each(data.docs, function(i, item) {
         $('<tr>').append(
@@ -137,5 +142,14 @@ $( function() {
         }
       });
   });
+  function next_page(increment) {
+        var page = Number($('#pagina').text());
+        new_page = page + increment;
+        if ((new_page >= 1) && (new_page <= Number( $('#npaginas').text() ) ) ) {
+            $('#pagina').text(new_page);
+            $('button#btnrank').click();
+        }
+  }
+
 </script>
 {% endblock %}

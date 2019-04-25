@@ -1,7 +1,7 @@
-from math import log10
 from collections import OrderedDict
 from datetime import datetime
 
+from math import log10
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
@@ -18,7 +18,10 @@ class TextSearch:
             'metadata.carga.conhecimento.identificacaoembarcador',
             'metadata.carga.conhecimento.descricaomercadoria'
         ]
-        cursor = db.fs.files.find(
+        self.mount()
+
+    def mount(self):
+        cursor = self.db.fs.files.find(
             self.filter, self.projection
         )  # .limit(20000)
         print('Consultando...')
@@ -111,13 +114,13 @@ class TextSearch:
             item['rank'] = rank
             date_months_diff = \
                 (datetime.today().year - dataescaneamento.year) * 12 + \
-                 datetime.today().month - dataescaneamento.month
+                datetime.today().month - dataescaneamento.month
             timed_rank = rank
             if date_months_diff > 0:
                 timed_rank = rank / log10(10 + date_months_diff)
             item['timed_rank'] = timed_rank
             itens.append(item)
-        return sorted(itens, key = lambda item: item['timed_rank'], reverse=True)
+        return sorted(itens, key=lambda item: item['timed_rank'], reverse=True)
 
     def get_itens_frase(self, frase):
         _ids, ranks = self.get_documentoids_frase(frase)

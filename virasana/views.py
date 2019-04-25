@@ -40,6 +40,7 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  plot_pie_plotly, stats_resumo_imagens,
                                  summary,
                                  TIPOS_GRIDFS)
+from virasana.integracao.padma import consulta_padma
 from virasana.models.models import Ocorrencias, Tags
 from virasana.models.text_index import TextSearch
 from virasana.utils.auditoria import Auditoria
@@ -81,10 +82,10 @@ def configure_app(mongodb):
 stats_cache = {}
 
 
-def allowed_file(filename):
+def allowed_file(filename, extensions):
     """Checa extensões permitidas."""
     return '.' in filename and \
-           filename.rsplit('.', 1)[-1].lower() in ['bson']
+           filename.rsplit('.', 1)[-1].lower() in extensions
 
 
 @app.route('/')
@@ -97,9 +98,9 @@ def index():
         return redirect(url_for('commons.login'))
 
 
-def valid_file(file):
+def valid_file(file, extensions=['bson']):
     """Valida arquivo passado e retorna validade e mensagem."""
-    if not file or file.filename == '' or not allowed_file(file.filename):
+    if not file or file.filename == '' or not allowed_file(file.filename, extensions):
         if not file:
             mensagem = 'Arquivo nao informado'
         elif not file.filename:
@@ -1002,6 +1003,35 @@ def similar(_id, offset=0):
                            _id=_id,
                            offset=offset,
                            chunk=img_search.chunk)
+
+
+@app.route('/similar_file', methods=['GET', 'POST'])
+@login_required
+def similar_file():
+    """Retorna índice de imagens similares."""
+    if request.method == 'POST':
+        # check if the post request has the file part
+        file = request.files.get('file')
+        validfile, mensagem = valid_file(file,
+                                         extensions=['jpg', 'jpeg', 'png'])
+        if not validfile:
+            flash(mensagem)
+            return redirect(request.url)
+        content = file.read()
+        img_search = app.config['img_search']
+        index = consulta_padma(content, 'index')
+        print(index)
+        try:
+            code = index.get('predictions')[0].get('code')
+        except Exception as err:
+            logger.error(err)
+            code = None
+        if code is not None:
+            _ = img_search.get_chunk(file.filename, index=code)
+            return redirect(url_for('similar', _id=file.filename))
+        else:
+            flash('Erro ao consultar index no PADMA. Checar logs do PADMA')
+    return render_template('upload_file.html')
 
 
 @app.route('/recarrega_imageindex')

@@ -58,12 +58,14 @@ class ImageSearch():
         sequence = np.argsort(distances)
         return sequence.reshape(-1)[:1000]  # Economiza memória
 
-    def _get_cache(self, _id):
-        """Consulta se há cache. Não havendo, gera."""
-        cache = self.cache.get(_id)
-        if cache is None or cache.get('expires') < datetime.now():
-            return self._search(_id)
-        return cache
+    def _search_for_index(self, search_index, _id):
+        seq = self.get_distances(search_index)
+        data_id = {
+            'seq': seq,
+            'expires': datetime.now() + timedelta(minutes=30)
+        }
+        self.cache[_id] = data_id
+        return self.cache[_id]
 
     def _search(self, _id):
         """Consulta no banco imagem a buscar. Monta cache de ids similares."""
@@ -78,17 +80,20 @@ class ImageSearch():
         else:
             search_index = self.image_indexes[np.where(
                 self.ids_indexes == _id)[0]][0]
-        seq = self.get_distances(search_index)
-        data_id = {
-            'seq': seq,
-            'expires': datetime.now() + timedelta(minutes=30)
-        }
-        self.cache[_id] = data_id
-        return self.cache[_id]
+        return self._search_for_index(search_index, _id)
 
-    def get_chunk(self, _id, offset):
+    def _get_cache(self, _id, index=None):
+        """Consulta se há cache. Não havendo, gera."""
+        cache = self.cache.get(_id)
+        if cache is None or cache.get('expires') < datetime.now():
+            if index is not None:
+                return self._search_for_index(index, _id)
+            return self._search(_id)
+        return cache
+
+    def get_chunk(self, _id, offset=0, index=None):
         """Retorna slice da lista de _ids."""
-        cache = self._get_cache(_id)
+        cache = self._get_cache(_id, index)
         start = offset * self.chunk
         end = start + 40
         seq = cache['seq']
@@ -96,9 +101,9 @@ class ImageSearch():
         most_similar = [str(self.ids_indexes[ind]) for ind in seq]
         return most_similar
 
-    def get_list(self, _id):
+    def get_list(self, _id, index=None):
         """Retorna slice da lista de _ids."""
-        cache = self._get_cache(_id)
+        cache = self._get_cache(_id, index)
         seq = cache['seq']
         most_similar = [str(self.ids_indexes[ind]) for ind in seq]
         return most_similar

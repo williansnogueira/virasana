@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from datetime import datetime
-
 from math import log10
+
+from ajna_commons.flask.log import logger
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
@@ -18,13 +19,14 @@ class TextSearch:
             'metadata.carga.conhecimento.identificacaoembarcador',
             'metadata.carga.conhecimento.descricaomercadoria'
         ]
-        # self.mount()
+        self.mount()
 
     def mount(self):
         cursor = self.db.fs.files.find(
             self.filter, self.projection
         )  # .limit(20000)
         print('Consultando...')
+        logger.info('Consultando...')
         self.documentos = OrderedDict()
         for line in cursor:
             # print(line)
@@ -39,6 +41,7 @@ class TextSearch:
                 identificacao = conhecimentos['identificacaoembarcador'] + \
                                 ' ' + conhecimentos['descricaomercadoria']
             self.documentos[line['_id']] = identificacao
+        logger.info('Vetorizando...')
         print('Vetorizando...')
         self.count_vect = CountVectorizer()
         word_count_vector = self.count_vect.fit_transform(

@@ -1148,8 +1148,8 @@ def mynavbar():
              View('Mudar senha', 'account'),
              Subgroup(
                  'Pesquisas especiais',
-                 View('Pesquisa imagem externa', 'text_search'),
-                 View('Pesquisa textual', 'similar_file'),
+                 View('Pesquisa imagem externa', 'similar_file'),
+                 View('Pesquisa textual', 'text_search'),
                  View('Estatísticas', 'stats'),
              ),
              ]

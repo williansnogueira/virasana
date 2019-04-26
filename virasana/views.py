@@ -26,7 +26,7 @@ from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from flask_cors import CORS
 from flask_nav import Nav
-from flask_nav.elements import Navbar, View
+from flask_nav.elements import Navbar, Subgroup, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
@@ -1145,17 +1145,13 @@ def mynavbar():
     items = [View('Home', 'index'),
              View('Importar Bson', 'upload_bson'),
              View('Pesquisar arquivos', 'files'),
-             Subgroup(
-                 'Products',
-                 View('Wg240-Series', 'products', product='wg240'),
-                 View('Wg250-Series', 'products', product='wg250'),
-                 Separator(),
-                 Label('Discontinued Products'),
-                 View('Wg10X', 'products', product='wg10x'),
-             ),
-             View('Pesquisa textual', 'text_search'),
-             View('Estatísticas', 'stats'),
              View('Mudar senha', 'account'),
+             Subgroup(
+                 'Pesquisas especiais',
+                 View('Pesquisa imagem externa', 'text_search'),
+                 View('Pesquisa textual', 'similar_file'),
+                 View('Estatísticas', 'stats'),
+             ),
              ]
     if current_user.is_authenticated:
         items.append(View('Sair', 'commons.logout'))

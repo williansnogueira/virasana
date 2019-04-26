@@ -18,7 +18,7 @@ class TextSearch:
             'metadata.carga.conhecimento.identificacaoembarcador',
             'metadata.carga.conhecimento.descricaomercadoria'
         ]
-        self.mount()
+        # self.mount()
 
     def mount(self):
         cursor = self.db.fs.files.find(

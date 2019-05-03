@@ -203,7 +203,7 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
     return cont
 
 
-def pesagens_grava_fsfiles(db, data_inicio, data_fim):
+def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=1):
     """Busca por registros no GridFS sem info da Pesagem
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
@@ -220,13 +220,16 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim):
     """
     filtro = {'metadata.contentType': 'image/jpeg'}
     #  {'metadata.pesagens': {'$exists': False},
-    DELTA = 5
+    delta_days = timedelta(days=delta)  # Pega dias antes/depois
     ldata = data_inicio
     acum = 0
     # Trata somente um dia por vez
     while ldata <= data_fim:
-        ldata_fim = ldata + timedelta(hours=23, minutes=59, seconds=59)  # Pega atá a última hora do dia
-        filtro['metadata.dataescaneamento'] = {'$gte': ldata, '$lte': ldata_fim}
+        ldata_inicio = ldata - delta_days
+        ldata_fim = ldata + delta_days + \
+                    datetime.time().max # Pega atá a última hora do dia
+        filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
+                                               '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
         total = db['fs.files'].count_documents(filtro)
         fs_cursor = list(

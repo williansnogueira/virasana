@@ -136,7 +136,7 @@ def adquire_pesagens(db, datainicial, datafinal):
         tem_passagem_na_data = db['PesagensDTE'].find_one(
             {'datahoraentradaiso': {'$gt': ldata,
                                     '$lt': ldata + timedelta(days=1)}})
-        tem_passagem_na_data = False
+        # tem_passagem_na_data = False
         if tem_passagem_na_data:
             logger.info('adquire_pesagens dia %s abortado'
                         ' por já existirem registros' % ldata)

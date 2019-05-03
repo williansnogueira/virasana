@@ -3,7 +3,7 @@
 import csv
 import os
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 import requests
 from ajna_commons.flask.log import logger
@@ -227,7 +227,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
     while ldata <= data_fim:
         ldata_inicio = ldata
         ldata_fim = ldata + \
-                    datetime.time().max  # Pega atá a última hora do dia
+                    time.max  # Pega atá a última hora do dia
         filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
                                                '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
@@ -240,7 +240,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
             db['PesagensDTE'].find(
                 {'datahoraentradaiso':
                      {'$gte': ldata - delta_days,
-                      '$lte': ldata_fim + delta_days + datetime.time().max
+                      '$lte': ldata_fim + delta_days + time.max
                       },
                  'codigoconteinerentrada':
                      {'$exists': True, '$ne': None, '$ne': ''}}
@@ -250,7 +250,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
             db['PesagensDTE'].find(
                 {'datahorasaidaiso':
                      {'$gte': ldata - delta_days,
-                      '$lte': ldata_fim + delta_days + datetime.time().max
+                      '$lte': ldata_fim + delta_days + time.max
                       },
                  'codigoconteinersaida':
                      {'$exists': True, '$ne': None, '$ne': ''}}

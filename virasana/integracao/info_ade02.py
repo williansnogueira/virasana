@@ -226,21 +226,22 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
     # Trata somente um dia por vez
     while ldata <= data_fim:
         ldata_inicio = ldata
-        ldata_fim = ldata + \
-                    time.max  # Pega atá a última hora do dia
+        ldata_fim = datetime.combine(
+            ldata, time.max)  # Pega atá a última hora do dia
         filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
                                                '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
         total = db['fs.files'].count_documents(filtro)
         fs_cursor = list(
-            db['fs.files'].find(filtro, projection=projection).sort('metadata.numeroinformado')
+            db['fs.files'].find(filtro, projection=projection
+                                ).sort('metadata.numeroinformado')
         )
         print(filtro)
         pesagens_cursor_entrada = list(
             db['PesagensDTE'].find(
                 {'datahoraentradaiso':
                      {'$gte': ldata - delta_days,
-                      '$lte': ldata_fim + delta_days + time.max
+                      '$lte': datetime.combine(ldata_fim + delta_days, time.max)
                       },
                  'codigoconteinerentrada':
                      {'$exists': True, '$ne': None, '$ne': ''}}
@@ -250,7 +251,7 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
             db['PesagensDTE'].find(
                 {'datahorasaidaiso':
                      {'$gte': ldata - delta_days,
-                      '$lte': ldata_fim + delta_days + time.max
+                      '$lte': datetime.combine(ldata_fim + delta_days, time.max)
                       },
                  'codigoconteinersaida':
                      {'$exists': True, '$ne': None, '$ne': ''}}

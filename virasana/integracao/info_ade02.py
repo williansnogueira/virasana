@@ -203,7 +203,7 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
     return cont
 
 
-def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=1):
+def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
     """Busca por registros no GridFS sem info da Pesagem
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata
@@ -225,9 +225,9 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=1):
     acum = 0
     # Trata somente um dia por vez
     while ldata <= data_fim:
-        ldata_inicio = ldata - delta_days
-        ldata_fim = ldata + delta_days + \
-                    datetime.time().max # Pega atá a última hora do dia
+        ldata_inicio = ldata
+        ldata_fim = ldata + \
+                    datetime.time().max  # Pega atá a última hora do dia
         filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
                                                '$lte': ldata_fim}
         projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
@@ -238,23 +238,29 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=1):
         print(filtro)
         pesagens_cursor_entrada = list(
             db['PesagensDTE'].find(
-                {'datahoraentradaiso': {'$gte': ldata - timedelta(days=DELTA),
-                                        '$lte': ldata_fim + timedelta(days=DELTA)},
-                 'codigoconteinerentrada': {'$exists': True, '$ne': None, '$ne': ''}}
+                {'datahoraentradaiso':
+                     {'$gte': ldata - delta_days,
+                      '$lte': ldata_fim + delta_days + datetime.time().max
+                      },
+                 'codigoconteinerentrada':
+                     {'$exists': True, '$ne': None, '$ne': ''}}
             ).sort('codigoconteinerentrada')
         )
         pesagens_cursor_saida = list(
             db['PesagensDTE'].find(
-                {'datahorasaidaiso': {'$gt': ldata - timedelta(days=DELTA),
-                                      '$lt': ldata_fim + timedelta(days=DELTA)},
-                 'codigoconteinersaida': {'$exists': True, '$ne': None, '$ne': ''}}
+                {'datahorasaidaiso':
+                     {'$gte': ldata - delta_days,
+                      '$lte': ldata_fim + delta_days + datetime.time().max
+                      },
+                 'codigoconteinersaida':
+                     {'$exists': True, '$ne': None, '$ne': ''}}
             ).sort('codigoconteinersaida')
         )
         logger.info(
             'Processando pesagens para imagens de %s a %s. '
             'Pesquisando pesagens %s dias antes e depois. '
             'Imagens encontradas: %s  Pesagens encontradas %s(entrada) %s(saída).'
-            % (ldata, ldata_fim, DELTA, len(fs_cursor),
+            % (ldata, ldata_fim, delta, len(fs_cursor),
                len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
         )
         linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')

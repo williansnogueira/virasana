@@ -161,10 +161,10 @@ def compara_pesagens_imagens(fs_cursor, pesagens_cursor, campo_comparacao):
             if fs_row['metadata']['numeroinformado'].lower() == pesagem[campo_comparacao]:
                 linhas_ainserir.append((fs_row['_id'], pesagem))
     # Conferência do algoritmo
-    # containers_imagens = [row['metadata']['numeroinformado'].lower() for row in fs_cursor]
-    # containers_pesagens = [row[campo_comparacao] for row in pesagens_cursor]
-    # containers_comuns = set(containers_imagens) & set(containers_pesagens)
-    # print(len(containers_comuns))
+    containers_imagens = [row['metadata']['numeroinformado'].lower() for row in fs_cursor]
+    containers_pesagens = [row[campo_comparacao] for row in pesagens_cursor]
+    containers_comuns = set(containers_imagens) & set(containers_pesagens)
+    print('TOTAL DE PESAGENS COMUNS:',  len(containers_comuns))
     return linhas_ainserir
 
 

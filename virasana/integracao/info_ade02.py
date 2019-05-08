@@ -276,9 +276,15 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
             'Encontrados %s entrada %s saida.'
             % (total, len(linhas_entrada), len(linhas_saida))
         )
-        acum += inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
-        acum += inserepesagens_fsfiles(db, linhas_saida, 'saida')
+        inseridos_entrada = inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
+        acum += inseridos_entrada
+        inseridos_saida = inserepesagens_fsfiles(db, linhas_saida, 'saida')
+        acum += inseridos_saida
         ldata = ldata + timedelta(days=1)
+        logger.info('%s dados de entrada inseridos em fs.files',
+                    inseridos_entrada)
+        logger.info('%s dados de saida inseridos em fs.files',
+                    inseridos_saida)
     return acum
 
 

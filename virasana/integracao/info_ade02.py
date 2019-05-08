@@ -190,7 +190,7 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
         pesagem = {}
         pesagem['recinto'] = dte['recinto']
         pesagem['tipo'] = tipo
-        pesagem['entrada'] = dte['datahoraentradaiso']
+        pesagem['entrada'] = dte.get('datahoraentradaiso', None)
         pesagem['saida'] = dte.get('datahorasaidaiso', None)
         pesagem['placacavalo'] = dte['placacavalo']
         pesagem['placacarreta'] = dte['placacarreta']

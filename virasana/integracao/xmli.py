@@ -27,16 +27,18 @@ FIELDS = ('TruckId', 'Site', 'Date', 'PlateNumber', 'IsContainerEmpty',
           'Login', 'Workstation', 'UpdateDateTime', 'ClearImgCount',
           'UpdateCount', 'LastStateDateTime', 'Custom1', 'Custom2')
 
-TAGS_NUMERO = ['ContainerId', 'container_no', 'ContainerID1']
-TAGS_DATA = ['Date', 'SCANTIME', 'ScanTime']
+TAGS_NUMERO = ['ContainerId', 'container_no', 'ContainerID1', 'Container1']
+TAGS_DATA = ['Date', 'SCANTIME', 'ScanTime', 'createdate']
 
 # Abaixo um dicionário para traduzir tags de XMLs em outro padrão
 # para um nome comum - NOME DIFERENTE: NOME COMUM
 XML_DEPARA = {
     'container_no': 'ContainerId',
     'ContainerID1': 'ContainerId',
+    'Container1': 'ContainerId',
     'SCANTIME': 'Date',
     'ScanTime': 'Date',
+    'createdate': 'Date',
     'OPERATORID': 'Login',
     'TYPE': 'Custom2'
 }
@@ -140,6 +142,10 @@ def xml_todict(xml) -> dict:
                 akey = field
             result[akey.lower()] = text
     lista_conteineres = []
+    for tag in root.iter('attribute'):
+        if tag.attrib.get('name') in TAGS_NUMERO:
+            numero = tag.text
+            lista_conteineres.append(numero.casefold())
     for atag in TAGS_NUMERO:
         for tag in root.iter(atag):
             numero = tag.text

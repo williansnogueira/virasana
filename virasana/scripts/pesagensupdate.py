@@ -28,7 +28,7 @@ str_yesterday = datetime.strftime(yesterday, '%d/%m/%Y')
               help='Dia de início (dia/mês/ano) - padrão ontem')
 @click.option('--fim', default=str_yesterday,
               help='Dia de fim (dia/mês/ano) - padrão ontem')
-@click.option('--refresh', flag=True, default=False,
+@click.option('--refresh', is_flag=True,
               help='Baixar novamente')
 def update(inicio, fim, refresh):
     """Script de linha de comando para integração do arquivo XML."""

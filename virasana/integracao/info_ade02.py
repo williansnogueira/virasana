@@ -129,14 +129,16 @@ def insert_pesagens_dte(db, pesagens_recintos):
     return qtde
 
 
-def adquire_pesagens(db, datainicial, datafinal):
+def adquire_pesagens(db, datainicial, datafinal, refresh=False):
     ldata = datainicial
     # Trata somente um dia por vez, para não sobrecarregar DT-E
     while ldata <= datafinal:
-        tem_passagem_na_data = db['PesagensDTE'].find_one(
-            {'datahoraentradaiso': {'$gt': ldata,
-                                    '$lt': ldata + timedelta(days=1)}})
-        # tem_passagem_na_data = False
+        if refresh:
+            tem_passagem_na_data = False
+        else:
+            tem_passagem_na_data = db['PesagensDTE'].find_one(
+                {'datahoraentradaiso': {'$gt': ldata,
+                                        '$lt': ldata + timedelta(days=1)}})
         if tem_passagem_na_data:
             logger.info('adquire_pesagens dia %s abortado'
                         ' por já existirem registros' % ldata)

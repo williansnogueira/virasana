@@ -28,7 +28,9 @@ str_yesterday = datetime.strftime(yesterday, '%d/%m/%Y')
               help='Dia de início (dia/mês/ano) - padrão ontem')
 @click.option('--fim', default=str_yesterday,
               help='Dia de fim (dia/mês/ano) - padrão ontem')
-def update(inicio, fim):
+@click.option('--refresh', flag=True, default=False,
+              help='Baixar novamente')
+def update(inicio, fim, refresh):
     """Script de linha de comando para integração do arquivo XML."""
     start = datetime.strptime(inicio, '%d/%m/%Y')
     end = datetime.strptime(fim, '%d/%m/%Y')
@@ -37,7 +39,7 @@ def update(inicio, fim):
     print('Começando a integração... Inicio %s Fim %s' % (inicio, fim))
     tempo = time.time()
     print('Adquirindo pesagens do dia')
-    print(info_ade02.adquire_pesagens(db, start, end))
+    print(info_ade02.adquire_pesagens(db, start, end, refresh))
     print('Integrando pesagens do dia')
     qtde = info_ade02.pesagens_grava_fsfiles(db, start, end)
     tempo = time.time() - tempo

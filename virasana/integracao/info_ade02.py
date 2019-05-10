@@ -211,7 +211,7 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
     return cont
 
 
-def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=5):
+def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=7):
     """Busca por registros no GridFS sem info da Pesagem
 
     Busca por registros no fs.files (GridFS - imagens) que não tenham metadata

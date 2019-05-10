@@ -3,7 +3,6 @@ import json
 from collections import defaultdict
 
 from ajna_commons.flask.log import logger
-
 from virasana.integracao import carga, info_ade02, xmli
 
 
@@ -47,8 +46,14 @@ class Auditoria:
         '7': {'filtro': info_ade02.FALTANTES,
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem pesagem integrada'
-              }
-
+              },
+        '8': {'filtro': {'metadata.contentType': 'image/jpeg',
+                         'metadata.carga.ncm': {'$size': 1},
+                         'metadata.carga.container.indicadorusoparcial': {'$ne': 's'}
+                         },
+              'order': [('metadata.dataescaneamento', 1)],
+              'descricao': 'Imagens com NCM único'
+              },
     }
 
     def __init__(self, db):

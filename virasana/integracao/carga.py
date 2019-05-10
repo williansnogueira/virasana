@@ -43,7 +43,8 @@ CHAVES_CARGA = [
     'metadata.carga.atracacao.horaatracacao',
     'metadata.carga.pesototal',
     'metadata.diferencapeso',
-    'metadata.alertapeso'
+    'metadata.alertapeso',
+    'metadata.carga.container.indicadorusoparcial'
 ]
 
 TIPOS_CARGA = {

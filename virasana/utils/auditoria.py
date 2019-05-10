@@ -122,3 +122,12 @@ class Auditoria:
                 lista.append(linha)
             result[key] = lista
         return result
+
+
+if __name__ == '__main__':  # pragma: no cover
+    from pymongo import MongoClient
+    from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    print('Recriando filtros Auditoria')
+    db['Auditorias'].delete_many({})
+    Auditoria()

@@ -130,4 +130,4 @@ if __name__ == '__main__':  # pragma: no cover
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     print('Recriando filtros Auditoria')
     db['Auditorias'].delete_many({})
-    Auditoria()
+    Auditoria(db)

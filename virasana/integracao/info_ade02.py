@@ -49,7 +49,7 @@ CHAVES_RECINTO = [
 def create_indexes(db):
     """Utilitário. Cria índices relacionados à integração."""
     db['PesagensDTE'].create_index('codigoconteinerentrada')
-    db['PesagensDTE'].create_index('codigoconteinesaida')
+    db['PesagensDTE'].create_index('codigoconteinersaida')
     db['PesagensDTE'].create_index('datahoraentradaiso')
     db['PesagensDTE'].create_index('datahorasaidaiso')
     db['PesagensDTE'].create_index('pesoentradafloat')
@@ -60,6 +60,7 @@ def create_indexes(db):
     db['fs.files'].create_index('metadata.pesagens.saida')
     db['fs.files'].create_index('metadata.pesagens.peso')
     db['fs.files'].create_index('metadata.pesagens.placacavalo')
+    return True
 
 
 def get_token_dte(username=DTE_USERNAME, password=DTE_PASSWORD):

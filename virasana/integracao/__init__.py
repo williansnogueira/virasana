@@ -48,6 +48,7 @@ CHAVES_GRIDFS = [
     'filename',
     'metadata.id',
     'metadata.idcov',
+    'metadata.UNIDADE',
     'metadata.recintoid',
     'metadata.recinto',
     'metadata.imagem',

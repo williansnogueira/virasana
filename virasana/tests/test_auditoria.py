@@ -1,4 +1,3 @@
-
 """Unit tests para os módulos do pacote integração."""
 import unittest
 from datetime import datetime
@@ -10,12 +9,31 @@ from virasana.utils.auditoria import Auditoria
 
 
 class TestCase(unittest.TestCase):
+    FILTROS_AUDITORIA = {
+        '1': {'filtro': {'metadata.carga.vazio': True,
+                         'metadata.predictions.vazio': False},
+              'order': [('metadata.predictions.peso', -1)],
+              'descricao': 'Contêineres informados como vazios mas detectados ' +
+                           'como não vazios (ordem decrescente de peso detectado)'
+              },
+        '2': {'filtro': {'metadata.carga.vazio': False,
+                         'metadata.predictions.vazio': True},
+              'order': [('metadata.predictions.peso', 1)],
+              'descricao': 'Contêineres informados como contendo carga mas ' +
+                           'detectados como vazios (ordem de peso detectado)'
+              },
+        '3': {'filtro': {'metadata.alertapeso': True},
+              'order': [('metadata.diferencapeso', 1)],
+              'descricao': 'Contêineres com maiores divergências de peso'
+              },
+    }
+
     def setUp(self):
         db = MongoClient()['unit_test']
         self.db = db
         # Cria data para testes
         data_escaneamento = datetime(2017, 1, 6)
-        data_escalas = '05/01/2017'   # dois dias a menos
+        data_escalas = '05/01/2017'  # dois dias a menos
         data_escala_4 = '01/01/2017'  # cinco dias a menos
         data_escaneamento_false = datetime(2017, 1, 1)
         self.data_escaneamento = data_escaneamento
@@ -124,4 +142,11 @@ class TestCase(unittest.TestCase):
 
     def test_auditoria(self):
         auditor = Auditoria(self.db)
-        auditor.add_relatorio('nome', {})
+        auditor.add_relatorio(
+            0,
+            filtro={},
+            order=[],
+            descricao='Selecione'
+        )
+        for id, campos in self.FILTROS_AUDITORIA.items():
+            auditor.add_relatorio(id, **campos)

@@ -3,6 +3,7 @@ import json
 from collections import defaultdict
 
 from ajna_commons.flask.log import logger
+
 from virasana.integracao import carga, info_ade02, xmli
 
 
@@ -81,12 +82,13 @@ class Auditoria:
             # Se não existe tabela, cria, preenche e chama de novo mesmo método
             for id, campos in self.FILTROS_AUDITORIA.items():
                 logger.debug(id + ' ' + campos['descricao'])
-                self.db['Auditorias'].insert_one(
-                    {'id': id,
-                     'filtro': json.dumps(campos['filtro']),
-                     'order': campos['order'],
-                     'descricao': campos['descricao']
-                     })
+                # self.db['Auditorias'].insert_one(
+                #     {'id': id,
+                #      'filtro': json.dumps(campos['filtro']),
+                #      'order': campos['order'],
+                #      'descricao': campos['descricao']
+                #      })
+                self.add_relatorio(id, **campos)
             self.mount_filtros()
             return
         for row in auditorias:
@@ -100,14 +102,24 @@ class Auditoria:
         logger.debug(self.filtros_auditoria_desc)
         logger.debug(self.dict_auditoria)
 
-    def add_relatorio(self, nome: str, relatorio: dict) -> bool:
+    def add_relatorio(self, id: int,
+                      filtro: dict,
+                      order: list,
+                      descricao: str
+                      ) -> bool:
         """Adiciona um relatório a rodar.
 
         Recebe um dicionário no formato campos: list e operador:str
 
         Lendo este dicionário, monta uma checagem por 'metaprogramação'
         """
-        self.relatorios[nome] = relatorio
+        self.db['Auditorias'].insert_one(
+            {'id': id,
+             'filtro': json.dumps(filtro),
+             'order': json.dumps(order),
+             'descricao': descricao
+             })
+        return True
 
     def reporta(self) -> dict:
         """Executa relatórios configurados.
@@ -127,7 +139,11 @@ class Auditoria:
 if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+
     db = MongoClient(host=MONGODB_URI)[DATABASE]
-    print('Recriando filtros Auditoria')
-    db['Auditorias'].delete_many({})
-    Auditoria(db)
+    certodisso = input('Esta ação apaga TODOS os filtros e restaura o padrão.'
+                       'Digite SIM para confirmar.\n')
+    if certodisso == 'SIM':
+        print('Recriando filtros Auditoria...')
+        db['Auditorias'].delete_many({})
+        Auditoria(db)

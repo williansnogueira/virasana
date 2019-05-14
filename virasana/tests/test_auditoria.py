@@ -5,7 +5,7 @@ from datetime import datetime
 from gridfs import GridFS
 from pymongo import MongoClient
 
-from virasana.utils.auditoria import Auditoria
+from virasana.models.auditoria import Auditoria
 
 
 class TestCase(unittest.TestCase):

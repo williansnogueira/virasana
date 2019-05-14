@@ -43,8 +43,8 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
 from virasana.integracao.padma import consulta_padma
 from virasana.models.models import Ocorrencias, Tags
 from virasana.models.text_index import TextSearch
-from virasana.utils.auditoria import Auditoria
-from virasana.utils.image_search import ImageSearch
+from virasana.models.auditoria import Auditoria
+from virasana.models.image_search import ImageSearch
 from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
 

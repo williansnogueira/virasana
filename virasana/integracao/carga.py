@@ -111,8 +111,8 @@ def summary(grid_data=None, registro=None):
             result['Descrição'] = \
                 conhecimento.get('descricaomercadoria')
             result['Consignatário'] = \
-                conhecimento.get('cpfcnpjconsignatario') + ' - ' + \
-                conhecimento.get('nomeconsignatario')
+                '%s - %s ' % (conhecimento.get('cpfcnpjconsignatario'),
+                conhecimento.get('nomeconsignatario'))
             conteiner_pesos = []
             conteineres = meta.get('container')
             if not isinstance(conteineres, list):

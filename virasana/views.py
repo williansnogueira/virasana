@@ -1152,6 +1152,8 @@ def account():
 @login_required
 def auditoria():
     """Permite editar e gravar filtro de auditoria"""
+    # TODO: Passar lógica para caso de Uso ou para form e classe
+    # TODO: Criar perfil para acesso restrito e SANITIZAR ENTRADA
     form = FormAuditoria()
     select = SelectAuditoria()
     auditoria = Auditoria(app.config['mongodb'])
@@ -1163,6 +1165,9 @@ def auditoria():
                 order = json.loads(form.order.data)
             except JSONDecodeError as err:
                 order = form.order.data.split(',')
+            filtro = filtro.replace('function', 'XXXX')
+            order = order.replace('function', 'XXXX')
+            form.descricao.data = mongo_sanitizar(form.descricao.data)
             auditoria.add_relatorio(form.id.data, filtro,
                                     order, form.descricao.data)
             flash('Filtro incluído!', 'success')
@@ -1177,6 +1182,7 @@ def auditoria():
 @login_required
 def select_auditoria():
     """Permite editar e gravar filtro de auditoria"""
+    # TODO: Passar lógica para caso de Uso ou para form e classe
     form = FormAuditoria()
     select = SelectAuditoria()
     auditoria = Auditoria(app.config['mongodb'])

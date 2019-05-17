@@ -1,0 +1,48 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+{% from "_formhelpers.html" import render_field %}
+<div id="main" class="container-fluid">
+    <div id="top" class="row">
+    </div>
+    <div id="account" class="row">
+        <h3>Filtro de Auditoria</h3>
+        <div class="user-profile">
+            <div class="page-header">
+                <h2>Dados do filtro de Auditoria</h2>
+            <form action="{{ url_for('select_auditoria') }}" method="POST">
+                {{ form.csrf_token }}
+                <dl>
+                    {{ select.filtro_auditoria(class='form-control') }}
+                    <button class="btn btn-sm btn-success" type="submit">Consultar</button>
+                </dl>
+            </form>
+            </div>
+            <form action="{{ url_for('auditoria') }}" method="POST">
+                {{ form.csrf_token }}
+                <dl>
+                    {{ render_field(form.id, placeholder="ID") }}
+                </dl>
+                <dl>
+                    {{ render_field(form.descricao, placeholder="Descrição") }}
+                </dl>
+                <dl>
+                    {{ render_field(form.filtro, placeholder="Filtro") }}
+                </dl>
+                <dl>
+                    {{ render_field(form.order, placeholder="Ordem") }}
+                </dl>
+                <button class="btn btn-sm btn-success" type="submit">Gravar</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="bottom" class="row">
+    <div class="col-md-12">
+        AJNA - Receita Federal do Brasil 2017
+    </div>
+</div>
+</div>
+<!-- /#main -->
+{% endblock %} {% block scripts %} {{super()}}
+<script src="/static/js/jquery-ui.min.js"></script>
+<script type="text/javascript">
+</script> {% endblock %}

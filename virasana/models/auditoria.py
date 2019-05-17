@@ -28,7 +28,7 @@ class Auditoria:
                            'detectados como vazios (ordem de peso detectado)'
               },
         '3': {'filtro': {'metadata.alertapeso': True},
-              'order': [('metadata.diferencapeso', 1)],
+              'order': [('metadata.diferencapeso', -1)],
               'descricao': 'Contêineres com maiores divergências de peso'
               },
         '4': {'filtro': {'metadata.contentType': 'image/jpeg',
@@ -95,14 +95,15 @@ class Auditoria:
             id = row['id']
             self.dict_auditoria[id] = {
                 'filtro': json.loads(row['filtro']),
-                'order': row['order'],
+                'order': json.loads(row['order']),
                 'descricao': row['descricao']
             }
             self.filtros_auditoria_desc.append((id, row['descricao']))
         logger.debug(self.filtros_auditoria_desc)
+        self.filtros_auditoria_desc = sorted(self.filtros_auditoria_desc)
         logger.debug(self.dict_auditoria)
 
-    def add_relatorio(self, id: int,
+    def add_relatorio(self, id: str,
                       filtro: dict,
                       order: list,
                       descricao: str
@@ -113,12 +114,15 @@ class Auditoria:
 
         Lendo este dicionário, monta uma checagem por 'metaprogramação'
         """
-        self.db['Auditorias'].insert_one(
+        self.db['Auditorias'].updateOne(
+            {'id': id},
             {'id': id,
              'filtro': json.dumps(filtro),
              'order': json.dumps(order),
              'descricao': descricao
-             })
+            },
+            {'$upsert': True}
+        )
         return True
 
     def reporta(self) -> dict:

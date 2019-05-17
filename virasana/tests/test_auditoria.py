@@ -141,12 +141,14 @@ class TestCase(unittest.TestCase):
         db['CARGA.ContainerVazio'].drop()
 
     def test_auditoria(self):
-        auditor = Auditoria(self.db)
-        auditor.add_relatorio(
+        auditoria = Auditoria(self.db)
+        auditoria.add_relatorio(
             0,
             filtro={},
             order=[],
             descricao='Selecione'
         )
         for id, campos in self.FILTROS_AUDITORIA.items():
-            auditor.add_relatorio(id, **campos)
+            auditoria.add_relatorio(id, **campos)
+        auditoria.mount_filtros()
+

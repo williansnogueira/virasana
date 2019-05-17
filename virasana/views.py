@@ -8,6 +8,7 @@ import json
 import os
 from base64 import b64encode
 from datetime import date, datetime, timedelta
+from json import JSONDecodeError
 from sys import platform
 
 import ajna_commons.flask.login as login_ajna
@@ -26,7 +27,7 @@ from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_required
 # from flask_cors import CORS
 from flask_nav import Nav
-from flask_nav.elements import Navbar, Subgroup, View
+from flask_nav.elements import Navbar, Separator, Subgroup, View
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from gridfs import GridFS
@@ -35,16 +36,17 @@ from wtforms import (BooleanField, DateField, FloatField, IntegerField,
                      PasswordField, SelectField, StringField)
 from wtforms.validators import DataRequired, optional
 
+from virasana.forms.auditoria import FormAuditoria, SelectAuditoria
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
                                  summary,
                                  TIPOS_GRIDFS)
 from virasana.integracao.padma import consulta_padma
-from virasana.models.models import Ocorrencias, Tags
-from virasana.models.text_index import TextSearch
 from virasana.models.auditoria import Auditoria
 from virasana.models.image_search import ImageSearch
+from virasana.models.models import Ocorrencias, Tags
+from virasana.models.text_index import TextSearch
 from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
 
@@ -794,8 +796,8 @@ def valida_form_files(form, filtro, db):
             # logger.debug(filtro_escolhido)
             # logger.debug(filtro_auditoria)
             if filtro_auditoria:
-                filtro.update(filtro_auditoria['filtro'])
-                order = filtro_auditoria['order']
+                filtro.update(filtro_auditoria.get('filtro'))
+                order = filtro_auditoria.get('order')
         tag_escolhida = form.filtro_tags.data
         tag_usuario = form.tag_usuario
         # print('****************************', tag_escolhida)
@@ -833,7 +835,7 @@ def valida_form_files(form, filtro, db):
 def files():
     """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
     db = app.config['mongodb']
-    PAGE_ROWS = 50
+    PAGE_ROWS = 3
     PAGES = 100
     lista_arquivos = []
     campos = campos_chave()
@@ -868,12 +870,19 @@ def files():
         if pagina_atual is None:
             pagina_atual = 1
 
-        print(filtro)
         projection = {'_id': 1, 'filename': 1,
                       'metadata.numeroinformado': 1,
                       'metadata.predictions.bbox': 1,
                       'metadata.dataescaneamento': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
+
+        print()
+        print(filtro, type(filtro))
+        print(projection, type(projection))
+        print('order:', order, type(order))
+        print(PAGE_ROWS)
+        print(skip)
+
         count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
         print(count)
         # count = 100
@@ -1139,6 +1148,55 @@ def account():
     return render_template('account.html', form=form)
 
 
+@app.route('/auditoria', methods=['GET', 'POST'])
+@login_required
+def auditoria():
+    """Permite editar e gravar filtro de auditoria"""
+    form = FormAuditoria()
+    select = SelectAuditoria()
+    auditoria = Auditoria(app.config['mongodb'])
+    select.filtro_auditoria.choices = auditoria.filtros_auditoria_desc
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            filtro = json.loads(form.filtro.data)
+            try:
+                order = json.loads(form.order.data)
+            except JSONDecodeError as err:
+                order = form.order.data.split(',')
+            auditoria.add_relatorio(form.id.data, filtro,
+                                    order, form.descricao.data)
+            flash('Filtro incluído!', 'success')
+            return redirect(url_for('auditoria'))
+
+    return render_template('auditoria.html',
+                           form=form,
+                           select=select)
+
+
+@app.route('/select_auditoria', methods=['GET', 'POST'])
+@login_required
+def select_auditoria():
+    """Permite editar e gravar filtro de auditoria"""
+    form = FormAuditoria()
+    select = SelectAuditoria()
+    auditoria = Auditoria(app.config['mongodb'])
+    select.filtro_auditoria.choices = auditoria.filtros_auditoria_desc
+    if request.method == 'POST':
+        filtro_escolhido = select.filtro_auditoria.data
+        print(filtro_escolhido)
+        if filtro_escolhido and filtro_escolhido != '0':
+            filtro_auditoria = \
+                auditoria.dict_auditoria.get(filtro_escolhido)
+            print(filtro_auditoria)
+            form.id.data = filtro_escolhido
+            form.order.data = json.dumps(filtro_auditoria.get('order'))
+            form.filtro.data = json.dumps(filtro_auditoria.get('filtro'))
+            form.descricao.data = filtro_auditoria.get('descricao')
+    return render_template('auditoria.html',
+                           form=form,
+                           select=select)
+
+
 @nav.navigation()
 def mynavbar():
     """Menu da aplicação."""
@@ -1151,6 +1209,8 @@ def mynavbar():
                  View('Pesquisa imagem externa', 'similar_file'),
                  View('Pesquisa textual', 'text_search'),
                  View('Estatísticas', 'stats'),
+                 Separator(),
+                 View('Cadastra Filtro de Auditoria', 'auditoria'),
              ),
              ]
     if current_user.is_authenticated:

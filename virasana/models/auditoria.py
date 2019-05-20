@@ -114,14 +114,13 @@ class Auditoria:
 
         Lendo este dicionário, monta uma checagem por 'metaprogramação'
         """
-        self.db['Auditorias'].updateOne(
+        self.db['Auditorias'].find_one_and_replace(
             {'id': id},
             {'id': id,
              'filtro': json.dumps(filtro),
              'order': json.dumps(order),
              'descricao': descricao
-            },
-            {'$upsert': True}
+            }
         )
         return True
 

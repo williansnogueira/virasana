@@ -33,8 +33,8 @@ import time
 from collections import namedtuple
 
 import click
-from ajna_commons.utils.images import mongo_image, recorta_imagem
 from ajna_commons.flask.log import logger
+from ajna_commons.utils.images import mongo_image, recorta_imagem
 from bson import ObjectId
 
 from virasana.db import mongodb as db
@@ -267,7 +267,7 @@ def predictions_update(modelo, campo, tamanho, qtde,
             if pred_gravado == []:
                 registros_vazios += 1
                 print('Pulando registros com anterior insucesso ' +
-                      ' (vazios:[]). Registro % d ' % registros_vazios)
+                      ' (vazios:[]). Registro %d ' % registros_vazios)
                 continue
         registros_processados += 1
         if registros_processados == 1:
@@ -280,8 +280,10 @@ def predictions_update(modelo, campo, tamanho, qtde,
             loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []
             s1 = time.time()
-            logger.info('Sequência real ...... %s {0:.2f}' %
-                        (registros_processados, (s1 - s0)))
+            logger.info(
+                'Sequência real ...... %d ' % registros_processados +
+                '{0: .2f} segundos'.format(s1 - s0)
+            )
     # Processa pilha restante...
     loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)

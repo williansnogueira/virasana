@@ -34,6 +34,7 @@ from collections import namedtuple
 
 import click
 from ajna_commons.utils.images import mongo_image, recorta_imagem
+from ajna_commons.flask.log import logger
 from bson import ObjectId
 
 from virasana.db import mongodb as db
@@ -49,11 +50,10 @@ def monta_filtro(model: str, sovazios: bool,
                  update: str, tamanho: int,
                  pulaerros=False) -> dict:
     """Retorna filtro para MongoDB."""
+    batch_size = tamanho
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
         filtro['metadata.carga.vazio'] = True
-    if pulaerros:
-        filtro['metadata.predictions'] = {'$ne': []}
     # Modelo que cria uma caixa de coordenadas para recorte é pré requisito
     # para os outros modelos. Assim, outros modelos só podem rodar em registros
     # que já possuam o campo bbox (bbox: exists: True)
@@ -64,25 +64,25 @@ def monta_filtro(model: str, sovazios: bool,
             filtro['metadata.predictions.bbox'] = {'$exists': False}
         else:
             filtro['metadata.predictions.' + model] = {'$exists': False}
-        batch_size = tamanho
     else:  # Parâmetro tamanho vira qtde de dias e filtra-se por datas
         try:
             dt_inicio = datetime.datetime.strptime(update, '%d/%m/%Y')
             dt_fim = dt_inicio + datetime.timedelta(days=tamanho)
-            batch_size = 0
         except ValueError:
             print('--update: Data em formato inválido!!!')
             return None
         print(dt_inicio, dt_fim)
         filtro['metadata.dataescaneamento'] = {'$gt': dt_inicio, '$lt': dt_fim}
 
-    print('Estimando número de registros a processar...')
+    if pulaerros:
+        filtro['metadata.predictions'] = {'$ne': []}
+    logger.info('Estimando número de registros a processar...')
     count = db['fs.files'].count_documents(filtro, limit=batch_size)
     print(
         count, ' arquivos sem predições com os parâmetros passados...')
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)[:batch_size]
-    print('Consulta ao banco efetuada, iniciando conexões ao Padma')
+    logger.info('Consulta ao banco efetuada, iniciando conexões ao Padma')
     return cursor
 
 

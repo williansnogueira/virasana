@@ -247,11 +247,12 @@ THREADS = 4
 @click.option('--pulaerros', is_flag=True,
               help='Pular registros que tenham erro anterior' +
                    '(metadata.predictions == [])')
-def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
+def predictions_update(modelo, campo, tamanho, qtde,
+                       sovazios, force, update, pulaerros):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
-    cursor = monta_filtro(campo, sovazios, update, tamanho)
+    cursor = monta_filtro(campo, sovazios, update, tamanho, pulaerros)
     if not cursor:
         return False
     registros_processados = 0

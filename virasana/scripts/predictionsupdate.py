@@ -46,11 +46,14 @@ from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
 
 
 def monta_filtro(model: str, sovazios: bool,
-                 update: str, tamanho: int) -> dict:
+                 update: str, tamanho: int,
+                 pulaerros=False) -> dict:
     """Retorna filtro para MongoDB."""
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
         filtro['metadata.carga.vazio'] = True
+    if pulaerros:
+        filtro['metadata.predictions'] = {'$ne': []}
     # Modelo que cria uma caixa de coordenadas para recorte é pré requisito
     # para os outros modelos. Assim, outros modelos só podem rodar em registros
     # que já possuam o campo bbox (bbox: exists: True)
@@ -241,6 +244,9 @@ THREADS = 4
                    + ' no formato DD/MM/AAAA. Se update for selecionado, o'
                    + ' parâmetro --t passa a ser a quantidade de dias a serem '
                    + ' processados.')
+@click.option('--pulaerros', is_flag=True,
+              help='Pular registros que tenham erro anterior' +
+                   '(metadata.predictions == [])')
 def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
@@ -284,7 +290,7 @@ def predictions_update2(modelo, campo, tamanho, qtde):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
-    cursor = monta_filtro(campo, False, None, tamanho)
+    cursor = monta_filtro(campo, False, None, tamanho, pulaerros=True)
     if not cursor:
         return False
     registros_processados = 0

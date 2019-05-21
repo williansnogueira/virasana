@@ -271,7 +271,7 @@ def predictions_update(modelo, campo, tamanho, qtde,
                 continue
         registros_processados += 1
         if registros_processados == 1:
-            print('Iniciando varredura de registros')
+            logger.info('Iniciando varredura de registros')
         image = mongo_image(db, _id)
         images.extend(get_images(model=modelo, _id=_id, image=image,
                                  predictions=pred_gravado))
@@ -280,8 +280,8 @@ def predictions_update(modelo, campo, tamanho, qtde,
             loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []
             s1 = time.time()
-            print('Sequência real ..............  ', registros_processados,
-                  '{0:.2f}'.format(s1 - s0), 'segundos')
+            logger.info('Sequência real ...... %s {0:.2f}' %
+                        (registros_processados, (s1 - s0)))
     # Processa pilha restante...
     loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)

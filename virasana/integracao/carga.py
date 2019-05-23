@@ -32,6 +32,8 @@ CHAVES_CARGA = [
     'metadata.carga.atracacao.escala',
     'metadata.carga.manifesto.manifesto',
     'metadata.carga.manifesto.tipomanifesto',
+    'metadata.carga.manifesto.codigoportocarregamento',
+    'metadata.carga.manifesto.codigoportodescarregamento',
     'metadata.carga.conhecimento.conhecimento',
     'metadata.carga.conhecimento.cpfcnpjconsignatario',
     'metadata.carga.container.container',

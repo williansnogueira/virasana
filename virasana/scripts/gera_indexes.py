@@ -7,7 +7,7 @@ import numpy as np
 
 from virasana.db import mongodb as db
 
-VIRASANA_UTILS = os.path.join('virasana', 'utils')
+VIRASANA_MODELS = os.path.join('virasana', 'models')
 
 
 def gera_indexes():
@@ -26,8 +26,8 @@ def gera_indexes():
     np_indexes = np.asarray(lista_indexes, dtype=np.float16)
     np_ids = np.asarray(lista_ids)
 
-    np.save(os.path.join(VIRASANA_UTILS, 'indexes.npy'), np_indexes)
-    np.save(os.path.join(VIRASANA_UTILS, '_ids.npy'),
+    np.save(os.path.join(VIRASANA_MODELS, 'indexes.npy'), np_indexes)
+    np.save(os.path.join(VIRASANA_MODELS, '_ids.npy'),
             np.asarray(np_ids))
 
 

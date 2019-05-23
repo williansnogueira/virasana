@@ -33,6 +33,7 @@ import time
 from collections import namedtuple
 
 import click
+from ajna_commons.flask.log import logger
 from ajna_commons.utils.images import mongo_image, recorta_imagem
 from bson import ObjectId
 
@@ -46,8 +47,10 @@ from virasana.integracao.padma import (BBOX_MODELS, consulta_padma,
 
 
 def monta_filtro(model: str, sovazios: bool,
-                 update: str, tamanho: int) -> dict:
+                 update: str, tamanho: int,
+                 pulaerros=False) -> dict:
     """Retorna filtro para MongoDB."""
+    batch_size = tamanho
     filtro = {'metadata.contentType': 'image/jpeg'}
     if sovazios:
         filtro['metadata.carga.vazio'] = True
@@ -61,25 +64,26 @@ def monta_filtro(model: str, sovazios: bool,
             filtro['metadata.predictions.bbox'] = {'$exists': False}
         else:
             filtro['metadata.predictions.' + model] = {'$exists': False}
-        batch_size = tamanho
     else:  # Parâmetro tamanho vira qtde de dias e filtra-se por datas
         try:
             dt_inicio = datetime.datetime.strptime(update, '%d/%m/%Y')
             dt_fim = dt_inicio + datetime.timedelta(days=tamanho)
-            batch_size = 0
         except ValueError:
             print('--update: Data em formato inválido!!!')
             return None
         print(dt_inicio, dt_fim)
         filtro['metadata.dataescaneamento'] = {'$gt': dt_inicio, '$lt': dt_fim}
 
-    print('Estimando número de registros a processar...')
+    if pulaerros:
+        filtro['metadata.predictions'] = {'$ne': []}
+    logger.info('Estimando número de registros a processar...')
     count = db['fs.files'].count_documents(filtro, limit=batch_size)
-    print(
-        count, ' arquivos sem predições com os parâmetros passados...')
+    logger.info(
+        '%d arquivos sem predições com os parâmetros passados...' % count
+    )
     cursor = db['fs.files'].find(
         filtro, {'metadata.predictions': 1}).limit(batch_size)[:batch_size]
-    print('Consulta ao banco efetuada, iniciando conexões ao Padma')
+    logger.info('Consulta ao banco efetuada, iniciando conexões ao Padma')
     return cursor
 
 
@@ -241,11 +245,15 @@ THREADS = 4
                    + ' no formato DD/MM/AAAA. Se update for selecionado, o'
                    + ' parâmetro --t passa a ser a quantidade de dias a serem '
                    + ' processados.')
-def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
+@click.option('--pulaerros', is_flag=True,
+              help='Pular registros que tenham erro anterior' +
+                   '(metadata.predictions == [])')
+def predictions_update(modelo, campo, tamanho, qtde,
+                       sovazios, force, update, pulaerros):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
-    cursor = monta_filtro(campo, sovazios, update, tamanho)
+    cursor = monta_filtro(campo, sovazios, update, tamanho, pulaerros)
     if not cursor:
         return False
     registros_processados = 0
@@ -259,12 +267,12 @@ def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
         if not force:
             if pred_gravado == []:
                 registros_vazios += 1
-                print('Pulando registros com anterior insucesso ' +
-                      ' (vazios:[]). Registro % d ' % registros_vazios)
+                logger.info('Pulando registros com anterior insucesso ' +
+                            ' (vazios:[]). Registro %d ' % registros_vazios)
                 continue
         registros_processados += 1
         if registros_processados == 1:
-            print('Iniciando varredura de registros')
+            logger.info('Iniciando varredura de registros')
         image = mongo_image(db, _id)
         images.extend(get_images(model=modelo, _id=_id, image=image,
                                  predictions=pred_gravado))
@@ -273,8 +281,10 @@ def predictions_update(modelo, campo, tamanho, qtde, sovazios, force, update):
             loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []
             s1 = time.time()
-            print('Sequência real ..............  ', registros_processados,
-                  '{0:.2f}'.format(s1 - s0), 'segundos')
+            logger.info(
+                'Sequência real ...... %d ' % registros_processados +
+                '{0: .2f} segundos'.format(s1 - s0)
+            )
     # Processa pilha restante...
     loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)
@@ -284,7 +294,7 @@ def predictions_update2(modelo, campo, tamanho, qtde):
     """Consulta padma e grava predições de retorno no MongoDB."""
     if not campo:
         campo = modelo
-    cursor = monta_filtro(campo, False, None, tamanho)
+    cursor = monta_filtro(campo, False, None, tamanho, pulaerros=True)
     if not cursor:
         return False
     registros_processados = 0
@@ -297,12 +307,12 @@ def predictions_update2(modelo, campo, tamanho, qtde):
         pred_gravado = registro.get('metadata').get('predictions')
         if pred_gravado == []:
             registros_vazios += 1
-            print('Pulando registros com anterior insucesso ' +
-                  ' (vazios:[]). Registro % d ' % registros_vazios)
+            logger.info('Pulando registros com anterior insucesso ' +
+                        ' (vazios:[]). Registro % d ' % registros_vazios)
             continue
         registros_processados += 1
         if registros_processados == 1:
-            print('Iniciando varredura de registros')
+            logger.info('Iniciando varredura de registros')
         image = mongo_image(db, _id)
         images.extend(get_images(model=modelo, _id=_id, image=image,
                                  predictions=pred_gravado))
@@ -311,8 +321,10 @@ def predictions_update2(modelo, campo, tamanho, qtde):
             loop.run_until_complete(fazconsulta(images, modelo, campo))
             images = []
             s1 = time.time()
-            print('Sequência real ..............  ', registros_processados,
-                  '{0:.2f}'.format(s1 - s0), 'segundos')
+            logger.info(
+                'Sequência real ...... %d ' % registros_processados +
+                '{0: .2f} segundos'.format(s1 - s0)
+            )
     # Processa pilha restante...
     loop.run_until_complete(fazconsulta(images, modelo, campo))
     mostra_tempo_final(s_inicio, registros_vazios, registros_processados)

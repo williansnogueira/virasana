@@ -82,13 +82,13 @@ class Auditoria:
             # Se não existe tabela, cria, preenche e chama de novo mesmo método
             for id, campos in self.FILTROS_AUDITORIA.items():
                 logger.debug(id + ' ' + campos['descricao'])
-                # self.db['Auditorias'].insert_one(
-                #     {'id': id,
-                #      'filtro': json.dumps(campos['filtro']),
-                #      'order': campos['order'],
-                #      'descricao': campos['descricao']
-                #      })
-                self.add_relatorio(id, **campos)
+                self.db['Auditorias'].insert_one(
+                     {'id': id,
+                      'filtro': json.dumps(campos['filtro']),
+                      'order': json.dumps(campos['order']),
+                      'descricao': campos['descricao']
+                      })
+                # self.add_relatorio(id, **campos)
             self.mount_filtros()
             return
         for row in auditorias:
@@ -114,14 +114,13 @@ class Auditoria:
 
         Lendo este dicionário, monta uma checagem por 'metaprogramação'
         """
-        self.db['Auditorias'].updateOne(
+        self.db['Auditorias'].find_one_and_replace(
             {'id': id},
             {'id': id,
              'filtro': json.dumps(filtro),
              'order': json.dumps(order),
              'descricao': descricao
-            },
-            {'$upsert': True}
+            }
         )
         return True
 

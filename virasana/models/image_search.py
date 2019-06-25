@@ -41,8 +41,8 @@ class ImageSearch():
             logger.info(
                 'Criando índices de imagesearch... arquivo utils/indexes.npy')
             gera_indexes()
-        self.image_indexes = np.load(IMAGE_INDEXES)
-        self.ids_indexes = np.load(IDS_INDEXES)
+        self.image_indexes = np.load(IMAGE_INDEXES, allow_pickle=True)
+        self.ids_indexes = np.load(IDS_INDEXES, allow_pickle=True)
         logger.info('Índice de %s imagens ' % len(self.image_indexes) +
                     'Para buscas de similaridade carregado em ImageSearch')
         self.chunk = chunk

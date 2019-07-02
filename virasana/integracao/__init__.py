@@ -249,6 +249,7 @@ def stats_resumo_imagens(db, datainicio=None, datafim=None):
     logger.debug('Consultando Totais')
     now_atual = datetime.now()
     stats['Data do levantamento'] = now_atual
+    stats['Periodo do levantamento'] = 'Inicio %s Fim %s.' % (datainicio, datafim)
     total = gridfs_count(db, filtro, limit=None)
     logger.debug('Total %s ' % filtro)
     stats['Total de imagens'] = total

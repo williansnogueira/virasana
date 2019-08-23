@@ -6,13 +6,13 @@
         </div>
         <div class="row">
             <div class="col-sm-12">
-                <label for="date">Escolha o período a ser analisado</label>
+                <label for="start">Escolha o período a ser analisado</label>
             </div>
         </div>
         <div class="row">
             <div class="form-group">
                 <div class="col-sm-3">
-                    <input class="form-control" type="date" name="start" value="{{oform.start.data}}" />
+                    <input class="form-control" type="date" name="start" id="start" value="{{oform.start.data}}" />
                 </div>
                 <div class="col-sm-3">
                     <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
@@ -61,7 +61,7 @@
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4) {
                     if (this.status == 200) {
-                        // console.log(this.responseText);
+                        console.log(this.responseText);
                         $(id_div).append(this.responseText);
                     }
                 }

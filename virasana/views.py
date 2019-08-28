@@ -534,7 +534,10 @@ def grid_data():
               for key, value in request.args.items()}
     logger.warning(filtro)
     linhas = db['fs.files'].find(filtro)
-    result = [str(linha['_id']) for linha in linhas]
+    result = [{'_id': str(linha['_id']),
+               'contentType': str(linha['metadata'].get('contentType'))
+               }
+              for linha in linhas]
     return jsonify(result)
 
 

@@ -31,6 +31,7 @@ setup(
         'redis',
         'requests',
         'scipy',
+        'selenium',
         'sklearn'
     ],
     dependency_links=[

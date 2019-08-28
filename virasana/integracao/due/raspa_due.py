@@ -2,7 +2,7 @@ import json
 import time
 from selenium import webdriver
 
-GECKO_PATH = "D:\\Users\\25052288840\\pybr\\chromedriver.exe"
+GECKO_PATH = "C:\\Users\\25052288840\\Downloads\\chromedriver.exe"
 
 SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="
@@ -58,6 +58,9 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
 
 
 if __name__ == '__main__':
+    import os
+    print(GECKO_PATH)
+    print(os.path.exists(GECKO_PATH))
     driver = webdriver.Chrome(GECKO_PATH)
     auth_suite_rfb(driver)
     conteineres = ['MSCU6656780']

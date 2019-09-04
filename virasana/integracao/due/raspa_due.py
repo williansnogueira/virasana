@@ -2,7 +2,7 @@ import json
 import time
 from selenium import webdriver
 
-GECKO_PATH = "C:\\Users\\25052288840\\Downloads\\chromedriver.exe"
+GECKO_PATH = "D:\\Users\\25052288840\\Downloads\\chromedriver.exe"
 
 SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="

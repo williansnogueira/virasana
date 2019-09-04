@@ -8,6 +8,7 @@ SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="
 DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterDueComItensResumidos?due="
 
+
 def auth_suite_rfb(driver, portal_url=SUITE_URL):
     driver.get(portal_url)
     time.sleep(1)
@@ -17,6 +18,7 @@ def auth_suite_rfb(driver, portal_url=SUITE_URL):
     form = driver.find_element_by_name("loginCertForm")
     form.submit()
     time.sleep(2)
+
 
 def limpa_pre(page_source: str):
     inicio = page_source.find('">{"')
@@ -32,6 +34,7 @@ def get_dues_json_pos_acd(page_source: str):
         result.append(item['numeroDUE'])
     return result
 
+
 def get_dues_pos_acd(driver, conteineres, pos_acd_url=POS_ACD_URL):
     conteineres_listadue = {}
     for conteiner in conteineres:
@@ -39,6 +42,7 @@ def get_dues_pos_acd(driver, conteineres, pos_acd_url=POS_ACD_URL):
         pos_acd = driver.page_source
         conteineres_listadue[conteiner] = get_dues_json_pos_acd(pos_acd)
     return conteineres_listadue
+
 
 def get_dues_json_due(page_source: str):
     json_due = json.loads(limpa_pre(page_source))
@@ -56,9 +60,9 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
     return conteineres_due
 
 
-
 if __name__ == '__main__':
     import os
+
     print(GECKO_PATH)
     print(os.path.exists(GECKO_PATH))
     driver = webdriver.Chrome(GECKO_PATH)

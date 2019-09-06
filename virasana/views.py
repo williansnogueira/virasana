@@ -518,8 +518,9 @@ def image():
     return ''
 
 
-@app.route('/grid_data')
+@app.route('/grid_data', methods=['POST', 'GET'])
 # @login_required
+@csrf.exempt
 def grid_data():
     """Executa uma consulta no banco.
 
@@ -528,17 +529,67 @@ def grid_data():
     o arquivo (campo content) fica em fs.chunks e é recuperado pela view
     image_id.
     """
-    # TODO: permitir consulta via POST de JSON
+    # TODO: Refatorar conversões de/para MongoDB - dict - JSON (Ver Bhadrasana, tem algo feito nesse sentido)
     db = app.config['mongodb']
-    filtro = {mongo_sanitizar(key): mongo_sanitizar(value)
-              for key, value in request.args.items()}
-    logger.warning(filtro)
-    linhas = db['fs.files'].find(filtro)
-    result = [{'_id': str(linha['_id']),
-               'contentType': str(linha['metadata'].get('contentType'))
-               }
+    if request.method == 'POST':
+        print(request.json)
+        query = request.json['query']
+        projection = request.json['projection']
+        query_processed = {}
+        for key, value in query.items():
+            if isinstance(value, dict):
+                value_processed = {}
+                for key2, value2 in value.items():
+                    try:
+                        value_processed[key2] = datetime.strptime(value2, '%Y-%m-%d  %H:%M:%S')
+                    except:
+                        value_processed[key2] = mongo_sanitizar(value2)
+                query_processed[key] = value_processed
+            else:
+                try:
+                    query_processed[key] = datetime.strptime(value, '%Y-%m-%d  %H:%M:%S')
+                except:
+                    query_processed[key] = mongo_sanitizar(value)
+
+
+        logger.warning(query)
+        logger.warning(query_processed)
+        # query = {mongo_sanitizar(key): mongo_sanitizar(value)
+        #          for key, value in query.items()}
+        # projection = {mongo_sanitizar(key): mongo_sanitizar(value)
+        #          for key, value in projection.items()}
+        logger.warning(projection)
+        linhas = db['fs.files'].find(query_processed, projection)
+        result = []
+        for linha in linhas:
+            dict_linha = {}
+            for key, value in linha.items():
+                if isinstance(value, dict):
+                    value_processed = {}
+                    for key2, value2 in value.items():
+                        try:
+                            value_processed[key2] = datetime.strptime(value2, '%Y-%m-%d  %H:%M:%S')
+                        except:
+                            value_processed[key2] = str(value2)
+                    dict_linha[key] = value_processed
+                else:
+                    try:
+                        dict_linha[key] = datetime.strptime(value, '%Y-%m-%d  %H:%M:%S')
+                    except:
+                        dict_linha[key] = str(value)
+            result.append(dict_linha)
+
+        return jsonify(result)
+    else:
+        filtro = {mongo_sanitizar(key): mongo_sanitizar(value)
+                  for key, value in request.args.items()}
+        logger.warning(filtro)
+        linhas = db['fs.files'].find(filtro)
+        result = [{'_id': str(linha['_id']),
+                   'contentType': str(linha['metadata'].get('contentType'))
+                   }
               for linha in linhas]
-    return jsonify(result)
+        return jsonify(result)
 
 
 @app.route('/image/<_id>')

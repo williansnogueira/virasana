@@ -165,71 +165,73 @@ def create_indexes(db):
     Alguns índices únicos também são criados, estes para evitar importação
     duplicada do mesmo registro.
     """
-    db['CARGA.ContainerVazio'].create_index('container')
-    db['CARGA.ContainerVazio'].create_index('manifesto')
-    db['CARGA.ContainerVazio'].create_index(
-        [('manifesto', pymongo.ASCENDING),
-         ('container', pymongo.ASCENDING)]
-    )
-    # TODO: ver porque esta duplicado
-    # unique=True)
-    """
-    cursor = db['CARGA.EscalaManifesto'].aggregate(
-        [{'$group':
-          {'_id': ['$manifesto', '$escala'],
-           'dups': {'$push': '$_id'},
-           'count': {'$sum': 1}}},
-            {'$match': {'count': {'$gt': 1}}}]
-    )
-    for ind, cursor in enumerate(cursor):
-        ids = cursor['dups']
-        for _id in ids[1:]:
-            db['CARGA.EscalaManifesto'].remove(_id)
-    print('TOTAL de registros duplicados', ind)
-    """
-    db['CARGA.EscalaManifesto'].create_index('manifesto')
-    db['CARGA.EscalaManifesto'].create_index('escala')
-    db['CARGA.EscalaManifesto'].create_index(
-        [('manifesto', pymongo.ASCENDING),
-         ('escala', pymongo.ASCENDING)],
-    )
-    # TODO: ver porque esta duplicado
-    # unique=True)
-    db['CARGA.Escala'].create_index('escala')  # , unique=True)
-    db['CARGA.Container'].create_index('container')
-    db['CARGA.Container'].create_index('conhecimento')
-    db['CARGA.Conhecimento'].create_index('conhecimento')  # , unique=True)
-    db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
-    db['CARGA.ManifestoConhecimento'].create_index('manifesto')
-    db['CARGA.AtracDesatracEscala'].create_index('escala')
-    db['CARGA.AtracDesatracEscala'].create_index('manifesto')
-    db['CARGA.Manifesto'].create_index('manifesto')  # , unique=True)
-    db['CARGA.NCM'].create_index('conhecimento')
-    db['CARGA.NCM'].create_index(
-        [('conhecimento', pymongo.ASCENDING),
-         ('item', pymongo.ASCENDING)],
-    )  # unique=True)
-    db['CARGA.Container'].create_index(
-        [('conhecimento', pymongo.ASCENDING),
-         ('container', pymongo.ASCENDING),
-         ('item', pymongo.ASCENDING)],
-    )  # unique=True)
-    # Cria campos utilizados para pesquisa de imagens
-    for campo in CHAVES_CARGA:
-        try:
-            db['fs.files'].create_index(campo)
-        except pymongo.errors.OperationFailure:
-            pass
-    # Cria campo data de atracacao no padrão ISODate
-    cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
-    for linha in cursor:
-        dataatracacaoiso = converte_datahora_atracacao(linha)
-        # print(linha['_id'], dataatracacao, dataatracacaoiso)
-        db['CARGA.AtracDesatracEscala'].update_one(
-            {'_id': linha['_id']}, {
-                '$set': {'dataatracacaoiso': dataatracacaoiso}}
+    try:
+        db['CARGA.ContainerVazio'].create_index('container')
+        db['CARGA.ContainerVazio'].create_index('manifesto')
+        db['CARGA.ContainerVazio'].create_index(
+            [('manifesto', pymongo.ASCENDING),
+             ('container', pymongo.ASCENDING)]
         )
-    db['fs.files'].create_index('metadata.carga.atracacao.dataatracacaoiso')
+        # TODO: ver porque esta duplicado
+        # unique=True)
+        """
+        cursor = db['CARGA.EscalaManifesto'].aggregate(
+            [{'$group':
+              {'_id': ['$manifesto', '$escala'],
+               'dups': {'$push': '$_id'},
+               'count': {'$sum': 1}}},
+                {'$match': {'count': {'$gt': 1}}}]
+        )
+        for ind, cursor in enumerate(cursor):
+            ids = cursor['dups']
+            for _id in ids[1:]:
+                db['CARGA.EscalaManifesto'].remove(_id)
+        print('TOTAL de registros duplicados', ind)
+        """
+        db['CARGA.EscalaManifesto'].create_index('manifesto')
+        db['CARGA.EscalaManifesto'].create_index('escala')
+        db['CARGA.EscalaManifesto'].create_index(
+            [('manifesto', pymongo.ASCENDING),
+             ('escala', pymongo.ASCENDING)],
+        )
+        # TODO: ver porque esta duplicado
+        # unique=True)
+        db['CARGA.Escala'].create_index('escala')  # , unique=True)
+        db['CARGA.Container'].create_index('container')
+        db['CARGA.Container'].create_index('conhecimento')
+        db['CARGA.Conhecimento'].create_index('conhecimento')  # , unique=True)
+        db['CARGA.ManifestoConhecimento'].create_index('conhecimento')
+        db['CARGA.ManifestoConhecimento'].create_index('manifesto')
+        db['CARGA.AtracDesatracEscala'].create_index('escala')
+        db['CARGA.AtracDesatracEscala'].create_index('manifesto')
+        db['CARGA.Manifesto'].create_index('manifesto')  # , unique=True)
+        db['CARGA.NCM'].create_index('conhecimento')
+        db['CARGA.NCM'].create_index(
+            [('conhecimento', pymongo.ASCENDING),
+             ('item', pymongo.ASCENDING)],
+        )  # unique=True)
+        db['CARGA.Container'].create_index(
+            [('conhecimento', pymongo.ASCENDING),
+             ('container', pymongo.ASCENDING),
+             ('item', pymongo.ASCENDING)],
+        )  # unique=True)
+        # Cria campos utilizados para pesquisa de imagens
+        for campo in CHAVES_CARGA:
+            try:
+                db['fs.files'].create_index(campo)
+            except pymongo.errors.OperationFailure:
+                pass
+        db['fs.files'].create_index('metadata.carga.atracacao.dataatracacaoiso')
+    finally:
+        # Cria campo data de atracacao no padrão ISODate
+        cursor = db['CARGA.AtracDesatracEscala'].find({'dataatracacaoiso': None})
+        for linha in cursor:
+            dataatracacaoiso = converte_datahora_atracacao(linha)
+            # print(linha['_id'], dataatracacao, dataatracacaoiso)
+            db['CARGA.AtracDesatracEscala'].update_one(
+                {'_id': linha['_id']}, {
+                    '$set': {'dataatracacaoiso': dataatracacaoiso}}
+            )
 
 
 def mongo_find_in(db, collection: str, field: str, in_set,

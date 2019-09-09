@@ -54,7 +54,8 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
     conteineres_due = {}
     for conteiner, dues in conteineres_listadue.items():
         for due in dues:
-            driver.get(due_items_url + due)
+            if due and isinstance(due, str):
+                driver.get(due_items_url + due)
             due_page = driver.page_source
             conteineres_due[conteiner] = get_dues_json_due(due_page)
     return conteineres_due

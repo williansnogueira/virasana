@@ -767,7 +767,7 @@ filtros = dict()
 
 def campos_chave():
     """Retorna campos chave para montagem de filtro."""
-    return CHAVES_GRIDFS + carga.CHAVES_CARGA + info_ade02.CHAVES_RECINTO
+    return CHAVES_GRIDFS + carga.CHAVES_CARGA + info_ade02.CHAVES_RECINTO + due_mongo.CHAVES_DUE
 
 
 def campos_chave_tipos():

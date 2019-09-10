@@ -204,6 +204,18 @@
                 </ul>
                 {% endif %}
             </div>
+            <h3>Dados do PUCOMEX</h3>
+            <div id="PUCOMEX">
+                {% if myfile['metadata']['due'] %}
+                    {% for due in myfile['metadata']['due'] %}
+                        <ul>
+                            {% for key, value in due.items() %}
+                                <li> {{ key }}: {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            </div>
             <h3>Dados de pesagens - integração recintos aduaneiros</h3>
             <div id="ade022003">
                 {% if myfile['metadata']['pesagens'] %}

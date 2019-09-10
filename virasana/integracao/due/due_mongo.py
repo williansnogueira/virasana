@@ -17,9 +17,10 @@ def update_due(db, dues):
 
 CHAVES_DUE = [
     'metadata.due.numero',
+    'metadata.due.ruc',
     'metadata.due.Declarante',
+    'metadata.due.PaisImportador',
     'metadata.due.itens.Exportador',
-    'metadata.due.itens.paisImportador',
     'metadata.due.itens.recintoAduaneiroDespacho.codigo',
     'metadata.due.itens.recintoAduaneiroEmbarque.codigo',
 ]

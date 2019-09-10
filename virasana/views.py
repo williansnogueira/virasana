@@ -37,6 +37,7 @@ from wtforms import (BooleanField, DateField, FloatField, IntegerField,
 from wtforms.validators import DataRequired, optional
 
 from virasana.forms.auditoria import FormAuditoria, SelectAuditoria
+from virasana.integracao.due import due_mongo
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
                                  plot_pie_plotly, stats_resumo_imagens,
@@ -590,6 +591,20 @@ def grid_data():
                    }
               for linha in linhas]
         return jsonify(result)
+
+
+@app.route('/dues/update', methods=['POST'])
+# @login_required
+@csrf.exempt
+def dues_update():
+    """Recebe um JSON no formato [{_id1: due1}, ..., {_idn: duen}] e grava
+
+    """
+    db = app.config['mongodb']
+    if request.method == 'POST':
+        due_mongo.update_due(db, request.json)
+    return jsonify({'status': 'DUEs inseridas/atualizadas'}), 201
+
 
 
 @app.route('/image/<_id>')

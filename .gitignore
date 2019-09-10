@@ -156,3 +156,4 @@ celerybeat*
 .idea/*
 .BSON/*
 dte.info
+/virasana/notebooks/dues.txt

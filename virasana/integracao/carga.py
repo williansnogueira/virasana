@@ -408,7 +408,7 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
 
     # Separar APENAS os Conhecimentos BL ou MBL
     filtro = {'conhecimento': {'$in': list(conhecimentos)},
-              'tipo': {'$in': ['bl', 'mbl']}}
+              'tipo': {'$in': ['bl', 'hbl']}}
     cursor = db['CARGA.Conhecimento'].find(filtro, {'conhecimento': 1})
     conhecimentos = [linha['conhecimento'] for linha in cursor]
 

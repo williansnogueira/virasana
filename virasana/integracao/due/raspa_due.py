@@ -51,14 +51,14 @@ def get_dues_json_due(page_source: str):
 
 
 def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
-    conteineres_due = {}
+    due_detalhe = {}
     for conteiner, dues in conteineres_listadue.items():
         for due in dues:
-            if due and isinstance(due, str):
+            if due and isinstance(due, str) and due_detalhe.get(due) is None:
                 driver.get(due_items_url + due)
-            due_page = driver.page_source
-            conteineres_due[conteiner] = get_dues_json_due(due_page)
-    return conteineres_due
+                due_page = driver.page_source
+                due_detalhe[due] = get_dues_json_due(due_page)
+    return due_detalhe
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 
 
 def update_due(db, dues):
+    print(dues)
     for _id, due in dues.items():
         db.fs.files.update_one(
             {'_id': _id},

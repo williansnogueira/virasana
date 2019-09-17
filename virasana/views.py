@@ -580,7 +580,6 @@ def grid_data():
                         dict_linha[key] = str(value)
             result.append(dict_linha)
 
-        return jsonify(result)
     else:
         filtro = {mongo_sanitizar(key): mongo_sanitizar(value)
                   for key, value in request.args.items()}
@@ -590,7 +589,10 @@ def grid_data():
                    'contentType': str(linha['metadata'].get('contentType'))
                    }
               for linha in linhas]
-        return jsonify(result)
+    status_code = 404
+    if len(result) > 0:
+        status_code = 200
+    return jsonify(result), status_code
 
 
 @app.route('/dues/update', methods=['POST'])

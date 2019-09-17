@@ -1,23 +1,49 @@
 import json
+import requests
 import time
+from datetime import datetime, time
 from selenium import webdriver
 
-GECKO_PATH = "D:\\Users\\25052288840\\Downloads\\chromedriver.exe"
+GECKO_PATH = "C:\\Users\\25052288840\\Downloads\\chromedriver.exe"
 
 SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="
 DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterDueComItensResumidos?due="
 
+VIRASANA_URL = "http://10.68.64.12/virasana/"
+
+
+def raspa_containers_sem_due(
+        datainicial: str, datafinal: str,
+        tipomanifesto: str = None,
+        virasana_url: str = VIRASANA_URL) -> list:
+    print('Conectando virasana')
+    params = {'query':
+                  {'metadata.dataescaneamento': {'$gte': datainicial, '$lte': datafinal},
+                   'metadata.contentType': 'image/jpeg',
+                   'metadata.carga.manifesto.tipomanifesto': tipomanifesto
+                   },
+              'projection':
+                  {'metadata.numeroinformado': 1,
+                   'metadata.dataescaneamento': 1}
+              }
+    r = requests.post(virasana_url + "grid_data", json=params)
+    lista_containeres = list(r.json())
+    conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
+                       for linha in lista_containeres}
+    print('%s Contêineres recuperados.' % len(lista_containeres))
+    return conteineres_ids
+
 
 def auth_suite_rfb(driver, portal_url=SUITE_URL):
     driver.get(portal_url)
-    time.sleep(1)
+    # time.sleep(1)
     LOGON_REDIRECT = "/camweb/grupo?sis=SUITERFB&url=www.suiterfb.receita.fazenda/api/private/redirect"
     driver.get(portal_url + LOGON_REDIRECT)
-    time.sleep(1)
+    # time.sleep(1)
     form = driver.find_element_by_name("loginCertForm")
     form.submit()
-    time.sleep(2)
+    # time.sleep(2)
 
 
 def limpa_pre(page_source: str):
@@ -61,16 +87,90 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
     return due_detalhe
 
 
-if __name__ == '__main__':
-    import os
+def monta_due_ajna(due):
+    def get_dados_recinto(recinto_dict):
+        result = {}
+        result['codigo'] = recinto_dict.get('codigo')
+        depositario = recinto_dict.get('depositario')
+        if depositario:
+            result['depositario'] = depositario.get('depositario')
+            result['nome'] = depositario.get('nome')
+            result['descricao'] = depositario.get('descricao')
+            unidade = depositario.get('unidadeLocalRFB')
+            if unidade:
+                unidadeLocalRFB = depositario.get('codigo')
 
-    print(GECKO_PATH)
-    print(os.path.exists(GECKO_PATH))
+        return result
+
+    keys = ['canal', 'chaveAcesso', 'dataProcessamentoTa', 'descricaoTipoItemDue',
+            'exportadorEstrangeiro', 'formaExportacao', 'indicadorOEA', 'informacoesComplementares']
+    pacote = {}
+    for key in keys:
+        item = due.get(key)
+        if item is not None:
+            pacote[key] = item
+
+    declarante = due.get('niDeclarante')
+    if declarante:
+        pacote['Declarante'] = declarante.get('numero')
+        pacote['Nome Declarante'] = declarante.get('nome')
+
+    destino = due.get('paisImportador')
+    if destino:
+        pacote['PaisImportador'] = destino.get('nome')
+
+    lista_items = due.get('listaInfoItemDue')
+    itensDue = []
+    for item in lista_items:
+        itemDue = {}
+        itemDue['descricaoMercadoria'] = item.get('descricaoMercadoria')
+        itemDue['exportadorEstrangeiro'] = item.get('exportadorEstrangeiro')
+        ncm = item.get('ncm')
+        if ncm:
+            itemDue['ncm'] = ncm.get('codigo')
+        exportador = item.get('niExportador')
+        if exportador:
+            itemDue['Exportador'] = exportador.get('numero')
+            itemDue['NomeExportador'] = exportador.get('nome')
+        itensDue.append(itemDue)
+    pacote['itens'] = itensDue
+
+    for recinto_tipo in ['recintoAduaneiroDespacho', 'recintoAduaneiroEmbarque']:
+        pacote[recinto_tipo] = get_dados_recinto(due.get(recinto_tipo))
+    ruc = due.get('ruc')
+    if ruc:
+        pacote['ruc'] = ruc.get('numero')
+    pacote['listaHistorico'] = due.get('listaHistorico')
+
+    return pacote
+
+
+if __name__ == '__main__':
     driver = webdriver.Chrome(GECKO_PATH)
-    auth_suite_rfb(driver)
-    conteineres = ['MSCU6656780']
-    conteineres_listadue = get_dues_pos_acd(driver, conteineres)
-    print(conteineres_listadue)
-    conteineres_due = detalha_dues(driver, conteineres_listadue)
-    print(conteineres_due)
-    driver.close()
+    diaapesquisar = datetime(2019, 9, 2)
+    datainicial = datetime.strftime(datetime.combine(diaapesquisar, time.min), '%Y-%m-%d  %H:%M:%S')
+    datafinal = datetime.strftime(datetime.combine(diaapesquisar, time.max), '%Y-%m-%d %H:%M:%S')
+    print(datainicial, datafinal)
+    for tipo_manifesto in (None, 'lce'):
+        conteineres_ids = raspa_containers_sem_due(
+            datainicial, datafinal, tipo_manifesto)
+        try:
+            auth_suite_rfb(driver)
+            conteineres_listadue = get_dues_pos_acd(driver,
+                                                    list(conteineres_ids.keys()))
+            due_detalhe = detalha_dues(driver, conteineres_listadue)
+        finally:
+            driver.close()
+        pacote_carregamento = {}
+        for conteiner, numeros_dues in conteineres_listadue.items():
+            _id = conteineres_ids[conteiner]
+            lista_dues = []
+            for due in numeros_dues:
+                if due is not None:
+                    pacote = monta_due_ajna(due_detalhe[due])
+                    lista_dues.append({'numero': due, **pacote})
+            if numeros_dues and len(numeros_dues) > 0:
+                pacote_carregamento[_id] = lista_dues
+        r = requests.post(VIRASANA_URL + "dues/update", json=pacote_carregamento)
+        print(r.status_code)
+        print(r.text)

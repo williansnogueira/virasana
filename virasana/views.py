@@ -12,6 +12,7 @@ from json import JSONDecodeError
 from sys import platform
 
 import ajna_commons.flask.login as login_ajna
+import ajna_commons.flask.user as user_ajna
 import requests
 from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
@@ -71,7 +72,7 @@ def configure_app(mongodb):
     app.config['SECRET_KEY'] = SECRET
     app.config['SESSION_TYPE'] = 'filesystem'
     login_ajna.configure(app)
-    login_ajna.DBUser.dbsession = mongodb
+    user_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
     try:
         img_search = ImageSearch(mongodb)

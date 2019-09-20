@@ -24,7 +24,7 @@ import plotly
 import plotly.graph_objs as go
 from ajna_commons.flask.conf import DATABASE, MONGODB_URI
 from ajna_commons.flask.log import logger
-from ajna_commons.flask.login import DBUser
+from ajna_commons.flask.user import DBUser
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import OperationFailure
 

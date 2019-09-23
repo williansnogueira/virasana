@@ -157,3 +157,4 @@ celerybeat*
 .BSON/*
 dte.info
 /virasana/notebooks/dues.txt
+/virasana/integracao/empresas_risco.csv

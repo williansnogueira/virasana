@@ -815,21 +815,22 @@ class FilesForm(FlaskForm):
     search_files.html
 
     """
-    numero = StringField(u'Número', validators=[optional()], default='')
-    start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=10))
-    end = DateField('End', validators=[optional()], default=date.today())
-    alerta = BooleanField('Alerta', validators=[optional()], default=False)
-    ranking = BooleanField('Ranking', validators=[optional()], default=False)
-    pagina_atual = IntegerField('Pagina', default=1)
-    filtro_auditoria = SelectField(u'Filtros de Auditoria',
-                                   default=0)
-    tag_usuario = BooleanField('Exclusivamente Tag do usuário',
-                               validators=[optional()], default=False)
-    filtro_tags = SelectField(u'Tags de usuário',
-                              default=[0])
-    texto_ocorrencia = StringField(u'Texto Ocorrência',
-                                   validators=[optional()], default='')
+    def __init__(self):
+        self.numero = StringField(u'Número', validators=[optional()], default='')
+        self.start = DateField('Start', validators=[optional()],
+                          default=date.today() - timedelta(days=10))
+        self.end = DateField('End', validators=[optional()], default=date.today())
+        self.alerta = BooleanField('Alerta', validators=[optional()], default=False)
+        self.ranking = BooleanField('Ranking', validators=[optional()], default=False)
+        self.pagina_atual = IntegerField('Pagina', default=1)
+        self.filtro_auditoria = SelectField(u'Filtros de Auditoria',
+                                       default=0)
+        self.tag_usuario = BooleanField('Exclusivamente Tag do usuário',
+                                   validators=[optional()], default=False)
+        self.filtro_tags = SelectField(u'Tags de usuário',
+                                  default=[0])
+        self.texto_ocorrencia = StringField(u'Texto Ocorrência',
+                                       validators=[optional()], default='')
 
 
 def recupera_user_filtros():

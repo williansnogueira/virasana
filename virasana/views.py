@@ -830,8 +830,6 @@ class FilesForm(FlaskForm):
                               default=[0])
     texto_ocorrencia = StringField(u'Texto Ocorrência',
                                    validators=[optional()], default='')
-    def __init__(self):
-        self.start.data.value = date.today()
 
 
 def recupera_user_filtros():

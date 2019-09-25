@@ -999,6 +999,8 @@ def stats():
     db = app.config['mongodb']
     global stats_cache
     form = StatsForm(**request.form)
+    form.start.default = date.today() - timedelta(days=30)
+    form.end.default = date.today()
     if form.validate():
         start = datetime.combine(form.start.data, datetime.min.time())
         end = datetime.combine(form.end.data, datetime.max.time())

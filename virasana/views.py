@@ -553,7 +553,6 @@ def grid_data():
                 except:
                     query_processed[key] = mongo_sanitizar(value)
 
-
         logger.warning(query)
         logger.warning(query_processed)
         # query = {mongo_sanitizar(key): mongo_sanitizar(value)
@@ -589,7 +588,7 @@ def grid_data():
         result = [{'_id': str(linha['_id']),
                    'contentType': str(linha['metadata'].get('contentType'))
                    }
-              for linha in linhas]
+                  for linha in linhas]
     status_code = 404
     if len(result) > 0:
         status_code = 200
@@ -607,7 +606,6 @@ def dues_update():
     if request.method == 'POST':
         due_mongo.update_due(db, request.json)
     return jsonify({'status': 'DUEs inseridas/atualizadas'}), 201
-
 
 
 @app.route('/image/<_id>')
@@ -918,6 +916,8 @@ def files():
     tags_object = Tags(db)
     auditoria_object = Auditoria(db)
     form_files = FilesForm()
+    form_files.start.default = date.today() - timedelta(days=10)
+    form_files.end.default = date.today()
     form_files.filtro_tags.choices = tags_object.tags_text
     form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
     filtro, user_filtros = recupera_user_filtros()
@@ -999,6 +999,8 @@ def stats():
     db = app.config['mongodb']
     global stats_cache
     form = StatsForm(**request.form)
+    form.start.default = date.today() - timedelta(days=30)
+    form.end.default = date.today()
     if form.validate():
         start = datetime.combine(form.start.data, datetime.min.time())
         end = datetime.combine(form.end.data, datetime.max.time())

@@ -12,7 +12,6 @@ from pymongo import MongoClient
 class FlaskTestCase(unittest.TestCase):
     def setUp(self):
         app = Flask(__name__)
-        app.config['SERVER_NAME'] = 'test.api'
         self.app = app
         app.secret_key = 'DUMMY'
         app.testing = True

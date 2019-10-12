@@ -22,6 +22,9 @@
                         <i class="fa fa-save"></i>&nbsp;Entrar
                     </button>
                 </form>
+                <button onclick="login_certificado()" class="btn btn-block btn-primary btn-default" id="btnlogin_certificado">
+                    <i class="fa fa-save"></i>&nbsp;Entrar com certificado digital
+                </button>
             </div>
         </div>
     </div>
@@ -33,4 +36,8 @@
         $('#loginmodal').modal();
         {% endif %}
     })
+    function login_certificado(campo) {
+        window.location.assign('login_certificado')
+    }
+
 </script> {% endblock %}

@@ -57,6 +57,13 @@ class Auditoria:
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens com NCM único'
               },
+        '9': {'filtro': {'metadata.contentType': 'image/jpeg',
+                         'metadata.carga.ncm': {'$size': 2},
+                         'metadata.carga.container.indicadorusoparcial': {'$ne': 's'}
+                         },
+              'order': [('metadata.dataescaneamento', 1)],
+              'descricao': 'Imagens com dois NCMs'
+              },
     }
 
     def __init__(self, db):

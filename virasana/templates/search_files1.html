@@ -132,20 +132,25 @@
         <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
             <thead>
                 <tr>
-                    <td>Dados</td>
-                    <td>Imagem</td>
+                    <td>Número informado do Contêiner</td>
+                    <td>Nome do Arquivo</td>
+                    <td>Data de Escaneamento</td>
+                    <td>Imagens (recortadas se disponível)</td>
+                    <td>Ações</td>
                 </tr>
             </thead>
             {% for myfile in paginated_files %}
             <tr>
+                <td>{{ myfile['numero'] }}</td>
+                <td>{{ myfile['filename'] }}</td>
+                <td>{{ myfile['dataescaneamento'] }}</td>
                 <td>
-                    {{ myfile['numero'] }}<br>
-                    {{ myfile['dataescaneamento'] }}
+                    <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" height="60" />
+                    <img src="mini1/{{ myfile['_id'] }}" alt="Sem miniatura" height="60" />
+                    <img src="mini2/{{ myfile['_id'] }}" alt="Sem segundo contêiner" height="60" />
                 </td>
                 <td>
-                    <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">
-                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" height="200" />
-                    </a>
+                    <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">Ver</a>
                 </td>
             </tr>
             {% endfor %}
@@ -153,20 +158,6 @@
     </div>
     <div class="col-sm-1">
         &nbsp;
-    </div>
-</div>
-<div id="bottom_buttons" class="row">
-    <div class="col-sm-6">
-        &nbsp;
-    </div>
-    <div class="col-sm-3">
-        Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
-    </div>
-    <div class="col-sm-3">
-        <button onclick="next_page(-1)" id="btn_page1b" type="button" class="btn btn-default btn-info"> < </button>
-        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2b" type="button" class="btn btn-default btn-info"> << </button>
-        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3b" type="button" class="btn btn-default btn-info"> >> </button>
-        <button onclick="next_page(1)" id="btn_page4b" type="button" class="btn btn-default btn-info"> > </button>
     </div>
 </div>
 <div id="bottom" class="row">

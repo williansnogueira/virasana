@@ -102,6 +102,7 @@ def get_dados_conteiner(grid_data):
             if isinstance(conhecimento, list) and len(conhecimento) > 0:
                 conhecimento = conhecimento[0]
                 descricao = conhecimento.get('descricaomercadoria')[:240]
+                descricao = descricao[:80] + ' ' + descricao[80:160] + ' ' + descricao[160:241]
             return '%s - %s' % (descricaotipo, descricao)
         return ''
     except Exception as err:

@@ -54,6 +54,81 @@ TIPOS_CARGA = {
 }
 
 
+def get_metadata_carga(grid_data):
+    # logger.debug(grid_data)
+    if grid_data:
+        metadata = grid_data.get('metadata')
+        if metadata:
+            carga = metadata.get('carga')
+            if carga:
+                return carga
+    return None
+
+
+def get_tipo_manifesto(grid_data):
+    metadata_carga = get_metadata_carga(grid_data)
+    manifesto = metadata_carga.get('manifesto')
+    if isinstance(manifesto, list):
+        manifesto = manifesto[0]
+    tipo = manifesto.get('tipomanifesto')
+    tipos = {'lci': 'Importação',
+             'bce': 'Baldeação',
+             'lce': 'Exportação'}
+    return tipo, tipos.get(tipo, '')
+
+
+def monta_float(campo: str):
+    try:
+        return float(campo.replace(',', '.'))
+    except ValueError as err:
+        logger.error(err)
+        return 0.
+
+
+def get_dados_conteiner(grid_data):
+    metadata_carga = get_metadata_carga(grid_data)
+    if metadata_carga:
+        tipo, descricaotipo = get_tipo_manifesto(grid_data)
+        if metadata_carga.get('vazio'):
+            conteiner = metadata_carga.get('container')
+            if isinstance(conteiner, list):
+                conteiner = conteiner[0]
+            if not conteiner:
+                return ''
+            tara = monta_float(conteiner.get('tara(kg)'))
+            return 'Contêiner VAZIO Tara: %d %s' % (tara, descricaotipo)
+        conhecimento = metadata_carga.get('conhecimento')
+        if isinstance(conhecimento, list):
+            conhecimento = conhecimento[0]
+            descricao = conhecimento.get('descricaomercadoria')[:240]
+        return '%s - %s' % (descricaotipo, descricao)
+    return ''
+
+
+def get_peso_conteiner(grid_data):
+    metadata_carga = get_metadata_carga(grid_data)
+    if metadata_carga:
+        conteiner = metadata_carga.get('container')
+        if isinstance(conteiner, list):
+            conteiner = conteiner[0]
+        if not conteiner:
+            return ''
+        pesototal = metadata_carga.get('pesototal', 0.)
+        tara = monta_float(conteiner.get('taracontainer', '0'))
+        peso = monta_float(conteiner.get('pesobrutoitem', '0'))
+        volume = monta_float(conteiner.get('volumeitem'))
+        return 'Peso: %d kg (Bruto %d kg Tara %d kg) - Volume %d m3' % \
+               (pesototal, peso, tara, volume)
+    return ''
+
+
+def get_dados_ncm(grid_data):
+    metadata_carga = get_metadata_carga(grid_data)
+    if metadata_carga:
+        return 'NCMs: ' + ', '.join([ncm.get('ncm')
+                         for ncm in metadata_carga.get('ncm')])
+    return ''
+
 def summary(grid_data=None, registro=None):
     """Selecionar campos mais importantes para exibição.
 
@@ -105,16 +180,21 @@ def summary(grid_data=None, registro=None):
             result['CONTÊINER COM CARGA'] = ''
             if meta.get('pesototal'):
                 result['PESO TOTAL'] = '{:0.2f}'.format(meta.get('pesototal'))
+            atracacao = meta.get('atracacao')
+            if isinstance(atracacao, list):
+                atracacao = atracacao[0]
+            if atracacao:
+                escala = atracacao.get('escala')
             result['Conhecimento - Manifesto - Escala'] = \
                 'CE %s - %s - %s' % \
                 (conhecimento.get('conhecimento'),
                  manifesto.get('manifesto'),
-                 meta.get('atracacao').get('escala'))
+                 escala)
             result['Descrição'] = \
                 conhecimento.get('descricaomercadoria')
             result['Consignatário'] = \
                 '%s - %s ' % (conhecimento.get('cpfcnpjconsignatario'),
-                conhecimento.get('nomeconsignatario'))
+                              conhecimento.get('nomeconsignatario'))
             conteiner_pesos = []
             conteineres = meta.get('container')
             if not isinstance(conteineres, list):
@@ -133,6 +213,8 @@ def summary(grid_data=None, registro=None):
             result['NCM'] = ' '.join([ncm.get('ncm')
                                       for ncm in meta.get('ncm')])
         atracacao = meta.get('atracacao')
+        if isinstance(atracacao, list):
+            atracacao = atracacao[0]
         if atracacao:
             result['Data e hora de atracação do Manifesto'] = '%s %s' % (
                 atracacao.get('dataatracacao'),
@@ -414,10 +496,13 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
 
     json_dict['conhecimento'], _ = mongo_find_in(
         db, 'CARGA.Conhecimento', 'conhecimento', conhecimentos)
-    json_dict['ncm'], _ = mongo_find_in(
+    # TODO: Observar se filtragem de NCMs abaixo está funcionando corretamente
+    ncms, _ = mongo_find_in(
         db, 'CARGA.NCM', 'conhecimento', conhecimentos)
-    json_dict['container'] = [linha for linha in conteineres
+    container = [linha for linha in conteineres
                               if linha['conhecimento'] in conhecimentos]
+    json_dict['ncm'] = [ncm for ncm in ncms if ncm['item'] == container['item']]
+    json_dict['container'] = container
     return json_dict
 
 

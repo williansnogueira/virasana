@@ -178,9 +178,11 @@
                     <li>{{key}}</li>
                     <ul>
                         {% if key == 'atracacao' %}
-                            {% for campo, valor in value.items() %}
-                                <li> {{ campo }}: {{ valor }}</li>
-                            {% endfor %}
+                            {% if value is mapping %}
+                                {% for campo, valor in value.items() %}
+                                    <li> {{ campo }}: {{ valor }}</li>
+                                {% endfor %}
+                            {% endif %}
                         {% else %}
                             {% if value is iterable and value is not mapping %}
                                 {% for linha in value %}

@@ -132,19 +132,24 @@
         <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
             <thead>
                 <tr>
-                    <td>Dados</td>
+                    <td width="500" style="text-align:left">Dados</td>
                     <td>Imagem</td>
                 </tr>
             </thead>
             {% for myfile in paginated_files %}
             <tr>
-                <td>
-                    {{ myfile['numero'] }}<br>
-                    {{ myfile['dataescaneamento'] }}
+                <td width="500" style="text-align:left">
+                    Contêiner n. <b>{{ myfile['numero'] }}</b>. Imagem de <b>{{ myfile['dataescaneamento'] }}</b> <br>
+                    {{ myfile['infocarga'] }}<br>
+                    {{ myfile['pesocarga'] }}<br>
+                    {{ myfile['ncms'] }}<br>
+
                 </td>
                 <td>
                     <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">
-                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" height="200" />
+                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" height="240"
+                        onmouseover="showMsg(this, '{{ myfile['_id'] }}')" onmouseout="clearMsg(this)"
+                        />
                     </a>
                 </td>
             </tr>
@@ -236,5 +241,21 @@
         };
         $('button#btnfiltropersonalizado').bind('click', filtro_personalizado);
       });
+
+    function showMsg(img,_id) {
+        xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    img.title = this.responseText;
+                }
+            }
+        }
+        xhttp.open("GET", "/virasana/summary/" + _id, true);
+        xhttp.send();
+    }
+    function clearMsg(img) {
+        img.title = "";
+    }
 
 </script> {% endblock %}

@@ -77,10 +77,10 @@ def get_tipo_manifesto(grid_data):
     return tipo, tipos.get(tipo, '')
 
 
-def monta_float(campo: str):
+def monta_float(campo: str)-> float:
     try:
         return float(campo.replace(',', '.'))
-    except ValueError as err:
+    except Exception as err:
         logger.error(err)
         return 0.
 

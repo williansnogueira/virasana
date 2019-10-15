@@ -77,6 +77,7 @@ def configure_app(mongodb):
     try:
         # img_search = ImageSearch(mongodb)
         # app.config['img_search'] = img_search
+        pass
     except (IOError, FileNotFoundError):
         pass
     app.config['text_search'] = TextSearch(mongodb)

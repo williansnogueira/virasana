@@ -192,6 +192,7 @@ def summary(grid_data=None, registro=None):
                  escala)
             result['Descrição'] = \
                 conhecimento.get('descricaomercadoria')
+            print(conhecimento)
             result['Consignatário'] = \
                 '%s - %s ' % (conhecimento.get('cpfcnpjconsignatario'),
                               conhecimento.get('nomeconsignatario'))

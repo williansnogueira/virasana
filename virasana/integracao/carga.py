@@ -125,9 +125,13 @@ def get_peso_conteiner(grid_data):
 def get_dados_ncm(grid_data):
     metadata_carga = get_metadata_carga(grid_data)
     if metadata_carga:
-        return 'NCMs: ' + ', '.join([ncm.get('ncm')
-                         for ncm in metadata_carga.get('ncm')])
+        ncms = metadata_carga.get('ncm')
+        if ncms:
+            return 'NCMs: ' + ', '.join(
+                [ncm.get('ncm') for ncm in ncms]
+            )
     return ''
+
 
 def summary(grid_data=None, registro=None):
     """Selecionar campos mais importantes para exibição.
@@ -501,7 +505,7 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
     ncms, _ = mongo_find_in(
         db, 'CARGA.NCM', 'conhecimento', conhecimentos)
     container = [linha for linha in conteineres
-                              if linha['conhecimento'] in conhecimentos]
+                 if linha['conhecimento'] in conhecimentos]
     json_dict['ncm'] = [ncm for ncm in ncms if ncm['item'] == container['item']]
     json_dict['container'] = container
     return json_dict

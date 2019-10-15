@@ -129,7 +129,7 @@ def get_dados_ncm(grid_data):
         if ncms:
             return 'NCMs: ' + ', '.join(
                 [ncm.get('ncm') for ncm in ncms]
-            )
+            )[:70]
     return ''
 
 

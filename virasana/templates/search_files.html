@@ -132,13 +132,13 @@
         <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
             <thead>
                 <tr>
-                    <td width="560" style="text-align:left">Dados</td>
+                    <td width="500" style="text-align:left">Dados</td>
                     <td>Imagem</td>
                 </tr>
             </thead>
             {% for myfile in paginated_files %}
             <tr>
-                <td width="560" style="text-align:left">
+                <td width="500" style="text-align:left">
                     Contêiner nº <b>{{ myfile['numero'] }}</b> escaneado <b>{{ myfile['dataescaneamento'] }}</b> <br>
                     {{ myfile['infocarga'] }}<br>
                     {{ myfile['pesocarga'] }}<br>

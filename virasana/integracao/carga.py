@@ -86,23 +86,28 @@ def monta_float(campo: str)-> float:
 
 
 def get_dados_conteiner(grid_data):
-    metadata_carga = get_metadata_carga(grid_data)
-    if metadata_carga:
-        tipo, descricaotipo = get_tipo_manifesto(grid_data)
-        if metadata_carga.get('vazio'):
-            conteiner = metadata_carga.get('container')
-            if isinstance(conteiner, list):
-                conteiner = conteiner[0]
-            if not conteiner:
-                return ''
-            tara = monta_float(conteiner.get('tara(kg)'))
-            return 'Contêiner VAZIO Tara: %d %s' % (tara, descricaotipo)
-        conhecimento = metadata_carga.get('conhecimento')
-        if isinstance(conhecimento, list):
-            conhecimento = conhecimento[0]
-            descricao = conhecimento.get('descricaomercadoria')[:240]
-        return '%s - %s' % (descricaotipo, descricao)
-    return ''
+    try:
+        metadata_carga = get_metadata_carga(grid_data)
+        if metadata_carga:
+            tipo, descricaotipo = get_tipo_manifesto(grid_data)
+            if metadata_carga.get('vazio'):
+                conteiner = metadata_carga.get('container')
+                if isinstance(conteiner, list) and len(conteiner) > 0:
+                    conteiner = conteiner[0]
+                if not conteiner:
+                    return ''
+                tara = monta_float(conteiner.get('tara(kg)'))
+                return 'Contêiner VAZIO Tara: %d %s' % (tara, descricaotipo)
+            conhecimento = metadata_carga.get('conhecimento')
+            if isinstance(conhecimento, list) and len(conhecimento) > 0:
+                conhecimento = conhecimento[0]
+                descricao = conhecimento.get('descricaomercadoria')[:240]
+            return '%s - %s' % (descricaotipo, descricao)
+        return ''
+    except Exception as err:
+        logger.error(err)
+        return ''
+
 
 
 def get_peso_conteiner(grid_data):

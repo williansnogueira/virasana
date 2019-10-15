@@ -970,7 +970,7 @@ def files():
             linha['_id'] = grid_data['_id']
             linha['filename'] = grid_data['filename']
             linha['dataescaneamento'] = datetime.strftime(grid_data['metadata'].get(
-                'dataescaneamento'), '%-d/%m/%Y às %H:%M:%S')
+                'dataescaneamento'), '%-d/%m/%Y %H:%M:%S')
             linha['ncms'] = carga.get_dados_ncm(grid_data)
             linha['infocarga'] = carga.get_dados_conteiner(grid_data)
             linha['pesocarga'] = carga.get_peso_conteiner(grid_data)

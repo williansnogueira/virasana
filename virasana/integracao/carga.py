@@ -117,7 +117,7 @@ def get_peso_conteiner(grid_data):
         tara = monta_float(conteiner.get('taracontainer', '0'))
         peso = monta_float(conteiner.get('pesobrutoitem', '0'))
         volume = monta_float(conteiner.get('volumeitem'))
-        return 'Peso: %d kg (Bruto %d kg Tara %d kg) - Volume %d m3' % \
+        return 'Peso %dkg (bruto %dkg  tara %dkg) Volume %dm3' % \
                (pesototal, peso, tara, volume)
     return ''
 

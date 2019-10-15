@@ -147,7 +147,8 @@
                 </td>
                 <td>
                     <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">
-                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" width="600"
+                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" width="auto" height="auto"
+                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
                         onmouseover="showMsg(this, '{{ myfile['_id'] }}')" onmouseout="clearMsg(this)"
                         />
                     </a>

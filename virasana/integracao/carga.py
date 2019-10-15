@@ -111,30 +111,36 @@ def get_dados_conteiner(grid_data):
 
 
 def get_peso_conteiner(grid_data):
-    metadata_carga = get_metadata_carga(grid_data)
-    if metadata_carga:
-        conteiner = metadata_carga.get('container')
-        if isinstance(conteiner, list):
-            conteiner = conteiner[0]
-        if not conteiner:
-            return ''
-        pesototal = metadata_carga.get('pesototal', 0.)
-        tara = monta_float(conteiner.get('taracontainer', '0'))
-        peso = monta_float(conteiner.get('pesobrutoitem', '0'))
-        volume = monta_float(conteiner.get('volumeitem'))
-        return 'Peso %dkg (bruto %dkg  tara %dkg) Volume %dm3' % \
-               (pesototal, peso, tara, volume)
+    try:
+        metadata_carga = get_metadata_carga(grid_data)
+        if metadata_carga:
+            conteiner = metadata_carga.get('container')
+            if isinstance(conteiner, list):
+                conteiner = conteiner[0]
+            if not conteiner:
+                return ''
+            pesototal = metadata_carga.get('pesototal', 0.)
+            tara = monta_float(conteiner.get('taracontainer', '0'))
+            peso = monta_float(conteiner.get('pesobrutoitem', '0'))
+            volume = monta_float(conteiner.get('volumeitem'))
+            return 'Peso %dkg (bruto %dkg  tara %dkg) Volume %dm3' % \
+                   (pesototal, peso, tara, volume)
+    except Exception as err:
+        logger.error(err)
     return ''
 
 
 def get_dados_ncm(grid_data):
-    metadata_carga = get_metadata_carga(grid_data)
-    if metadata_carga:
-        ncms = metadata_carga.get('ncm')
-        if ncms:
-            return 'NCMs: ' + ', '.join(
-                [ncm.get('ncm') for ncm in ncms]
-            )[:70]
+    try:
+        metadata_carga = get_metadata_carga(grid_data)
+        if metadata_carga:
+            ncms = metadata_carga.get('ncm')
+            if ncms:
+                return 'NCMs: ' + ', '.join(
+                    [ncm.get('ncm') for ncm in ncms]
+                )
+    except Exception as err:
+        logger.error(err)
     return ''
 
 

@@ -75,8 +75,8 @@ def configure_app(mongodb):
     user_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
     try:
-        img_search = ImageSearch(mongodb)
-        app.config['img_search'] = img_search
+        # img_search = ImageSearch(mongodb)
+        # app.config['img_search'] = img_search
     except (IOError, FileNotFoundError):
         pass
     app.config['text_search'] = TextSearch(mongodb)

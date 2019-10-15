@@ -16,6 +16,9 @@ for grid_data in mongodb['fs.files'].find(
     carga = metadata.get('carga')
     conteiner = carga.get('container')
     if isinstance(conteiner, list):
+        if len(conteiner) == 0:
+            conterros += 1
+            continue
         conteiner = conteiner[0]
     item = conteiner['item']
     ncms_antigo = carga.get('ncm')

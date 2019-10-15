@@ -10,7 +10,7 @@ conterros = 0
 for grid_data in mongodb['fs.files'].find(
     {'metadata.carga.ncm': {'$ne': None}},
     {'metadata.carga': 1}
-    ).limit(1000):
+    ):
     _id = grid_data.get('_id')
     metadata = grid_data.get('metadata')
     carga = metadata.get('carga')

@@ -519,6 +519,7 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
         db, 'CARGA.NCM', 'conhecimento', conhecimentos)
     container = [linha for linha in conteineres
                  if linha['conhecimento'] in conhecimentos]
+    print(ncms)
     json_dict['ncm'] = [ncm for ncm in ncms if ncm['item'] == container['item']]
     json_dict['container'] = container
     return json_dict

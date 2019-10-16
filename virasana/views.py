@@ -992,9 +992,8 @@ def files():
 class StatsForm(FlaskForm):
     """Valida datas da tela de estatísticas."""
 
-    start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=90))
-    end = DateField('End', validators=[optional()], default=date.today())
+    start = DateField('Start', validators=[optional()])
+    end = DateField('End', validators=[optional()])
 
 
 @app.route('/stats', methods=['GET', 'POST'])

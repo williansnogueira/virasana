@@ -517,8 +517,11 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
     # TODO: Observar se filtragem de NCMs abaixo está funcionando corretamente
     ncms, _ = mongo_find_in(
         db, 'CARGA.NCM', 'conhecimento', conhecimentos)
-    container = [linha for linha in conteineres
-                 if linha['conhecimento'] in conhecimentos]
+    container = {}
+    for linha in conteineres:
+        if linha['conhecimento'] in conhecimentos:
+            container = linha
+            break
     print('CONTAINER', container)
     print('NCM', ncms)
     json_dict['ncm'] = [ncm for ncm in ncms if ncm['item'] == container['item']]

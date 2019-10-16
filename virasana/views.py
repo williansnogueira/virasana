@@ -1000,7 +1000,7 @@ def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
     db = app.config['mongodb']
     global stats_cache
-    form = StatsForm(**request.form,
+    form = StatsForm(request.form,
                      start=date.today() - timedelta(days=30),
                      end=date.today())
     if form.validate():

@@ -815,9 +815,8 @@ class FilesForm(FlaskForm):
 
     """
     numero = StringField(u'Número', validators=[optional()], default='')
-    start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=10))
-    end = DateField('End', validators=[optional()], default=date.today())
+    start = DateField('Start', validators=[optional()])
+    end = DateField('End', validators=[optional()])
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     ranking = BooleanField('Ranking', validators=[optional()], default=False)
     pagina_atual = IntegerField('Pagina', default=1)
@@ -916,9 +915,8 @@ def files():
     order = None
     tags_object = Tags(db)
     auditoria_object = Auditoria(db)
-    form_files = FilesForm()
-    form_files.start.default = date.today() - timedelta(days=10)
-    form_files.end.default = date.today()
+    form_files = FilesForm(start=date.today() - timedelta(days=10),
+                           end=date.today())
     form_files.filtro_tags.choices = tags_object.tags_text
     form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
     filtro, user_filtros = recupera_user_filtros()
@@ -992,9 +990,8 @@ def files():
 class StatsForm(FlaskForm):
     """Valida datas da tela de estatísticas."""
 
-    start = DateField('Start', validators=[optional()],
-                      default=date.today() - timedelta(days=90))
-    end = DateField('End', validators=[optional()], default=date.today())
+    start = DateField('Start', validators=[optional()])
+    end = DateField('End', validators=[optional()])
 
 
 @app.route('/stats', methods=['GET', 'POST'])
@@ -1003,9 +1000,9 @@ def stats():
     """Permite consulta as estatísticas do GridFS e integrações."""
     db = app.config['mongodb']
     global stats_cache
-    form = StatsForm(**request.form)
-    form.start.default = date.today() - timedelta(days=30)
-    form.end.default = date.today()
+    form = StatsForm(request.form,
+                     start=date.today() - timedelta(days=30),
+                     end=date.today())
     if form.validate():
         start = datetime.combine(form.start.data, datetime.min.time())
         end = datetime.combine(form.end.data, datetime.max.time())

@@ -517,8 +517,13 @@ def monta_info_cheio(db, index_atracacao, atracacoes,
     # TODO: Observar se filtragem de NCMs abaixo está funcionando corretamente
     ncms, _ = mongo_find_in(
         db, 'CARGA.NCM', 'conhecimento', conhecimentos)
-    container = [linha for linha in conteineres
-                 if linha['conhecimento'] in conhecimentos]
+    container = {}
+    for linha in conteineres:
+        if linha['conhecimento'] in conhecimentos:
+            container = linha
+            break
+    # print('CONTAINER', container)
+    # print('NCM', ncms)
     json_dict['ncm'] = [ncm for ncm in ncms if ncm['item'] == container['item']]
     json_dict['container'] = container
     return json_dict
@@ -764,9 +769,11 @@ def cria_campo_pesos_carga(db, batch_size=1):
         carga = linha.get('metadata').get('carga')
         _id = linha['_id']
         container = carga.get('container')
+        if isinstance(container, list) and len(container) > 0:
+            container = container[0]
         if container:
-            tara = float(container[0].get('taracontainer').replace(',', '.'))
-            peso = float(container[0].get('pesobrutoitem').replace(',', '.'))
+            tara = float(container.get('taracontainer').replace(',', '.'))
+            peso = float(container.get('pesobrutoitem').replace(',', '.'))
             pesototal = tara + peso
             peso_dif = abs(pesopred - pesototal)
             peso_dif_relativo = peso_dif / (pesopred + pesototal) / 2

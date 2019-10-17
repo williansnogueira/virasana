@@ -108,9 +108,9 @@ class Auditoria:
                 'descricao': row['descricao']
             }
             self.filtros_auditoria_desc.append((id, row['descricao']))
-        logger.debug(self.filtros_auditoria_desc)
+        #   logger.debug(self.filtros_auditoria_desc)
         self.filtros_auditoria_desc = sorted(self.filtros_auditoria_desc)
-        logger.debug(self.dict_auditoria)
+        # logger.debug(self.dict_auditoria)
 
     def add_relatorio(self, id: str,
                       filtro: dict,

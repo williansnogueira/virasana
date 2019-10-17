@@ -6,40 +6,38 @@
         <div id="accordion">
             <h3>Resumo</h3>
             <div id="resumo">
-                <div class="col-md-6">
+                <div class="col-md-7">
                     {% if myfile %}
                     <div class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
                             <li>
-                                <a href="padma_proxy/{{ myfile['_id'] }}" target="_BLANK">Predições imagem</a>
-                            </li>
-                            <li>
                                 <a href="files?numero={{ myfile['metadata']['numeroinformado'] }}">
-                                    Listar todas as passages por escâner
+                                    <u>Listar todas as passages por escâner</u>
                                 </a>
                             </li>
                             <li>
                                 <a href="similar/{{ myfile['_id'] }}" target="_BLANK">
-                                    Buscar imagens similares
+                                    <u>Buscar imagens similares</u>
                                 </a>
                             </li>
                             <li>
                                 <a href="view_image/{{ myfile['_id'] }}" target="_BLANK">
-                                    Analisar imagem
+                                    <u>Analisar imagem</u>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="similar2/{{ myfile['_id'] }}" target="_BLANK">
+                                    <u>Buscar imagens</u>
                                 </a>
                             </li>
                         </ul>
                     </div>
-                    <img src="image/{{ myfile['_id'] }}" width="500" height="250"/>
-                    <div class="col-md-6">
-                        <img src="mini1/{{ myfile['_id'] }}" width="250" height="180" alt="Sem miniatura"/>
-                    </div>
-                    <div class="col-md-6">
-                        <img src="mini2/{{ myfile['_id'] }}" width="250" height="180" alt="Sem segundo contêiner"/>
-                    </div>
+                    <img src="image/{{ myfile['_id'] }}" width="auto" height="auto"
+                     style="border: 1px solid #000; max-width:700px; max-height:300px;"
+                    />
                     {% endif %}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <br> {{ summary|safe }}
                     <br> {{ summary_carga|safe }}
                 </div>

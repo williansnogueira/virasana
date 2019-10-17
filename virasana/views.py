@@ -921,7 +921,7 @@ def files():
     form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
     filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
-        print('****************************', request.form)
+        # print('****************************', request.form)
         form_files = FilesForm(**request.form)
         form_files.filtro_tags.choices = tags_object.tags_text
         form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
@@ -933,7 +933,7 @@ def files():
             form_files.filtro_tags.choices = tags_object.tags_text
             form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
             filtro['metadata.numeroinformado'] = \
-                {'$regex': '^' + mongo_sanitizar(numero) + '$i '}
+                {'$regex': '^' + mongo_sanitizar(numero) + '$i'}
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
         if order is None:
@@ -947,14 +947,11 @@ def files():
                       'metadata.dataescaneamento': 1,
                       'metadata.carga': 1}
         skip = (pagina_atual - 1) * PAGE_ROWS
-
-        print()
-        print(filtro, type(filtro))
-        print(projection, type(projection))
-        print('order:', order, type(order))
-        print(PAGE_ROWS)
-        print(skip)
-
+        logger.debug(filtro)
+        logger.debug(projection)
+        logger.debug('order: %s' % order)
+        logger.debug(PAGE_ROWS)
+        logger.debug(skip)
         count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
         print(count)
         # count = 100

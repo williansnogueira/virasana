@@ -616,7 +616,7 @@ def image_id(_id):
     Estes métodos dispensam autenticação, pois é necessário ter um _id válido.
     """
     db = app.config['mongodb']
-    image = mongo_image(db, _id)
+    image = mongo_image(db, _id, bboxes=True)
     if image:
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'

@@ -933,7 +933,7 @@ def files():
             form_files.filtro_tags.choices = tags_object.tags_text
             form_files.filtro_auditoria.choices = auditoria_object.filtros_auditoria_desc
             filtro['metadata.numeroinformado'] = \
-                {'$regex': '^' + mongo_sanitizar(numero) + '$i'}
+                {'$regex': '^' + mongo_sanitizar(numero), '$options': 'i'}
     if filtro:
         filtro['metadata.contentType'] = 'image/jpeg'
         if order is None:

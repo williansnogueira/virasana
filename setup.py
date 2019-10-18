@@ -22,7 +22,6 @@ setup(
         'gunicorn',
         'matplotlib',
         'opencv-python',
-        'pymongo',
         'plotly',
         'pandas',
         'pillow',
@@ -31,8 +30,7 @@ setup(
         'redis',
         'requests',
         'scipy',
-        'selenium',
-        'sklearn'
+        'sklearn',
     ],
     dependency_links=[
         'git+https://github.com/IvanBrasilico/ajna_commons.git#egg=ajna_commons-0.0.1'
@@ -60,6 +58,8 @@ setup(
             'pytest-cov',
             'pytest-mock',
             'radon',
+            'selenium',
+            'streamlit'
             'testfixtures',
             'tox'
         ],

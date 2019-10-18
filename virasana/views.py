@@ -614,9 +614,12 @@ def image_id(_id):
     """Recupera a imagem do banco e serializa para stream HTTP.
 
     Estes métodos dispensam autenticação, pois é necessário ter um _id válido.
+    O padrão é retornar um bounding box desenhado.
+    Para evitar o bbox, passar ?bboxes=False na url
     """
     db = app.config['mongodb']
-    image = mongo_image(db, _id, bboxes=True)
+    bboxes = request.args.get('bboxes', 'True').lower() == 'false'
+    image = mongo_image(db, _id, bboxes=bboxes)
     if image:
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'

@@ -554,13 +554,13 @@ def grid_data():
                 except:
                     query_processed[key] = mongo_sanitizar(value)
 
-        logger.warning(query)
-        logger.warning(query_processed)
+        # logger.warning(query)
+        # logger.warning(query_processed)
         # query = {mongo_sanitizar(key): mongo_sanitizar(value)
         #          for key, value in query.items()}
         # projection = {mongo_sanitizar(key): mongo_sanitizar(value)
         #          for key, value in projection.items()}
-        logger.warning(projection)
+        # logger.warning(projection)
         linhas = db['fs.files'].find(query_processed, projection)
         result = []
         for linha in linhas:

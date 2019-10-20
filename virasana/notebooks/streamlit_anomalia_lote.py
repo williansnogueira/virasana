@@ -78,14 +78,7 @@ def outlier_index(indexes, distance_function=cosine_sum, zscores=3):
     distances = np.zeros((size, 1), dtype=np.float32)
     for ind in range(size):
         linha = indexes[ind, :]
-        try:
-            distances[ind] = distance_function(indexes, linha)
-            distances[ind, ind] = 0.01
-        except Exception as err:
-            print(err)
-            # print(indexes)
-            return np.array([])
-    # print(distances),m.
+        distances[ind] = distance_function(indexes, linha)
     return np.where(zscore(distances) > zscores)[0]
 
 
@@ -93,13 +86,14 @@ def filtra_anomalias(conhecimentos_ids, ids_indexes):
     conhecimentos_anomalia = []
     for conhecimento, ids in conhecimentos_ids.items():
         indexes = [ids_indexes[id]['index'] for id in ids]
-        array_indexes = np.array(indexes)
+        array_indexes = np.array(indexes, dtype=np.float32)
         try:
             outliers = outlier_index(array_indexes)
+            if outliers.shape[0] > 0:
+                conhecimentos_anomalia.append(conhecimento)
         except Exception as err:
+            # TODO: logger
             print(err)
-        if outliers.shape[0] > 0:
-            conhecimentos_anomalia.append(conhecimento)
     return conhecimentos_anomalia
 
 def plot_imagens(imagens):

@@ -1,0 +1,142 @@
+{% extends "layout.html" %} {% block content %}{{super()}}
+<div id="main" class="container-fluid">
+    <div id="top" class="row">
+        <form method="POST" id="formfiltro" action="lotes_anomalia">
+            <div class="col-sm-12">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>Filtrar por número e datas</h4>
+                </div>
+                <div class="col-sm-3">
+                    <label for="numero">Número do conhecimento</label>
+                </div>
+                <div class="col-sm-6">
+                    <label for="date">Período de escaneamento da imagem</label>
+                </div>
+                <div class="col-sm-3">
+                    Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <input class="form-control" type="text" name="numero" value="{{oform.numero.data}}" />
+                    </div>
+                    <div class="col-sm-2">
+                        <input class="form-control" type="date" name="start" value="{{oform.start.data}}" />
+                    </div>
+                    <div class="col-sm-2">
+                        <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
+                    </div>
+                    <div class="col-sm-2">
+                        <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> Filtrar </button>
+                    </div>
+                    <div class="col-sm-3">
+                        <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
+                        <button onclick="next_page(-1)" id="btn_page1" type="button" class="btn btn-default btn-info"> < </button>
+                        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2" type="button" class="btn btn-default btn-info"> << </button>
+                        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3" type="button" class="btn btn-default btn-info"> >> </button>
+                        <button onclick="next_page(1)" id="btn_page4" type="button" class="btn btn-default btn-info"> > </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+<div id="list" class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="table table-responsive col-sm-10">
+        <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
+            <thead>
+                <tr>
+                    <td width="300" style="text-align:left">Conhecimentos</td>
+                    <td>Imagem normal</td>
+                    <td>Imagem diferente</td>
+                </tr>
+            </thead>
+            {% for conhecimento in conhecimentos %}
+            <tr>
+                <td width="300" style="text-align:left">
+                    Conhecimento nº <b>{{ conhecimento['numero'] }}
+                </td>
+                <td>
+                    <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
+                        <img src="image/{{ conhecimento['idnormal'] }}" alt="Sem imagem" width="auto" height="auto"
+                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                        onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
+                        />
+                    </a>
+                </td>
+                <td>
+                    <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
+                        <img src="image/{{ conhecimento['idanomalo'] }}" alt="Sem imagem" width="auto" height="auto"
+                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                        onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
+                        />
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="col-sm-1">
+        &nbsp;
+    </div>
+</div>
+<div id="bottom_buttons" class="row">
+    <div class="col-sm-6">
+        &nbsp;
+    </div>
+    <div class="col-sm-3">
+        Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
+    </div>
+    <div class="col-sm-3">
+        <button onclick="next_page(-1)" id="btn_page1b" type="button" class="btn btn-default btn-info"> < </button>
+        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2b" type="button" class="btn btn-default btn-info"> << </button>
+        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3b" type="button" class="btn btn-default btn-info"> >> </button>
+        <button onclick="next_page(1)" id="btn_page4b" type="button" class="btn btn-default btn-info"> > </button>
+    </div>
+</div>
+<div id="bottom" class="row">
+    AJNA - Receita Federal do Brasil 2017
+</div>
+</div>
+<!-- /#main -->
+{% endblock %} {% block scripts %} {{super()}}
+<script type="text/javascript">
+
+    function next_page(increment) {
+        var page = Number($('#pagina_atual').val());
+        new_page = page + increment;
+        if (new_page <= 0) new_page = 1;
+        if (new_page > {{ npaginas }}) {new_page = {{ npaginas }}};
+        $('#pagina_atual').val(new_page);
+        form = $('#formfiltro');
+        form.submit();
+    }
+
+    function zeraeposta() {
+        $('#pagina_atual').val(1);
+        form = $('#formfiltro');
+        form.submit();
+    }
+
+    function showMsg(img,_id) {
+        xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    img.title = this.responseText;
+                }
+            }
+        }
+        xhttp.open("GET", "/virasana/summary/" + _id, true);
+        xhttp.send();
+    }
+    function clearMsg(img) {
+        img.title = "";
+    }
+
+</script> {% endblock %}

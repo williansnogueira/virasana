@@ -45,6 +45,7 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  summary,
                                  TIPOS_GRIDFS)
 from virasana.integracao.padma import consulta_padma
+from virasana.models.anomalia_lote import get_conhecimentos_zscore, get_ids_score_conhecimento_zscore
 from virasana.models.auditoria import Auditoria
 from virasana.models.image_search import ImageSearch
 from virasana.models.models import Ocorrencias, Tags
@@ -53,6 +54,7 @@ from virasana.workers.dir_monitor import BSON_DIR
 from virasana.workers.tasks import raspa_dir, trata_bson
 
 app = Flask(__name__, static_url_path='/static')
+# app.jinja_env.filters['zip'] = zip
 csrf = CSRFProtect(app)
 Bootstrap(app)
 nav = Nav()
@@ -985,6 +987,76 @@ def files():
                            filtros=user_filtros,
                            npaginas=npaginas,
                            nregistros=count)
+
+
+class LotesForm(FlaskForm):
+    """Valida pesquisa de arquivos.
+
+    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
+    search_lotes.html
+
+    """
+    numero = StringField(u'Número', validators=[optional()], default='')
+    start = DateField('Start', validators=[optional()])
+    end = DateField('End', validators=[optional()])
+    zscore = FloatField('Z-Score', validators=[optional()], default=3.)
+    pagina_atual = IntegerField('Pagina', validators=[optional()], default=1)
+
+
+@app.route('/lotes_anomalia', methods=['GET', 'POST'])
+@login_required
+def lotes_anomalia():
+    """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
+    db = app.config['mongodb']
+    PAGE_ROWS = 50
+    PAGES = 100
+    conhecimentos = []
+    form = LotesForm(start=date.today() - timedelta(days=10),
+                           end=date.today())
+    if request.method == 'POST':
+        form = LotesForm(**request.form)
+        print(form)
+        if form.validate():
+            numero = form.numero.data
+            start = form.start.data
+            end = form.end.data
+            zscore = form.zscore.data
+            start = datetime.combine(start, datetime.min.time())
+            end = datetime.combine(end, datetime.max.time())
+            conhecimentos_anomalia = get_conhecimentos_zscore(
+                db, start, end, min_zscore=zscore)
+            print(start, end, zscore, conhecimentos_anomalia)
+            conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
+                db, conhecimentos_anomalia)
+            idsnormais = []
+            idsanomalos = []
+            for conhecimento in conhecimentos_anomalia:
+                maxzscore = 0.
+                minzscore = 10.
+                for idzscore in conhecimentos_idszscore[conhecimento]:
+                    _id = idzscore['_id']
+                    zscore = idzscore['zscore']
+                    if zscore > maxzscore:
+                        maxzscore = zscore
+                        idanomalo = _id
+                    if zscore < minzscore:
+                        minzscore = zscore
+                        idnormal = _id
+                idsnormais.append(idnormal)
+                idsanomalos.append(idanomalo)
+            for numero, normal, anomalo in zip(
+                        conhecimentos_anomalia, idsnormais, idsanomalos):
+                conhecimento = {}
+                conhecimento['numero'] = numero
+                conhecimento['idnormal'] = normal
+                conhecimento['idanomalo'] = anomalo
+                conhecimentos.append(conhecimento)
+            print(conhecimentos)
+            # TODO: Fazer VER LOTE - VISUALIZAR UM CE MERCANTE NA TELA, MARCAR ANOMALIAS / ZSCORES
+    return render_template('search_lotes.html',
+                           conhecimentos=conhecimentos,
+                           oform=form,
+                           npaginas=1)
 
 
 class StatsForm(FlaskForm):

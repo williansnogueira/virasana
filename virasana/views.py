@@ -537,7 +537,7 @@ def grid_data():
     # TODO: Refatorar conversões de/para MongoDB - dict - JSON (Ver Bhadrasana, tem algo feito nesse sentido)
     db = app.config['mongodb']
     if request.method == 'POST':
-        print(request.json)
+        # print(request.json)
         query = request.json['query']
         projection = request.json['projection']
         query_processed = {}
@@ -799,7 +799,7 @@ def filtro():
                 valor = valor.lower()
                 user_filtros[campo] = (valor == 's' or valor == 'true' or valor == 'sim')
             elif campos_chave_tipos().get(campo) == date:
-                print('DATE!!!', valor)
+                # print('DATE!!!', valor)
                 ldata = datetime.strptime(valor, '%Y/%m/%d')
                 start = datetime.combine(ldata, datetime.min.time())
                 end = datetime.combine(ldata, datetime.max.time())
@@ -958,7 +958,7 @@ def files():
         logger.debug(PAGE_ROWS)
         logger.debug(skip)
         count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
-        print(count)
+        # print(count)
         # count = 100
         npaginas = (count - 1) // PAGE_ROWS + 1
         # print('**Página:', pagina_atual, skip, type(skip))
@@ -1015,7 +1015,7 @@ def lotes_anomalia():
                            end=date.today())
     if request.method == 'POST':
         form = LotesForm(**request.form)
-        print(form)
+        # print(form)
         if form.validate():
             numero = form.numero.data
             start = form.start.data
@@ -1025,7 +1025,7 @@ def lotes_anomalia():
             end = datetime.combine(end, datetime.max.time())
             conhecimentos_anomalia = get_conhecimentos_zscore(
                 db, start, end, min_zscore=zscore)
-            print(start, end, zscore, conhecimentos_anomalia)
+            # print(start, end, zscore, conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)
             idsnormais = []
@@ -1051,12 +1051,40 @@ def lotes_anomalia():
                 conhecimento['idnormal'] = normal
                 conhecimento['idanomalo'] = anomalo
                 conhecimentos.append(conhecimento)
-            print(conhecimentos)
             # TODO: Fazer VER LOTE - VISUALIZAR UM CE MERCANTE NA TELA, MARCAR ANOMALIAS / ZSCORES
     return render_template('search_lotes.html',
                            conhecimentos=conhecimentos,
                            oform=form,
                            npaginas=1)
+
+
+
+@app.route('/cemercante/<numero>')
+@login_required
+def cemercante(numero):
+    """Tela para exibição de um CE Mercante do GridFS.
+
+    Exibe o CE Mercante e os arquivos associados a ele.
+    """
+    db = app.config['mongodb']
+    if numero:
+        summary_conhecimento = numero
+        idszscore = get_ids_score_conhecimento_zscore(db, [numero])[numero]
+        print(idszscore)
+        imagens = [{'_id': str(item['_id']),
+                    'zscore': '{:0.1f}'.format(item['zscore'])}
+                    for item in sorted(idszscore,
+                                       key=lambda item: item['zscore'],
+                                       reverse=True)
+                   ]
+    else:
+        summary_conhecimento = 'Conhecimento não encontrado.'
+        idszscore = []
+    return render_template('view_cemercante.html',
+                           summary_conhecimento=summary_conhecimento,
+                           imagens = imagens)
+
+
 
 
 class StatsForm(FlaskForm):
@@ -1177,7 +1205,7 @@ def similar_file():
         content = file.read()
         img_search = app.config['img_search']
         index = consulta_padma(content, 'index')
-        print(index)
+        # print(index)
         try:
             code = index.get('predictions')[0].get('code')
         except Exception as err:
@@ -1337,11 +1365,11 @@ def select_auditoria():
     select.filtro_auditoria.choices = auditoria.filtros_auditoria_desc
     if request.method == 'POST':
         filtro_escolhido = select.filtro_auditoria.data
-        print(filtro_escolhido)
+        # print(filtro_escolhido)
         if filtro_escolhido and filtro_escolhido != '0':
             filtro_auditoria = \
                 auditoria.dict_auditoria.get(filtro_escolhido)
-            print(filtro_auditoria)
+            # print(filtro_auditoria)
             form.id.data = filtro_escolhido
             form.order.data = json.dumps(filtro_auditoria.get('order'))
             form.filtro.data = json.dumps(filtro_auditoria.get('filtro'))

@@ -59,7 +59,9 @@
             {% for conhecimento in conhecimentos %}
             <tr>
                 <td width="300" style="text-align:left">
-                    Conhecimento nº <b>{{ conhecimento['numero'] }}
+                    <a href="cemercante/{{ conhecimento['numero'] }}" target="_BLANK">
+                    Conhecimento nº {{ conhecimento['numero'] }}
+                    </a>
                 </td>
                 <td>
                     <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">

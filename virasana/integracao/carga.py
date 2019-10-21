@@ -800,6 +800,18 @@ def cria_campo_pesos_carga(db, batch_size=1):
     return total
 
 
+class Conhecimento:
+
+    table = 'CARGA.Conhecimento'
+    chave = 'conhecimento'
+    @classmethod
+    def from_db(cls, db, numero):
+        query = {cls.chave: numero}
+        return db[cls.table].find_one(query)
+
+
+
+
 if __name__ == '__main__':  # pragma: no cover
     from pymongo import MongoClient
     from ajna_commons.flask.conf import DATABASE, MONGODB_URI

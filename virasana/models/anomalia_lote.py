@@ -1,10 +1,21 @@
 import datetime
+import logging
+import os
 from collections import defaultdict
 
 import numpy as np
 
+from pymongo import MongoClient
 from scipy.stats import zscore
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
+
+from ajna_commons.flask.conf import DATABASE, MONGODB_URI
+from ajna_commons.flask.log import logger
+
+
+def create_indexes(db):
+    """Cria índices necessários no GridFS."""
+    db['fs.files'].create_index('metadata.zscore')
 
 
 def norm_distance(array, search):
@@ -41,10 +52,12 @@ def get_conhecimentos_um_ncm(db, inicio: datetime, fim: datetime) -> set:
     """Consulta apenas contêineres(imagens) com um NCM e retorna seus conhecimentos."""
     result = set()
     query = {'metadata.contentType': 'image/jpeg',
+             'metadata.zscore': {'$exists': False},
              'metadata.carga.ncm': {'$size': 1},
              'metadata.carga.container.indicadorusoparcial': {'$ne': 's'},
              'metadata.dataescaneamento': {'$gte': inicio, '$lt': fim}
              }
+    print(query)
     projection = {'metadata.carga.conhecimento': 1}
     cursor = db['fs.files'].find(query, projection)
     for linha in cursor:
@@ -96,7 +109,8 @@ def get_indexes_and_ids_conhecimentos(db, conhecimentos: list):
     """
     conhecimentos_ids = defaultdict(list)
     ids_indexes = dict()
-    projection = {'_id': 1, 'metadata.predictions': 1, 'metadata.carga.ncm.ncm': 1}
+    projection = {'_id': 1, 'metadata.predictions': 1,
+                  'metadata.carga.ncm.ncm': 1}
     for conhecimento in conhecimentos:
         query = {'metadata.carga.conhecimento.conhecimento': conhecimento}
         cursor = db['fs.files'].find(query, projection)
@@ -120,18 +134,30 @@ def get_ids_score_conhecimento_zscore(db, conhecimentos: list):
     """
     conhecimentos_idszscore = defaultdict(list)
     ids_zscores = dict()
-    projection = {'_id': 1, 'metadata.zscore': 1}
+    projection = {'_id': 1, 'metadata.zscore': 1,
+                  'metadata.carga.container': 1}
     for conhecimento in conhecimentos:
-        query = {'metadata.carga.conhecimento.conhecimento': conhecimento}
+        query = {'metadata.carga.conhecimento.conhecimento': conhecimento,
+                 'metadata.zscore': {'$ne': None}}
         cursor = db['fs.files'].find(query, projection)
         for linha in cursor:
+            zscore = linha['metadata'].get('zscore')
+            if not zscore or not isinstance(zscore, float):
+                zscore = 0.
+            container = linha['metadata'].get('carga').get('container')
+            print(container)
+            if isinstance(container, list):
+                container = container[0]
+            numero = container.get('container')
             zscore_dict = {'_id': linha['_id'],
-                           'zscore': linha['metadata'].get('zscore')}
+                           'zscore': zscore,
+                           'container': numero}
             conhecimentos_idszscore[conhecimento].append(zscore_dict)
     return conhecimentos_idszscore
 
 
 def grava_zcores(db, conhecimentos_ids, ids_indexes):
+    cont = 0
     for conhecimento, ids in conhecimentos_ids.items():
         indexes = [ids_indexes[_id]['index'] for _id in ids]
         array_indexes = np.array(indexes)
@@ -140,6 +166,8 @@ def grava_zcores(db, conhecimentos_ids, ids_indexes):
             db['fs.files'].update_one(
                 {'_id': _id},
                 {'$set': {'metadata.zscore': float(zscores[ind])}})
+            cont += 1
+    return cont
 
 
 def filtra_anomalias(conhecimentos_ids, ids_indexes):
@@ -151,3 +179,23 @@ def filtra_anomalias(conhecimentos_ids, ids_indexes):
         if outliers.shape[0] > 0:
             conhecimentos_anomalia[conhecimento] = outliers
     return conhecimentos_anomalia
+
+
+def processa_zscores(db, inicio, fim):
+    logger.info('Pesquisando de %s de %s' % (inicio, fim))
+    conhecimentos_agravar = get_conhecimentos_um_ncm(db, inicio, fim)
+    logger.info('%d conhecimentos encontrados' % len(conhecimentos_agravar))
+    conhecimentos_ids, ids_indexes = get_indexes_and_ids_conhecimentos(
+        db, conhecimentos_agravar
+    )
+    logger.info('%d conhecimentos filtrados' % len(conhecimentos_ids.items()))
+    ngravados = grava_zcores(db, conhecimentos_ids, ids_indexes)
+    return ngravados
+
+
+if __name__ == '__main__':
+    os.environ['DEBUG'] = '1'
+    logger.setLevel(logging.DEBUG)
+    db = MongoClient(host=MONGODB_URI)[DATABASE]
+    logger.info('Criando índices para anomalia lote')
+    create_indexes(db)

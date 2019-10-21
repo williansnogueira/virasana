@@ -12,10 +12,13 @@
                 <div class="col-sm-3">
                     <label for="numero">Número do conhecimento</label>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <label for="date">Período de escaneamento da imagem</label>
                 </div>
                 <div class="col-sm-3">
+                    <label for="spin">Score</label>
+                </div>
+                <div class="col-sm-2">
                     Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
                 </div>
             </div>
@@ -30,10 +33,13 @@
                     <div class="col-sm-2">
                         <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
                     </div>
-                    <div class="col-sm-2">
-                        <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> Filtrar </button>
+                    <div class="col-sm-1">
+                        <input class="form-control" type="number" MIN="0.5" MAX="4" STEP="0.5" name="zscore" value="{{oform.zscore.data}}" />
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-2">
+                        <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info">   &nbsp;  Filtrar lotes   &nbsp;  </button>
+                    </div>
+                    <div class="col-sm-2">
                         <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
                         <button onclick="next_page(-1)" id="btn_page1" type="button" class="btn btn-default btn-info"> < </button>
                         <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2" type="button" class="btn btn-default btn-info"> << </button>
@@ -44,47 +50,51 @@
             </div>
         </form>
     </div>
-<div id="list" class="row">
-    <div class="col-sm-1">
-    </div>
-    <div class="table table-responsive col-sm-10">
-        <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
-            <thead>
-                <tr>
-                    <td width="300" style="text-align:left">Conhecimentos</td>
-                    <td>Imagem normal</td>
-                    <td>Imagem diferente</td>
-                </tr>
-            </thead>
-            {% for conhecimento in conhecimentos %}
-            <tr>
-                <td width="300" style="text-align:left">
-                    <a href="cemercante/{{ conhecimento['numero'] }}" target="_BLANK">
-                    Conhecimento nº {{ conhecimento['numero'] }}
-                    </a>
-                </td>
-                <td>
-                    <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
-                        <img src="image/{{ conhecimento['idnormal'] }}" alt="Sem imagem" width="auto" height="auto"
-                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
-                        onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
-                        />
-                    </a>
-                </td>
-                <td>
-                    <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
-                        <img src="image/{{ conhecimento['idanomalo'] }}" alt="Sem imagem" width="auto" height="auto"
-                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
-                        onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
-                        />
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div class="col-sm-1">
+    <div id="list" class="row">
         &nbsp;
+    </div>
+    <div id="list" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="table table-responsive col-sm-10">
+            <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
+                <thead>
+                    <tr>
+                        <td width="300" style="text-align:left">Conhecimentos</td>
+                        <td>Imagem normal</td>
+                        <td>Imagem diferente</td>
+                    </tr>
+                </thead>
+                {% for conhecimento in conhecimentos %}
+                <tr>
+                    <td width="300" style="text-align:left">
+                        <a href="cemercante/{{ conhecimento['numero'] }}" target="_BLANK">
+                        Conhecimento nº {{ conhecimento['numero'] }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
+                            <img src="image/{{ conhecimento['idnormal'] }}" alt="Sem imagem" width="auto" height="auto"
+                                 style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                            onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
+                            />
+                        </a>
+                    </td>
+                    <td>
+                        <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
+                            <img src="image/{{ conhecimento['idanomalo'] }}" alt="Sem imagem" width="auto" height="auto"
+                                 style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                            onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
+                            />
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="col-sm-1">
+            &nbsp;
+        </div>
     </div>
 </div>
 <div id="bottom_buttons" class="row">

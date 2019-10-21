@@ -506,23 +506,6 @@ def tag_del():
     return jsonify(data)
 
 
-@app.route('/image')
-@login_required
-def image():
-    """Executa uma consulta no banco.
-
-    Monta um dicionário de consulta a partir dos argumentos do get.
-    Se encontrar registro, chama image_id.
-    """
-    db = app.config['mongodb']
-    filtro = {key: value for key, value in
-              mongo_sanitizar(request.args.items())}
-    linha = db['fs.files'].find_one(filtro, {'_id': 1})
-    if linha:
-        return image_id(linha['_id'])
-    return ''
-
-
 @app.route('/grid_data', methods=['POST', 'GET'])
 # @login_required
 @csrf.exempt
@@ -611,6 +594,23 @@ def dues_update():
     return jsonify({'status': 'DUEs inseridas/atualizadas'}), 201
 
 
+@app.route('/image')
+@login_required
+def image():
+    """Executa uma consulta no banco.
+
+    Monta um dicionário de consulta a partir dos argumentos do get.
+    Se encontrar registro, chama image_id.
+    """
+    db = app.config['mongodb']
+    filtro = {key: value for key, value in
+              mongo_sanitizar(request.args.items())}
+    linha = db['fs.files'].find_one(filtro, {'_id': 1})
+    if linha:
+        return image_id(linha['_id'])
+    return ''
+
+
 @app.route('/image/<_id>')
 def image_id(_id):
     """Recupera a imagem do banco e serializa para stream HTTP.
@@ -620,7 +620,7 @@ def image_id(_id):
     Para evitar o bbox, passar ?bboxes=False na url
     """
     db = app.config['mongodb']
-    bboxes = request.args.get('bboxes', 'True').lower() == 'false'
+    bboxes = request.args.get('bboxes', 'True').lower() == 'true'
     image = mongo_image(db, _id, bboxes=bboxes)
     if image:
         return Response(response=image, mimetype='image/jpeg')
@@ -1012,51 +1012,56 @@ def lotes_anomalia():
     PAGES = 100
     conhecimentos = []
     form = LotesForm(start=date.today() - timedelta(days=10),
-                           end=date.today())
+                     end=date.today())
     if request.method == 'POST':
         form = LotesForm(**request.form)
         # print(form)
         if form.validate():
             numero = form.numero.data
-            start = form.start.data
-            end = form.end.data
-            zscore = form.zscore.data
-            start = datetime.combine(start, datetime.min.time())
-            end = datetime.combine(end, datetime.max.time())
-            conhecimentos_anomalia = get_conhecimentos_zscore(
-                db, start, end, min_zscore=zscore)
+            if numero:
+                conhecimentos_anomalia = [numero]
+            else:
+                start = form.start.data
+                end = form.end.data
+                zscore = form.zscore.data
+                start = datetime.combine(start, datetime.min.time())
+                end = datetime.combine(end, datetime.max.time())
+                conhecimentos_anomalia = get_conhecimentos_zscore(
+                    db, start, end, min_zscore=zscore)
             # print(start, end, zscore, conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)
-            idsnormais = []
-            idsanomalos = []
-            for conhecimento in conhecimentos_anomalia:
-                maxzscore = 0.
-                minzscore = 10.
-                for idzscore in conhecimentos_idszscore[conhecimento]:
-                    _id = idzscore['_id']
-                    zscore = idzscore['zscore']
-                    if zscore > maxzscore:
-                        maxzscore = zscore
-                        idanomalo = _id
-                    if zscore < minzscore:
-                        minzscore = zscore
-                        idnormal = _id
-                idsnormais.append(idnormal)
-                idsanomalos.append(idanomalo)
-            for numero, normal, anomalo in zip(
+            # TODO: Refatorar para uma classe, modulo ou funções a lógica
+            if conhecimentos_idszscore:
+                idsnormais = []
+                idnormal = idanomalo = None
+                idsanomalos = []
+                for conhecimento in conhecimentos_anomalia:
+                    maxzscore = 0.
+                    minzscore = 10.
+                    for idzscore in conhecimentos_idszscore[conhecimento]:
+                        _id = idzscore['_id']
+                        zscore = idzscore['zscore']
+                        if zscore > maxzscore:
+                            maxzscore = zscore
+                            idanomalo = _id
+                        if zscore < minzscore:
+                            minzscore = zscore
+                            idnormal = _id
+                    idsnormais.append(idnormal)
+                    idsanomalos.append(idanomalo)
+                for numero, normal, anomalo in zip(
                         conhecimentos_anomalia, idsnormais, idsanomalos):
-                conhecimento = {}
-                conhecimento['numero'] = numero
-                conhecimento['idnormal'] = normal
-                conhecimento['idanomalo'] = anomalo
-                conhecimentos.append(conhecimento)
-            # TODO: Fazer VER LOTE - VISUALIZAR UM CE MERCANTE NA TELA, MARCAR ANOMALIAS / ZSCORES
+                    conhecimento = {}
+                    conhecimento['numero'] = numero
+                    conhecimento['idnormal'] = normal
+                    conhecimento['idanomalo'] = anomalo
+                    conhecimentos.append(conhecimento)
     return render_template('search_lotes.html',
                            conhecimentos=conhecimentos,
                            oform=form,
-                           npaginas=1)
-
+                           npaginas=1,
+                           nregistros=len(conhecimentos))
 
 
 @app.route('/cemercante/<numero>')
@@ -1067,24 +1072,22 @@ def cemercante(numero):
     Exibe o CE Mercante e os arquivos associados a ele.
     """
     db = app.config['mongodb']
+    conhecimento = None
+    imagens = []
     if numero:
-        summary_conhecimento = numero
+        conhecimento = carga.Conhecimento.from_db(db, numero)
         idszscore = get_ids_score_conhecimento_zscore(db, [numero])[numero]
         print(idszscore)
         imagens = [{'_id': str(item['_id']),
+                    'container': item['container'],
                     'zscore': '{:0.1f}'.format(item['zscore'])}
-                    for item in sorted(idszscore,
-                                       key=lambda item: item['zscore'],
-                                       reverse=True)
+                   for item in sorted(idszscore,
+                                      key=lambda item: item['zscore'],
+                                      reverse=True)
                    ]
-    else:
-        summary_conhecimento = 'Conhecimento não encontrado.'
-        idszscore = []
     return render_template('view_cemercante.html',
-                           summary_conhecimento=summary_conhecimento,
-                           imagens = imagens)
-
-
+                           conhecimento=conhecimento,
+                           imagens=imagens)
 
 
 class StatsForm(FlaskForm):
@@ -1388,6 +1391,7 @@ def mynavbar():
              View('Mudar senha', 'account'),
              Subgroup(
                  'Pesquisas especiais',
+                 View('Pesquisa lote com anomalia', 'lotes_anomalia'),
                  View('Pesquisa imagem externa', 'similar_file'),
                  View('Pesquisa textual', 'text_search'),
                  View('Estatísticas', 'stats'),

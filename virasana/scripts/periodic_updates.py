@@ -30,7 +30,7 @@ from virasana.integracao import atualiza_stats, \
     carga, get_service_password, info_ade02, xmli
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
-
+from virasana.models import anomalia_lote
 
 def get_token(session, url):
     """Faz um get na url e tenta encontrar o csrf_token na resposta."""
@@ -93,6 +93,7 @@ def periodic_updates(db, lote=2000):
     #  (linha comentadao abaixo) e tirar a antiga (próxima linha)
     # do_update_carga(db)
     carga.dados_carga_grava_fsfiles(db, lote * 10, dezdias)
+    anomalia_lote.processa_zscores(db, cincodias, ontem)
     info_ade02.adquire_pesagens(db, cincodias, ontem)
     info_ade02.pesagens_grava_fsfiles(db, cincodias, ontem)
     atualiza_stats(db)

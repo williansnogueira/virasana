@@ -137,8 +137,7 @@ def get_ids_score_conhecimento_zscore(db, conhecimentos: list):
     projection = {'_id': 1, 'metadata.zscore': 1,
                   'metadata.carga.container': 1}
     for conhecimento in conhecimentos:
-        query = {'metadata.carga.conhecimento.conhecimento': conhecimento,
-                 'metadata.zscore': {'$ne': None}}
+        query = {'metadata.carga.conhecimento.conhecimento': conhecimento}
         cursor = db['fs.files'].find(query, projection)
         for linha in cursor:
             zscore = linha['metadata'].get('zscore')

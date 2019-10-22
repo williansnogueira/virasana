@@ -165,7 +165,7 @@ def grava_zcores(db, conhecimentos_ids, ids_indexes):
         for ind, _id in enumerate(ids):
             db['fs.files'].update_one(
                 {'_id': _id},
-                {'$set': {'metadata.zscore': float(zscores[ind])}})
+                {'$set': {'metadata.zscore': abs(float(zscores[ind]))}})
             cont += 1
     return cont
 

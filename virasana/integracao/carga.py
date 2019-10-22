@@ -85,6 +85,18 @@ def monta_float(campo: str)-> float:
         return 0.
 
 
+
+def get_conhecimento(grid_data):
+    metadata_carga = get_metadata_carga(grid_data)
+    if metadata_carga:
+        conhecimento = metadata_carga.get('conhecimento')
+        if isinstance(conhecimento, list) and len(conhecimento) > 0:
+            conhecimento = conhecimento[0]
+        if conhecimento:
+            return conhecimento.get('conhecimento')
+    return None
+
+
 def get_dados_conteiner(grid_data):
     try:
         metadata_carga = get_metadata_carga(grid_data)

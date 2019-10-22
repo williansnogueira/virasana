@@ -14,7 +14,7 @@ from sys import platform
 import ajna_commons.flask.login as login_ajna
 import ajna_commons.flask.user as user_ajna
 import requests
-from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, MONGODB_URI,
+from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, logo, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from ajna_commons.utils import ImgEnhance
@@ -976,6 +976,7 @@ def files():
             linha['infocarga'] = carga.get_dados_conteiner(grid_data)
             linha['pesocarga'] = carga.get_peso_conteiner(grid_data)
             linha['numero'] = grid_data['metadata'].get('numeroinformado')
+            linha['conhecimento'] = carga.get_conhecimento(grid_data)
             lista_arquivos.append(linha)
         # print(lista_arquivos)
         if len(lista_arquivos) < 50:
@@ -1385,18 +1386,19 @@ def select_auditoria():
 @nav.navigation()
 def mynavbar():
     """Menu da aplicação."""
-    items = [View('Home', 'index'),
-             View('Importar Bson', 'upload_bson'),
+    items = [View(logo, 'index'),
              View('Pesquisar arquivos', 'files'),
-             View('Mudar senha', 'account'),
+             View('Pesquisa lote com anomalia', 'lotes_anomalia'),
+             View('Estatísticas', 'stats'),
              Subgroup(
-                 'Pesquisas especiais',
-                 View('Pesquisa lote com anomalia', 'lotes_anomalia'),
+                 'Outros',
                  View('Pesquisa imagem externa', 'similar_file'),
                  View('Pesquisa textual', 'text_search'),
-                 View('Estatísticas', 'stats'),
                  Separator(),
                  View('Cadastra Filtro de Auditoria', 'auditoria'),
+                 View('Mudar senha', 'account'),
+                 Separator(),
+                 View('Importar Bson', 'upload_bson'),
              ),
              ]
     if current_user.is_authenticated:

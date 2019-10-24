@@ -122,11 +122,11 @@ def trata_registro_pesagem_dte(registro):
             new_dict['datahorasaida'],
             '%Y-%m-%d %H:%M:%S')
     new_dict['pesoentradafloat'] = float_or_zero(new_dict['pesocarregado_entrada'].replace(',', '.'))
-    new_dict['pesosaidafloat'] = float_or_zero(new_dict['pesocarregaco_saida'].replace(',', '.'))
+    new_dict['pesosaidafloat'] = float_or_zero(new_dict['pesocarregado_saida'].replace(',', '.'))
     new_dict['taraentradafloat'] = float_or_zero(new_dict['tara_entrada'].replace(',', '.'))
     new_dict['tarasaidafloat'] = float_or_zero(new_dict['tara_saida'].replace(',', '.'))
-    new_dict['veiculocarregadosaidabool'] = new_dict['veiculocarregadosaida'] == "sim"
-    new_dict['veiculocarregadoentradabool'] = new_dict['veiculocarregadoentrada'] == "sim"
+    new_dict['veiculocarregadosaidabool'] = new_dict['veiculocarregado_saida'] == "sim"
+    new_dict['veiculocarregadoentradabool'] = new_dict['veiculocarregado_entrada'] == "sim"
     return (new_dict)
 
 
@@ -204,7 +204,7 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
         pesagem['placacavalo'] = dte['placacavalo']
         pesagem['placacarreta'] = dte['placacarreta']
         pesobruto = dte['pesoentradafloat']
-        if pesobruto = 0:
+        if pesobruto == 0:
             pesobruto = dte['pesosaidafloat']
         pesagem['pesobruto'] = pesobruto
         tara = dte['taraentradafloat']

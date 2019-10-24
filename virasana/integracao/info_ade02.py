@@ -30,7 +30,8 @@ try:
 except FileNotFoundError:
     recintos_list = []
 
-DTE_URL = 'https://www.janelaunicaportuaria.org.br/ws_homologacao/sepes/api/Pesagem'
+# DTE_URL = 'https://www.janelaunicaportuaria.org.br/ws_homologacao/sepes/api/Pesagem'
+DTE_URL = 'https://www.janelaunicaportuaria.org.br/ws_homologacao/sepes/api/PesagemMovimentacao'
 
 FIELDS = ()
 
@@ -78,7 +79,7 @@ def get_pesagens_dte(datainicial, datafinal, recinto, token):
     r = requests.get(DTE_URL, headers=headers, params=payload)
     logger.debug('get_pesagens_dte ' + r.url)
     try:
-        lista_pesagens = r.json()['JUP_WS']['Pesagens']['Lista_Pesagens']
+        lista_pesagens = r.json()['JUP_WS']['Pesagens']['Lista_Pesagens_Movimentacao']
     except:
         logger.error(r, r.text)
     return lista_pesagens
@@ -99,6 +100,11 @@ def get_pesagens_dte_recintos(recintos_list, datainicial, datafinal):
 
 
 def trata_registro_pesagem_dte(registro):
+    def float_or_zero(s: str)-> float:
+        try:
+            return float(s)
+        except ValueError:
+            return 0.
     new_dict = {}
     for key, value in registro.items():
         key = sanitizar(key, mongo_sanitizar)
@@ -115,8 +121,10 @@ def trata_registro_pesagem_dte(registro):
         new_dict['datahorasaidaiso'] = datetime.strptime(
             new_dict['datahorasaida'],
             '%Y-%m-%d %H:%M:%S')
-    new_dict['pesoentradafloat'] = float(new_dict['pesoentrada'].replace(',', '.'))
-    new_dict['pesosaidafloat'] = float(new_dict['pesosaida'].replace(',', '.'))
+    new_dict['pesoentradafloat'] = float_or_zero(new_dict['pesocarregado_entrada'].replace(',', '.'))
+    new_dict['pesosaidafloat'] = float_or_zero(new_dict['pesocarregaco_saida'].replace(',', '.'))
+    new_dict['taraentradafloat'] = float_or_zero(new_dict['tara_entrada'].replace(',', '.'))
+    new_dict['tarasaidafloat'] = float_or_zero(new_dict['tara_saida'].replace(',', '.'))
     new_dict['veiculocarregadosaidabool'] = new_dict['veiculocarregadosaida'] == "sim"
     new_dict['veiculocarregadoentradabool'] = new_dict['veiculocarregadoentrada'] == "sim"
     return (new_dict)
@@ -126,7 +134,7 @@ def insert_pesagens_dte(db, pesagens_recintos):
     qtde = 0
     for recinto, pesagens in pesagens_recintos.items():
         for pesagem in pesagens:
-            if pesagem['CodigoConteinerEntrada'] or pesagem['CodigoConteinerSaida']:
+            if pesagem['CodigoConteiner_Entrada'] or pesagem['CodigoConteiner_Saida']:
                 pesagem_insert_mongo = {'codigo_recinto': recinto}
                 pesagem_insert_mongo.update(trata_registro_pesagem_dte(pesagem))
                 db['PesagensDTE'].insert_one(pesagem_insert_mongo)
@@ -195,10 +203,15 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
         pesagem['saida'] = dte.get('datahorasaidaiso', None)
         pesagem['placacavalo'] = dte['placacavalo']
         pesagem['placacarreta'] = dte['placacarreta']
-        pesagem['pesoentrada'] = dte['pesoentradafloat']
-        pesagem['pesosaida'] = dte['pesosaidafloat']
-        # TODO: Será preciso procurar tara quando não informada
-        pesagem['peso'] = abs(pesagem['pesoentrada'] - pesagem['pesosaida'])
+        pesobruto = dte['pesoentradafloat']
+        if pesobruto = 0:
+            pesobruto = dte['pesosaidafloat']
+        pesagem['pesobruto'] = pesobruto
+        tara = dte['taraentradafloat']
+        if tara == 0:
+            tara = dte['tarasaidafloat']
+        pesagem['tara'] = tara
+        pesagem['peso'] = pesobruto - tara
         pesagem['carregadoentrada'] = dte['veiculocarregadoentradabool']
         pesagem['carregadosaida'] = dte['veiculocarregadosaidabool']
         if pesagem not in pesagens:
@@ -272,8 +285,8 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=7):
             % (ldata, ldata_fim, delta, len(fs_cursor),
                len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
         )
-        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
-        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
+        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteiner_entrada')
+        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteiner_saida')
         # acum = len(linhas_entrada) + len(linhas_saida)
         logger.info(
             'Resultado pesagens_grava_fsfiles '

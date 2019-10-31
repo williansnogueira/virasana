@@ -59,7 +59,6 @@ setup(
             'pytest-mock',
             'radon',
             'selenium',
-            'streamlit'
             'testfixtures',
             'tox'
         ],

@@ -31,7 +31,8 @@ except FileNotFoundError:
     recintos_list = []
 
 # DTE_URL = 'https://www.janelaunicaportuaria.org.br/ws_homologacao/sepes/api/Pesagem'
-DTE_URL = 'https://www.janelaunicaportuaria.org.br/ws_homologacao/sepes/api/PesagemMovimentacao'
+DTE_TOKEN = 'https://jupapi.org.br/api/sepes/Pesagem/token'
+DTE_URL = 'https://jupapi.org.br/api/sepes/PesagemMovimentacao'
 
 FIELDS = ()
 
@@ -66,7 +67,7 @@ def create_indexes(db):
 
 def get_token_dte(username=DTE_USERNAME, password=DTE_PASSWORD):
     data = {'username': username, 'password': password, 'grant_type': 'password'}
-    r = requests.post(DTE_URL + '/token', data=data)
+    r = requests.post(DTE_TOKEN, data=data)
     token = r.json().get('access_token')
     return token
 

@@ -112,7 +112,7 @@ if __name__ == '__main__':
     with MongoClient(host=MONGODB_URI) as conn:
         db = conn[DATABASE]
         daemonize = '--daemon' in sys.argv
-        # periodic_updates(db)
+        periodic_updates(db)
         s0 = time.time() - 600
         counter = 1
         while daemonize:

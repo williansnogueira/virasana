@@ -214,13 +214,13 @@ def inserepesagens_fsfiles(db, pesagens: list, tipo: str):
         pesagem['saida'] = dte.get('datahorasaidaiso', None)
         pesagem['placacavalo'] = dte['placacavalo']
         pesagem['placacarreta'] = dte['placacarreta']
-        pesobruto = dte['pesoentradafloat']
-        if pesobruto == 0:
-            pesobruto = dte['pesosaidafloat']
+        pesobruto = dte.get('pesoentradafloat', 0.)
+        if pesobruto == 0.:
+            pesobruto = dte.get('pesosaidafloat', 0.)
         pesagem['pesobruto'] = pesobruto
-        tara = dte['taraentradafloat']
-        if tara == 0:
-            tara = dte['tarasaidafloat']
+        tara = dte.get('taraentradafloat', 0.)
+        if tara == 0.:
+            tara = dte.get('tarasaidafloat', 0.)
         pesagem['tara'] = tara
         pesagem['peso'] = pesobruto - tara
         pesagem['carregadoentrada'] = dte['veiculocarregadoentradabool']

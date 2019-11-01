@@ -19,7 +19,7 @@
                     <label for="alerta">Alerta?</label>
                 </div>
                 <div class="col-sm-1">
-                    <label for="ranking">Ranking</label>
+                    <label for="contrast">Filtro imagem</label>
                 </div>
                 <div class="col-sm-3">
                     Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
@@ -40,7 +40,10 @@
                         <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
                     </div>
                     <div class="col-sm-1">
-                        <input class="form-control" type="checkbox" name="ranking" {% if oform.ranking.data %} checked {% endif %} />
+                        <input type="checkbox" id="contrast" name="contrast" {% if oform.contrast.data %} checked {% endif %} />
+                    &nbsp;  + contraste<br>
+                        <input type="checkbox" id="color" name="color" {% if oform.color.data %} checked {% endif %} />
+                    &nbsp;  colorir<br>
                     </div>
                     <div class="col-sm-1">
                         <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> Filtrar </button>
@@ -150,8 +153,8 @@
                 </td>
                 <td>
                     <a href="file?_id={{ myfile['_id'] }}" target="_BLANK">
-                        <img src="image/{{ myfile['_id'] }}" alt="Sem imagem" width="auto" height="auto"
-                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                        <img src="image/{{ myfile['_id'] }}?contrast={{ oform.contrast.data }}&color={{ oform.color.data }}" alt="Sem imagem" width="auto" height="auto"
+                             style="border: 1px solid #000; max-width:800px; max-height:320px;"
                         onmouseover="showMsg(this, '{{ myfile['_id'] }}')" onmouseout="clearMsg(this)"
                         />
                     </a>

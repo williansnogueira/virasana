@@ -846,6 +846,8 @@ class FilesForm(FlaskForm):
                               default=[0])
     texto_ocorrencia = StringField(u'Texto Ocorrência',
                                    validators=[optional()], default='')
+    contrast = BooleanField()
+    color = BooleanField()
 
 
 def recupera_user_filtros():

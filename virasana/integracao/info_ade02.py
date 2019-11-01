@@ -151,22 +151,25 @@ def insert_pesagens_dte(db, pesagens_recintos):
 
 
 def adquire_pesagens(db, datainicial, datafinal, refresh=False):
-    ldata = datainicial
-    # Trata somente um dia por vez, para não sobrecarregar DT-E
-    while ldata <= datafinal:
-        if refresh:
-            tem_passagem_na_data = False
-        else:
-            tem_passagem_na_data = db['PesagensDTE'].find_one(
-                {'datahoraentradaiso': {'$gt': ldata,
-                                        '$lt': ldata + timedelta(days=1)}})
-        if tem_passagem_na_data:
-            logger.info('adquire_pesagens dia %s abortado'
-                        ' por já existirem registros' % ldata)
-        else:
-            pesagens = get_pesagens_dte_recintos(recintos_list, ldata, ldata)
-            insert_ok = insert_pesagens_dte(db, pesagens)
-        ldata = ldata + timedelta(days=1)
+    try:
+        ldata = datainicial
+        # Trata somente um dia por vez, para não sobrecarregar DT-E
+        while ldata <= datafinal:
+            if refresh:
+                tem_passagem_na_data = False
+            else:
+                tem_passagem_na_data = db['PesagensDTE'].find_one(
+                    {'datahoraentradaiso': {'$gt': ldata,
+                                            '$lt': ldata + timedelta(days=1)}})
+            if tem_passagem_na_data:
+                logger.info('adquire_pesagens dia %s abortado'
+                            ' por já existirem registros' % ldata)
+            else:
+                pesagens = get_pesagens_dte_recintos(recintos_list, ldata, ldata)
+                insert_ok = insert_pesagens_dte(db, pesagens)
+            ldata = ldata + timedelta(days=1)
+    except Exception as err:
+        logger.error(err, exc_info=True)
 
 
 def compara_pesagens_imagens(fs_cursor, pesagens_cursor, campo_comparacao):
@@ -247,71 +250,75 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=7):
         Número de registros encontrados
 
     """
-    filtro = {'metadata.contentType': 'image/jpeg'}
-    #  {'metadata.pesagens': {'$exists': False},
-    delta_days = timedelta(days=delta)  # Pega dias antes/depois
-    ldata = data_inicio
-    acum = 0
-    # Trata somente um dia por vez
-    while ldata <= data_fim:
-        ldata_inicio = ldata
-        ldata_fim = datetime.combine(
-            ldata, time.max)  # Pega atá a última hora do dia
-        filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
-                                               '$lte': ldata_fim}
-        projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
-        total = db['fs.files'].count_documents(filtro)
-        fs_cursor = list(
-            db['fs.files'].find(filtro, projection=projection
-                                ).sort('metadata.numeroinformado')
-        )
-        print(filtro)
-        pesagens_cursor_entrada = list(
-            db['PesagensDTE'].find(
-                {'datahoraentradaiso':
-                     {'$gte': ldata - delta_days,
-                      '$lte': datetime.combine(ldata_fim + delta_days, time.max)
-                      },
-                 'codigoconteinerentrada':
-                     {'$exists': True, '$ne': None, '$ne': ''}}
-            ).sort('codigoconteinerentrada')
-        )
-        pesagens_cursor_saida = list(
-            db['PesagensDTE'].find(
-                {'datahorasaidaiso':
-                     {'$gte': ldata - delta_days,
-                      '$lte': datetime.combine(ldata_fim + delta_days, time.max)
-                      },
-                 'codigoconteinersaida':
-                     {'$exists': True, '$ne': None, '$ne': ''}}
-            ).sort('codigoconteinersaida')
-        )
-        logger.info(
-            'Processando pesagens para imagens de %s a %s. '
-            'Pesquisando pesagens %s dias antes e depois. '
-            'Imagens encontradas: %s  Pesagens encontradas %s(entrada) %s(saída).'
-            % (ldata, ldata_fim, delta, len(fs_cursor),
-               len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
-        )
-        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
-        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
-        # acum = len(linhas_entrada) + len(linhas_saida)
-        logger.info(
-            'Resultado pesagens_grava_fsfiles '
-            'Pesquisados %s. '
-            'Encontrados %s entrada %s saida.'
-            % (total, len(linhas_entrada), len(linhas_saida))
-        )
-        inseridos_entrada = inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
-        acum += inseridos_entrada
-        inseridos_saida = inserepesagens_fsfiles(db, linhas_saida, 'saida')
-        acum += inseridos_saida
-        ldata = ldata + timedelta(days=1)
-        logger.info('%s dados de entrada inseridos em fs.files',
-                    inseridos_entrada)
-        logger.info('%s dados de saida inseridos em fs.files',
-                    inseridos_saida)
-    return acum
+    try:
+        filtro = {'metadata.contentType': 'image/jpeg'}
+        #  {'metadata.pesagens': {'$exists': False},
+        delta_days = timedelta(days=delta)  # Pega dias antes/depois
+        ldata = data_inicio
+        acum = 0
+        # Trata somente um dia por vez
+        while ldata <= data_fim:
+            ldata_inicio = ldata
+            ldata_fim = datetime.combine(
+                ldata, time.max)  # Pega atá a última hora do dia
+            filtro['metadata.dataescaneamento'] = {'$gte': ldata_inicio,
+                                                   '$lte': ldata_fim}
+            projection = ['metadata.numeroinformado', 'metadata.dataescaneamento']
+            total = db['fs.files'].count_documents(filtro)
+            fs_cursor = list(
+                db['fs.files'].find(filtro, projection=projection
+                                    ).sort('metadata.numeroinformado')
+            )
+            print(filtro)
+            pesagens_cursor_entrada = list(
+                db['PesagensDTE'].find(
+                    {'datahoraentradaiso':
+                         {'$gte': ldata - delta_days,
+                          '$lte': datetime.combine(ldata_fim + delta_days, time.max)
+                          },
+                     'codigoconteinerentrada':
+                         {'$exists': True, '$ne': None, '$ne': ''}}
+                ).sort('codigoconteinerentrada')
+            )
+            pesagens_cursor_saida = list(
+                db['PesagensDTE'].find(
+                    {'datahorasaidaiso':
+                         {'$gte': ldata - delta_days,
+                          '$lte': datetime.combine(ldata_fim + delta_days, time.max)
+                          },
+                     'codigoconteinersaida':
+                         {'$exists': True, '$ne': None, '$ne': ''}}
+                ).sort('codigoconteinersaida')
+            )
+            logger.info(
+                'Processando pesagens para imagens de %s a %s. '
+                'Pesquisando pesagens %s dias antes e depois. '
+                'Imagens encontradas: %s  Pesagens encontradas %s(entrada) %s(saída).'
+                % (ldata, ldata_fim, delta, len(fs_cursor),
+                   len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
+            )
+            linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
+            linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
+            # acum = len(linhas_entrada) + len(linhas_saida)
+            logger.info(
+                'Resultado pesagens_grava_fsfiles '
+                'Pesquisados %s. '
+                'Encontrados %s entrada %s saida.'
+                % (total, len(linhas_entrada), len(linhas_saida))
+            )
+            inseridos_entrada = inserepesagens_fsfiles(db, linhas_entrada, 'entrada')
+            acum += inseridos_entrada
+            inseridos_saida = inserepesagens_fsfiles(db, linhas_saida, 'saida')
+            acum += inseridos_saida
+            ldata = ldata + timedelta(days=1)
+            logger.info('%s dados de entrada inseridos em fs.files',
+                        inseridos_entrada)
+            logger.info('%s dados de saida inseridos em fs.files',
+                        inseridos_saida)
+        return acum
+    except Exception as err:
+        logger.error(err, exc_info=True)
+        return acum
 
 
 if __name__ == '__main__':  # pragma: no cover

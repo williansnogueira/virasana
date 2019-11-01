@@ -18,7 +18,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, logo, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from ajna_commons.utils import ImgEnhance
-from ajna_commons.utils.images import mongo_image, PIL_tobytes, recorta_imagem
+from ajna_commons.utils.images import bytes_toPIL, mongo_image, PIL_tobytes, recorta_imagem
 from ajna_commons.utils.sanitiza import mongo_sanitizar
 from bson import json_util
 from bson.objectid import ObjectId
@@ -611,6 +611,11 @@ def image():
     return ''
 
 
+def get_contrast_and_color_(request):
+    contrast = request.values.get('contrast', 'False').lower() in ('on', 'true')
+    color = request.values.get('color', 'False').lower() in ('on', 'true')
+    return contrast, color
+
 @app.route('/image/<_id>')
 def image_id(_id):
     """Recupera a imagem do banco e serializa para stream HTTP.
@@ -623,6 +628,14 @@ def image_id(_id):
     bboxes = request.args.get('bboxes', 'True').lower() == 'true'
     image = mongo_image(db, _id, bboxes=bboxes)
     if image:
+        contrast, color = get_contrast_and_color_(request)
+        if contrast or color:
+            PILimage = bytes_toPIL(image)
+            if contrast:
+                PILimage = ImgEnhance.enhancedcontrast_cv2(PILimage)
+            if color:
+                PILimage = ImgEnhance.expand_tocolor(PILimage)
+            image = PIL_tobytes(PILimage)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'
 
@@ -689,7 +702,7 @@ def view_image(_id=None):
 
 
 @app.route('/contrast')
-def contrast():
+def img_contrast():
     _id = request.args.get('_id')
     n = request.args.get('n', 0)
     cutoff = request.args.get('cutoff', '10')
@@ -1066,8 +1079,9 @@ def lotes_anomalia():
 
 
 @app.route('/cemercante/<numero>')
+@app.route('/cemercante', methods=['POST', 'GET'])
 @login_required
-def cemercante(numero):
+def cemercante(numero=None):
     """Tela para exibição de um CE Mercante do GridFS.
 
     Exibe o CE Mercante e os arquivos associados a ele.
@@ -1075,10 +1089,15 @@ def cemercante(numero):
     db = app.config['mongodb']
     conhecimento = None
     imagens = []
+    if request.method == 'POST':
+        numero = request.form.get('numero')
+        print(request.values)
+        contrast, color = get_contrast_and_color_(request)
+        print('################', contrast, color)
     if numero:
         conhecimento = carga.Conhecimento.from_db(db, numero)
         idszscore = get_ids_score_conhecimento_zscore(db, [numero])[numero]
-        print(idszscore)
+        # print(idszscore)
         imagens = [{'_id': str(item['_id']),
                     'container': item['container'],
                     'zscore': '{:0.1f}'.format(item['zscore'])}
@@ -1086,9 +1105,12 @@ def cemercante(numero):
                                       key=lambda item: item['zscore'],
                                       reverse=True)
                    ]
+        contrast, color = get_contrast_and_color_(request)
     return render_template('view_cemercante.html',
                            conhecimento=conhecimento,
-                           imagens=imagens)
+                           imagens=imagens,
+                           color=color,
+                           contrast=contrast)
 
 
 class StatsForm(FlaskForm):

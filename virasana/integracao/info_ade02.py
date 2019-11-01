@@ -67,7 +67,7 @@ def create_indexes(db):
 
 def get_token_dte(username=DTE_USERNAME, password=DTE_PASSWORD):
     data = {'username': username, 'password': password, 'grant_type': 'password'}
-    r = requests.post(DTE_TOKEN, data=data)
+    r = requests.post(DTE_TOKEN, data=data, verify=False)
     token = r.json().get('access_token')
     return token
 
@@ -77,7 +77,7 @@ def get_pesagens_dte(datainicial, datafinal, recinto, token):
                'data_fim': datetime.strftime(datafinal, '%Y-%m-%d'),
                'cod_recinto': recinto}
     headers = {'Authorization': 'Bearer ' + token}
-    r = requests.get(DTE_URL, headers=headers, params=payload)
+    r = requests.get(DTE_URL, headers=headers, params=payload, verify=False)
     logger.debug('get_pesagens_dte ' + r.url)
     try:
         lista_pesagens = r.json()['JUP_WS']['Pesagens']['Lista_Pesagens_Movimentacao']

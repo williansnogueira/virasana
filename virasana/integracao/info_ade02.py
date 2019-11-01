@@ -68,6 +68,7 @@ def create_indexes(db):
 def get_token_dte(username=DTE_USERNAME, password=DTE_PASSWORD):
     data = {'username': username, 'password': password, 'grant_type': 'password'}
     r = requests.post(DTE_TOKEN, data=data, verify=False)
+    print(r.url)
     print(r.text)
     print(r.status_code)
     token = r.json().get('access_token')

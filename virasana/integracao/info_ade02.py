@@ -111,6 +111,10 @@ def trata_registro_pesagem_dte(registro):
         if value is not None:
             value = sanitizar(value, mongo_sanitizar)
         new_dict[key] = value
+    new_dict['codigoconteinerentrada'] = new_dict['codigoconteiner_entrada']
+    new_dict['codigoconteinersaida'] = new_dict['codigoconteiner_saida']
+    new_dict.pop('codigoconteiner_entrada')
+    new_dict.pop('codigoconteiner_saida')
     datahoraentrada = new_dict['datahoraentrada']
     if datahoraentrada:
         new_dict['datahoraentradaiso'] = datetime.strptime(
@@ -285,8 +289,8 @@ def pesagens_grava_fsfiles(db, data_inicio, data_fim, delta=7):
             % (ldata, ldata_fim, delta, len(fs_cursor),
                len(pesagens_cursor_entrada), len(pesagens_cursor_saida))
         )
-        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteiner_entrada')
-        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteiner_saida')
+        linhas_entrada = compara_pesagens_imagens(fs_cursor, pesagens_cursor_entrada, 'codigoconteinerentrada')
+        linhas_saida = compara_pesagens_imagens(fs_cursor, pesagens_cursor_saida, 'codigoconteinersaida')
         # acum = len(linhas_entrada) + len(linhas_saida)
         logger.info(
             'Resultado pesagens_grava_fsfiles '

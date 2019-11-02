@@ -821,6 +821,14 @@ class Conhecimento:
         query = {cls.chave: numero}
         return db[cls.table].find_one(query)
 
+class ListaContainerConhecimento:
+
+    table = 'CARGA.Container'
+    chave = 'conhecimento'
+    @classmethod
+    def from_db(cls, db, numero):
+        query = {cls.chave: numero}
+        return list(db[cls.table].find(query, {'container': 1}))
 
 
 

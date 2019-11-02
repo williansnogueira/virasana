@@ -616,6 +616,7 @@ def get_contrast_and_color_(request):
     color = request.values.get('color', 'False').lower() in ('on', 'true')
     return contrast, color
 
+
 @app.route('/image/<_id>')
 def image_id(_id):
     """Recupera a imagem do banco e serializa para stream HTTP.
@@ -680,10 +681,13 @@ def mini2(_id):
 
 
 class ImgForm(FlaskForm):
-    cutoff = IntegerField(u'Cut Off', default=15)
-    alpha = FloatField(u'Alpha', default=12)
-    beta = FloatField(u'Beta', default=10)
+    cutoff = IntegerField(u'Cut Off', default=10)
     equalize = BooleanField(u'Equalize')
+    colorize = BooleanField(u'Colorize')
+    alpha = FloatField(u'Alpha', default=10)
+    beta = FloatField(u'Beta', default=10)
+    equalize2 = BooleanField(u'Equalize')
+    cv2 = BooleanField('cv2')
 
 
 @app.route('/view_image/<_id>')
@@ -706,10 +710,15 @@ def img_contrast():
     _id = request.args.get('_id')
     n = request.args.get('n', 0)
     cutoff = request.args.get('cutoff', '10')
+    equalize = request.args.get('equalize', False) == 'True'
+    colorize = request.args.get('colorize', False) == 'True'
+    cv2 = request.args.get('cv2', False) == 'True'
     image = get_image(_id, n, pil=True)
     if image:
         cutoff = int(cutoff)
-        image = ImgEnhance.autocontrast(image, cutoff=cutoff)
+        image = ImgEnhance.autocontrast(image, cutoff=cutoff,
+                                        colorize=colorize, equalize=equalize,
+                                        cv2=cv2)
         image = PIL_tobytes(image)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
@@ -1098,6 +1107,7 @@ def cemercante(numero=None):
         print('################', contrast, color)
     if numero:
         conhecimento = carga.Conhecimento.from_db(db, numero)
+        containers = carga.ListaContainerConhecimento.from_db(db, numero)
         idszscore = get_ids_score_conhecimento_zscore(db, [numero])[numero]
         # print(idszscore)
         imagens = [{'_id': str(item['_id']),
@@ -1110,6 +1120,7 @@ def cemercante(numero=None):
         contrast, color = get_contrast_and_color_(request)
     return render_template('view_cemercante.html',
                            conhecimento=conhecimento,
+                           containers=containers,
                            imagens=imagens,
                            color=color,
                            contrast=contrast)

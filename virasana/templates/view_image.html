@@ -3,52 +3,63 @@
     <div id="top" class="row">
     </div>
     <div id="img_enhance" class="row">
-        <h3>Filtros de imagem</h3>
         <div id="sliders" class="row">
             <form method="POST" id="imgform" action="/virasana/view_image">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="_id" value="{{ _id }}"/>
-                <div class="slidecontainer col-md-3">
-                    Aumento do contraste (zerar para original)
-                    <input type="range" min="0" max="48" value="{{ imgform.cutoff.data }}" class="slider" id="cutoff"
-                           name="cutoff" onchange="this.form.submit()">
+                <div class="col-md-6">
+                    <div class="slidecontainer col-md-6">
+                        Aumento do contraste (zerar para original)
+                        <input type="range" min="0" max="48" value="{{ imgform.cutoff.data }}" class="slider" id="cutoff"
+                               name="cutoff" onchange="this.form.submit()">
+                        <br>
+                        <input type="checkbox" id="cv2" name="cv2" {% if imgform.cv2.data %} checked {% endif %}
+                               onchange="this.form.submit()"/>Usar contraste OpenCV
+                    </div>
+                    <div class="col-md-6">
+                        <input type="checkbox" id="equalize" name="equalize" {% if imgform.equalize.data %} checked {% endif %}
+                               onchange="this.form.submit()"/>
+                        &nbsp;Equalizar histograma<br>
+                        <input type="checkbox" id="colorize" name="colorize" {% if imgform.colorize.data %} checked {% endif %}
+                               onchange="this.form.submit()"/>
+                        Colorizar
+                    </div>
                 </div>
-                <div class="slidecontainer col-md-3">
-                    Multiplicador da colorização
-                    <input type="range" min="8" max="30" value="{{ imgform.alpha.data }}" class="slider" id="alpha"
-                           name="alpha" onchange="this.form.submit()">
-                </div>
-                <div class="slidecontainer col-md-3">
-                    Exponenciador da colorização
-                    <input type="range" min="8" max="20" value="{{ imgform.beta.data }}" class="slider" id="beta"
-                           name="beta" onchange="this.form.submit()">
-                </div>
-                <div class="col-md-2">
-                    <input type="checkbox" id="equalize" name="equalize" {% if imgform.equalize.data %} checked {% endif %}
-                           onchange="this.form.submit()"/>
-                    &nbsp;Equalizar colorização
-                </div>
-                <div class="col-md-1">
-                    <input class="btn btn-default btn-info" type="submit" value="Atualizar"/>
+                <div class="col-md-6">
+                    <div class="slidecontainer col-md-4">
+                        Multiplicador da colorização
+                        <input type="range" min="8" max="30" value="{{ imgform.alpha.data }}" class="slider" id="alpha"
+                               name="alpha" onchange="this.form.submit()">
+                    </div>
+                    <div class="slidecontainer col-md-4">
+                        Exponenciador da colorização
+                        <input type="range" min="8" max="20" value="{{ imgform.beta.data }}" class="slider" id="beta"
+                               name="beta" onchange="this.form.submit()">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="checkbox" id="equalize2" name="equalize2" {% if imgform.equalize2.data %} checked {% endif %}
+                               onchange="this.form.submit()"/>
+                        &nbsp;Equalizar histograma
+                    </div>
                 </div>
             </form>
         </div>
         <div class="col-md-6">
-            Contraste aumentado
-            <img src="/virasana/contrast?_id={{ _id }}&cutoff={{ imgform.cutoff.data }}" width="90%"
+            <h4>Contraste aumentado</h4>
+            <img src="/virasana/contrast?_id={{ _id }}&cutoff={{ imgform.cutoff.data }}&colorize={{ imgform.colorize.data}}&equalize={{ imgform.equalize.data}}&cv2={{ imgform.cv2.data}}" width="90%"
                  alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
-            Colorização com expansão linear e exponencial de contraste
-            <img src="/virasana/colorize?_id={{ _id }}&alpha={{ imgform.alpha.data }}&beta={{ imgform.beta.data }}&equalize={{ imgform.equalize.data}}"
+            <h4>Colorização com expansão linear e exponencial de contraste</h4>
+            <img src="/virasana/colorize?_id={{ _id }}&alpha={{ imgform.alpha.data }}&beta={{ imgform.beta.data }}&equalize={{ imgform.equalize2.data}}"
                  width="90%" alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
-            Equalização de histograma
+            <h4>Equalização de histograma</h4>
             <img src="/virasana/equalize/{{ _id }}" width="90%" alt="Sem miniatura"/>
         </div>
         <div class="col-md-6">
-            Contraste realçado
+            <h4>Contraste realçado OpenCV</h4>
             <img src="/virasana/contrast_cv2/{{ _id }}" width="90%" alt="Sem miniatura"/>
         </div>
     </div>

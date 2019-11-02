@@ -21,6 +21,7 @@ def raspa_containers_sem_due(
     params = {'query':
                   {'metadata.dataescaneamento': {'$gte': datainicial, '$lte': datafinal},
                    'metadata.contentType': 'image/jpeg',
+                   'metadata.due': {'$exists': False},
                    'metadata.carga.manifesto.tipomanifesto': tipomanifesto
                    },
               'projection':

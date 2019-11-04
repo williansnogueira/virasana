@@ -16,7 +16,7 @@ from collections import Counter
 from xml.etree import ElementTree
 
 from ajna_commons.flask.log import logger
-from integracao.mercante import mercante
+from virasana.integracao.mercante import mercante
 # from ajnaapi.config import Staging
 from virasana.integracao.mercante.mercantealchemy import data_ultimo_arquivo_baixado, \
     grava_arquivo_baixado

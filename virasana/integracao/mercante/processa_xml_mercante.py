@@ -18,7 +18,7 @@ from xml.etree import ElementTree
 from ajna_commons.flask.log import logger
 from integracao.mercante import mercante
 # from ajnaapi.config import Staging
-from integracao.mercante.mercantealchemy import data_ultimo_arquivo_baixado, \
+from virasana.integracao.mercante.mercantealchemy import data_ultimo_arquivo_baixado, \
     grava_arquivo_baixado
 
 FORMATO_DATA_ANIITA = '%Y%m%d%H%M%S'

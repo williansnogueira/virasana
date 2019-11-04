@@ -13,16 +13,16 @@ from sqlalchemy import create_engine
 
 from ajna_commons.flask.log import logger
 from ajna_commons.flask.conf import SQL_URI
-from integracao.mercante.processa_xml_mercante import get_arquivos_novos, \
+from virasana.integracao.mercante.processa_xml_mercante import get_arquivos_novos, \
     xml_para_mercante
-from integracao.mercante.resume_mercante import mercante_resumo
+from virasana.integracao.mercante.resume_mercante import mercante_resumo
 
 
 def mercante_periodic(connection):
     print('Iniciando atualizações...')
     get_arquivos_novos(connection)
     xml_para_mercante(connection)
-    mercante_resumo(connection)
+    # mercante_resumo(connection)
 
 
 if __name__ == '__main__':

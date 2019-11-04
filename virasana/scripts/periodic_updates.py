@@ -115,19 +115,19 @@ def periodic_updates(db, connection, lote=2000):
 if __name__ == '__main__':
     os.environ['DEBUG'] = '1'
     logger.setLevel(logging.DEBUG)
-    with create_engine(SQL_URI) as connection:
-        with MongoClient(host=MONGODB_URI) as conn:
-            db = conn[DATABASE]
-            daemonize = '--daemon' in sys.argv
-            periodic_updates(db, connection)
-            s0 = time.time() - 600
-            counter = 1
-            while daemonize:
-                logger.info('Dormindo 10 minutos... ')
-                logger.info('Tempo decorrido %s segundos.' % (time.time() - s0))
-                time.sleep(30)
-                if time.time() - s0 > 300:
-                    logger.info('Periódico chamado rodada %s' % counter)
-                    counter += 1
-                    periodic_updates(db, connection)
-                    s0 = time.time()
+    connection = create_engine(SQL_URI)
+    with MongoClient(host=MONGODB_URI) as conn:
+        db = conn[DATABASE]
+        daemonize = '--daemon' in sys.argv
+        periodic_updates(db, connection)
+        s0 = time.time() - 600
+        counter = 1
+        while daemonize:
+            logger.info('Dormindo 10 minutos... ')
+            logger.info('Tempo decorrido %s segundos.' % (time.time() - s0))
+            time.sleep(30)
+            if time.time() - s0 > 300:
+                logger.info('Periódico chamado rodada %s' % counter)
+                counter += 1
+                periodic_updates(db, connection)
+                s0 = time.time()

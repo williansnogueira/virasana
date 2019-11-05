@@ -14,12 +14,16 @@ import time
 import sqlalchemy
 from datetime import datetime
 from sqlalchemy import func, select, and_
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from ajna_commons.flask.conf import SQL_URI
 
 from ajna_commons.flask.log import logger
-# from ajnaapi.config import Staging
-from virasana.integracao.mercante.mercantealchemy import conhecimentos, \
-    conteineresVazios,  itens, manifestos, NCMItem, t_conhecimentosEmbarque,\
-    t_ConteinerVazio,  t_itensCarga, t_manifestosCarga, t_NCMItemCarga
+from virasana.integracao.mercante.mercantealchemy import Conhecimento, \
+    ConteinerVazio, ControleResumo, Item, Manifesto, NCMItem, \
+    t_conhecimentosEmbarque, t_ConteinerVazio, t_itensCarga, \
+    t_manifestosCarga, t_NCMItemCarga
 
 
 def execute_movimento(conn, destino, chaves_valores,
@@ -53,41 +57,57 @@ def execute_movimento(conn, destino, chaves_valores,
 
 
 def processa_resumo(engine, origem, destino, chaves):
-    with engine.begin() as conn:
-        s = select([func.Max(destino.c.create_date)])
-        c = conn.execute(s).fetchone()
-        start_date = 0
-        if c and c[0] is not None:
-            start_date = c[0]
-        # print(c)
-        print('Start date %s' % start_date)
-        s = select([origem]
-                   ).where(origem.c.create_date >= start_date)
-        cont = 0
-        for row in conn.execute(s):
-            cont += 1
-            chaves_valores = [destino.c[chave] == row[chave] for chave in chaves]
-            # print(numeroCEmercante)
-            tipoMovimento = row[origem.c.tipoMovimento]
-            result_proxy = execute_movimento(conn, destino, chaves_valores,
-                                             tipoMovimento, destino.c.keys(), row)
-        return cont
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    # Fazer INSERTS PRIMEIRO
+    tipomovimento = 'I'
+    controle = ControleResumo.get_(session, str(origem), tipomovimento)
+    maxid = controle.maxid
+    logger.info('%s - inicio em ID %s - tipo %s' % (origem, maxid, tipomovimento))
+    s = select([origem]).where(
+        and_(origem.c['id'] > maxid, origem.c['tipoMovimento'] == tipomovimento)
+    ).order_by(origem.c['id']).limit(2000)
+    cont = 0
+    resulproxy = session.execute(s)
+    keys = destino.__table__.columns.keys()
+    keys.remove('ID')
+    keys.remove('last_modified')
+    newmaxid = maxid 
+    for row in resulproxy:
+        if row['id'] > newmaxid:
+            newmaxid = row['id']
+        dict_campos = {key: row[key]
+                       for key in keys}
+        objeto = destino(**dict_campos)
+        session.add(objeto)
+        cont += 1
+        # chaves_valores = [getattr(destino, chave) == row[chave] for chave in chaves]
+        # print(numeroCEmercante)
+        # tipoMovimento = row[origem.c.tipoMovimento]
+        # result_proxy = execute_movimento(session, destino, chaves_valores,
+        #
+        #                                 tipoMovimento, destino.__table__.columns.keys(), row)
+    controle.maxid = newmaxid
+    session.add(controle)
+    session.commit()
+    return cont
 
 
 def mercante_resumo(engine):
     logger.info('Iniciando resumo da base Mercante...')
-    migracoes = {t_conhecimentosEmbarque: conhecimentos,
-                 t_manifestosCarga: manifestos,
-                 t_itensCarga: itens,
+    migracoes = {t_conhecimentosEmbarque: Conhecimento}
+    {
+                 t_manifestosCarga: Manifesto,
+                 t_itensCarga: Item,
                  t_NCMItemCarga: NCMItem,
-                 t_ConteinerVazio: conteineresVazios}
+                 t_ConteinerVazio: ConteinerVazio}
 
-    chaves = {conhecimentos: ['numeroCEmercante'],
-              manifestos: ['numero'],
-              itens: ['numeroCEmercante', 'numeroSequencialItemCarga'],
+    chaves = {Conhecimento: ['numeroCEmercante'],
+              Manifesto: ['numero'],
+              Item: ['numeroCEmercante', 'numeroSequencialItemCarga'],
               NCMItem: ['numeroCEMercante', 'codigoConteiner',
                         'numeroSequencialItemCarga'],
-              conteineresVazios: ['manifesto', 'idConteinerVazio']
+              ConteinerVazio: ['manifesto', 'idConteinerVazio']
               }
 
     for origem, destino in migracoes.items():
@@ -102,7 +122,6 @@ def mercante_resumo(engine):
 if __name__ == '__main__':
     os.environ['DEBUG'] = '1'
     logger.setLevel(logging.DEBUG)
-    # engine = sqlalchemy.create_engine('mysql+pymysql://ivan@localhost:3306/mercante')
-    # engine = Staging.sql
-    engine = sqlalchemy.create_engine('sqlite:///teste.db')
+    engine = sqlalchemy.create_engine(SQL_URI)
+    # engine = sqlalchemy.create_engine('sqlite:///teste.db')
     mercante_resumo(engine)

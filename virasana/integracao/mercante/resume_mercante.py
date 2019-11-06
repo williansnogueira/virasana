@@ -25,7 +25,8 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 from virasana.integracao.mercante.mercantealchemy import Conhecimento, \
     ConteinerVazio, ControleResumo, Item, Manifesto, NCMItem, \
     t_conhecimentosEmbarque, t_ConteinerVazio, t_itensCarga, \
-    t_manifestosCarga, t_NCMItemCarga
+    t_manifestosCarga, t_NCMItemCarga, t_exclusoesEscala, Escala, \
+    t_ManifestoEscala, EscalaManifesto
 
 
 def get_pendentes(session, origem, tipomovimento, limit=10000):
@@ -54,6 +55,10 @@ def processa_resumo(engine, origem, destino, chaves):
     for tipomovimento in movimentos:
         controle, resultproxy = get_pendentes(session, origem, tipomovimento)
         campos_destino = monta_campos(destino)
+        # Tratar atualização de EscalaManifesto como inclusão
+        if destino.__name__ == 'EscalaManifesto':
+            if tipomovimento == 'A':
+                tipomovimento = 'I'
         cont = 0
         for row in resultproxy:
             if row['id'] > controle.maxid:
@@ -73,9 +78,6 @@ def processa_resumo(engine, origem, destino, chaves):
                         cont += 1
                         if tipomovimento == 'E':
                             session.delete(objeto)
-                            if hasattr(objeto, 'filhos'):
-                                for filho in objeto.filhos:
-                                    session.delete(filho)
                         else:
                             for k, v in dict_campos.items():
                                 setattr(objeto, k, v)
@@ -93,20 +95,42 @@ def processa_resumo(engine, origem, destino, chaves):
                     )
 
 
+def exclui_orfaos(engine):
+    """Exclui todos os registros que não contenham """
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    sql_delete_itens = 'DELETE FROM itensresumo WHERE numeroCEMercante not in (SELECT numeroCEMercante from conhecimentosresumo);'
+    sql_delete_ncmitem = 'DELETE FROM ncmitemresumo WHERE numeroCEMercante not in (SELECT numeroCEMercante from conhecimentosresumo);'
+    sql_delete_conhecimento = 'DELETE FROM conhecimentosresumo WHERE manifestoCE not in (SELECT numero from manifestosresumo);'
+    sql_delete_conteinervazio = 'DELETE FROM conteinervazioresumo WHERE manifesto not in (SELECT numero from manifestosresumo);'
+    sql_delete_escalamanifesto = 'DELETE FROM escalamanifestoresumo WHERE escala not in (SELECT escala from escalaeresumo);'
+    sql_delete_manifesto = 'DELETE FROM manifestosresumo WHERE numero not in (SELECT manifesto from escalamanifestoresumo);'
+    session.execute(sql_delete_escalamanifesto)
+    session.execute(sql_delete_manifesto)
+    session.execute(sql_delete_conteinervazio)
+    session.execute(sql_delete_conhecimento)
+    session.execute(sql_delete_itens)
+    session.execute(sql_delete_ncmitem)
+
+
 def mercante_resumo(engine):
     logger.info('Iniciando resumo da base Mercante...')
-    migracoes = {t_conhecimentosEmbarque: Conhecimento,
-                 t_manifestosCarga: Manifesto,
-                 t_itensCarga: Item,
-                 t_NCMItemCarga: NCMItem,
-                 t_ConteinerVazio: ConteinerVazio}
+    migracoes = {t_ManifestoEscala: EscalaManifesto}
+    {
+        t_manifestosCarga: Manifesto,
+        t_conhecimentosEmbarque: Conhecimento,
+        t_itensCarga: Item,
+        t_NCMItemCarga: NCMItem,
+        t_ConteinerVazio: ConteinerVazio,
+    }
 
-    chaves = {Conhecimento: ['numeroCEmercante'],
+    chaves = {EscalaManifesto: ['manifesto', 'escala'],
               Manifesto: ['numero'],
+              Conhecimento: ['numeroCEmercante'],
               Item: ['numeroCEmercante', 'numeroSequencialItemCarga'],
               NCMItem: ['numeroCEMercante', 'codigoConteiner',
                         'numeroSequencialItemCarga', 'identificacaoNCM'],
-              ConteinerVazio: ['manifesto', 'idConteinerVazio']
+              ConteinerVazio: ['manifesto', 'idConteinerVazio'],
               }
 
     for origem, destino in migracoes.items():
@@ -116,6 +140,7 @@ def mercante_resumo(engine):
         logger.info('Resumos processados em %0.2f s' %
                     (t - t0)
                     )
+    # exclui_orfaos(engine)
 
 
 if __name__ == '__main__':

@@ -243,11 +243,24 @@ class NCMItemCarga(ParseXML):
     def __repr__(self):
         return self.identificacaoNCM
 
+class EscalaManifesto(ParseXML):
+    _tag = 'numeroEscalaMercante'
+
+    def __init__(self, manifesto: Manifesto):
+        self.tipoMovimento = manifesto.tipoMovimento
+        self.manifesto = manifesto.numero
+        self.escala: str = ''
+
+
+    def _parse_node(self, node):
+        """Esta classe não está em subnode. A lista é o próprio node pai."""
+        self.escala = node.text
+
 
 classes = {'conhecimentosEmbarque': Conhecimento,
            'manifestosCarga': Manifesto,
            'itensCarga': ItemCarga,
            'exclusoesEscala': ExclusaoEscala}
 
-classes_em_lista = {'manifestosCarga': ConteinerVazio,
-                    'itensCarga': NCMItemCarga}
+classes_em_lista = {'manifestosCarga': [ConteinerVazio, EscalaManifesto],
+                    'itensCarga': [NCMItemCarga]}

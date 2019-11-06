@@ -12,7 +12,7 @@ import requests
 import sqlalchemy
 from datetime import datetime, timedelta
 
-from collections import Counter
+from collections import Counter, defaultdict
 from xml.etree import ElementTree
 
 from ajna_commons.flask.log import logger
@@ -91,28 +91,31 @@ def processa_classes_em_lista(engine, lista_arquivos):
     for arquivo in lista_arquivos:
         xtree = ElementTree.parse(os.path.join(mercante.MERCANTE_DIR, arquivo))
         xroot = xtree.getroot()
-        objetos = []
+        objetos = defaultdict(list)
         for node in xroot:
-            classe = mercante.classes_em_lista.get(node.tag)
-            if classe:
-                classe_pai = mercante.classes.get(node.tag)
-                objeto_pai = classe_pai()
-                objeto_pai._parse_node(node)
-                tag_classe = classe._tag
-                for subnode in node.findall(tag_classe):
-                    count_objetos[classe] += 1
-                    objeto = classe(objeto_pai)
-                    objeto._parse_node(subnode)
-                    objetos.append(objeto._to_dict())
+            classes = mercante.classes_em_lista.get(node.tag)
+            if classes:
+                for classe in classes:
+                    classe_pai = mercante.classes.get(node.tag)
+                    objeto_pai = classe_pai()
+                    objeto_pai._parse_node(node)
+                    tag_classe = classe._tag
+                    for subnode in node.findall(tag_classe):
+                        count_objetos[classe] += 1
+                        objeto = classe(objeto_pai)
+                        objeto._parse_node(subnode)
+                        objetos[classe].append(objeto._to_dict())
         if objetos and len(objetos) > 0:
-            df = pd.DataFrame(objetos)
-            classname = objeto.__class__.__name__
-            try:
-                df.reset_index()
-                df.to_sql(classname, engine, if_exists='append', index=False)
-            except Exception as err:
-                logger.error('Erro ocorrido no arquivo %s. %s' % (arquivo, err))
-                lista_erros.append(arquivo)
+            for classe, lista in objetos.items():
+                df = pd.DataFrame(lista)
+                classname = classe.__name__
+                # print(classname, len(lista))
+                try:
+                    df.reset_index()
+                    df.to_sql(classname, engine, if_exists='append', index=False)
+                except Exception as err:
+                    logger.error('Erro ocorrido no arquivo %s. %s' % (arquivo, err))
+                    lista_erros.append(arquivo)
     return count_objetos, lista_erros
 
 

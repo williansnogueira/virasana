@@ -42,6 +42,18 @@ def grava_arquivo_baixado(engine, nome, data):
 
 
 # Tabelas de lista do XML
+
+t_ManifestoEscala = Table(
+    'EscalaManifesto', metadata,
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    Column('manifesto', Text),
+    Column('escala', Text),
+    Column('tipoMovimento', Text),
+    Column('create_date', TIMESTAMP, index=True,
+           server_default=func.current_timestamp())
+)
+
+
 t_ConteinerVazio = Table(
     'ConteinerVazio', metadata,
     Column('id', BIGINT, primary_key=True, autoincrement=True),
@@ -310,6 +322,17 @@ class ConteinerVazio(Base):
     idConteinerVazio = Column(CHAR(11), index=True)
     isoConteinerVazio = Column(VARCHAR(10))
     taraConteinerVazio = Column(VARCHAR(10))
+    create_date = Column(TIMESTAMP, index=True,
+                         server_default=func.current_timestamp())
+    last_modified = Column(DateTime, index=True,
+                           onupdate=func.current_timestamp())
+
+class EscalaManifesto(Base):
+    __tablename__ = 'escalamanifestoresumo'
+    ID = Column(BIGINT,
+                primary_key=True, autoincrement=True)
+    manifesto = Column(CHAR(15))
+    escala = Column(CHAR(15))
     create_date = Column(TIMESTAMP, index=True,
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, index=True,

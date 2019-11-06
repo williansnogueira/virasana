@@ -29,7 +29,7 @@ from virasana.integracao.mercante.mercantealchemy import Conhecimento, \
     t_ManifestoEscala, EscalaManifesto
 
 
-def get_pendentes(session, origem, tipomovimento, limit=10000):
+def get_pendentes(session, origem, tipomovimento, limit=1000):
     controle = ControleResumo.get_(session, str(origem), tipomovimento)
     maxid = controle.maxid
     logger.info('%s - inicio em ID %s - tipo %s' % (origem, maxid, tipomovimento))
@@ -132,13 +132,17 @@ def mercante_resumo(engine):
               ConteinerVazio: ['manifesto', 'idConteinerVazio'],
               }
 
+    t0 = time.time()
     for origem, destino in migracoes.items():
-        t0 = time.time()
+        t1 = time.time()
         processa_resumo(engine, origem, destino, chaves[destino])
-        t = time.time()
+        t2 = time.time()
         logger.info('Resumos processados em %0.2f s' %
-                    (t - t0)
+                    (t2 - t1)
                     )
+    logger.info('FINAL: Resumos processados em %0.2f s' %
+                (t2 - t0)
+                )
     # exclui_orfaos(engine)
 
 

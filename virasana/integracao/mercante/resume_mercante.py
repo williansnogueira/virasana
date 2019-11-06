@@ -20,83 +20,82 @@ from sqlalchemy.orm import sessionmaker
 from ajna_commons.flask.conf import SQL_URI
 
 from ajna_commons.flask.log import logger
+from sqlalchemy.orm.exc import MultipleResultsFound
+
 from virasana.integracao.mercante.mercantealchemy import Conhecimento, \
     ConteinerVazio, ControleResumo, Item, Manifesto, NCMItem, \
     t_conhecimentosEmbarque, t_ConteinerVazio, t_itensCarga, \
     t_manifestosCarga, t_NCMItemCarga
 
 
-def execute_movimento(conn, destino, chaves_valores,
-                      tipoMovimento, keys, row):
-    # print(tipoMovimento)
-    # print(chaves_valores)
-    if tipoMovimento == 'E':
-        sql = destino.delete(
-        ).where(and_(*chaves_valores))
-        return conn.execute(sql)
+def get_pendentes(session, origem, tipomovimento, limit=10000):
+    controle = ControleResumo.get_(session, str(origem), tipomovimento)
+    maxid = controle.maxid
+    logger.info('%s - inicio em ID %s - tipo %s' % (origem, maxid, tipomovimento))
+    s = select([origem]).where(
+        and_(origem.c['id'] > maxid, origem.c['tipoMovimento'] == tipomovimento)
+    ).order_by(origem.c['id']).limit(limit)
+    resultproxy = session.execute(s)
+    return controle, resultproxy
+
+
+def monta_campos(destino):
+    keys = destino.__table__.columns.keys()
     keys.remove('ID')
     keys.remove('last_modified')
-    dict_campos = {key: row[key]
-                   for key in keys}
-    # Diferença entre banco MySQL e SQLite
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    dict_campos['last_modified'] = timestamp
-    if tipoMovimento == 'I':
-        sql = destino.insert()
-        # print(sql, dict_campos)
-        try:
-            return conn.execute(sql, **dict_campos)
-        except sqlalchemy.exc.IntegrityError as err:
-            print(err)
-            # TODO: Ver como resolver o problema de processar duas vezes (criar flag??)
-            pass
-    # tipoMovimento == 'A':
-    sql = destino.update(
-    ).where(and_(*chaves_valores))
-    return conn.execute(sql, **dict_campos)
+    return keys
 
 
 def processa_resumo(engine, origem, destino, chaves):
     Session = sessionmaker(bind=engine)
     session = Session()
     # Fazer INSERTS PRIMEIRO
-    tipomovimento = 'I'
-    controle = ControleResumo.get_(session, str(origem), tipomovimento)
-    maxid = controle.maxid
-    logger.info('%s - inicio em ID %s - tipo %s' % (origem, maxid, tipomovimento))
-    s = select([origem]).where(
-        and_(origem.c['id'] > maxid, origem.c['tipoMovimento'] == tipomovimento)
-    ).order_by(origem.c['id']).limit(2000)
-    cont = 0
-    resulproxy = session.execute(s)
-    keys = destino.__table__.columns.keys()
-    keys.remove('ID')
-    keys.remove('last_modified')
-    newmaxid = maxid 
-    for row in resulproxy:
-        if row['id'] > newmaxid:
-            newmaxid = row['id']
-        dict_campos = {key: row[key]
-                       for key in keys}
-        objeto = destino(**dict_campos)
-        session.add(objeto)
-        cont += 1
-        # chaves_valores = [getattr(destino, chave) == row[chave] for chave in chaves]
-        # print(numeroCEmercante)
-        # tipoMovimento = row[origem.c.tipoMovimento]
-        # result_proxy = execute_movimento(session, destino, chaves_valores,
-        #
-        #                                 tipoMovimento, destino.__table__.columns.keys(), row)
-    controle.maxid = newmaxid
-    session.add(controle)
-    session.commit()
-    return cont
+    movimentos = ['I', 'A', 'E']
+    for tipomovimento in movimentos:
+        controle, resultproxy = get_pendentes(session, origem, tipomovimento)
+        campos_destino = monta_campos(destino)
+        cont = 0
+        for row in resultproxy:
+            if row['id'] > controle.maxid:
+                controle.maxid = row['id']
+            dict_campos = {key: row[key]
+                           for key in campos_destino}
+            if tipomovimento == 'I':
+                objeto = destino(**dict_campos)
+                session.add(objeto)
+                cont += 1
+            else:  # A = Update / E = Delete
+                chaves_valores = [getattr(destino, chave) == row[chave] for chave in chaves]
+                # print(chaves_valores)
+                try:
+                    objeto = session.query(destino).filter(*chaves_valores).one_or_none()
+                    if objeto:
+                        cont += 1
+                        if tipomovimento == 'E':
+                            session.delete(objeto)
+                            if hasattr(objeto, 'filhos'):
+                                for filho in objeto.filhos:
+                                    session.delete(filho)
+                        else:
+                            for k, v in dict_campos.items():
+                                setattr(objeto, k, v)
+                except MultipleResultsFound:
+                    filtro = {chave: row[chave] for chave in chaves}
+                    logger.error(
+                        'Erro! Multiplos registros encontrados para %s com filtro %s'
+                        'Registro %s não atualizado!' %
+                        (destino.__tablename__, filtro, row['id'])
+                    )
+        session.add(controle)
+        session.commit()
+        logger.info('%s Resumos tipo %s processados' %
+                    (cont, tipomovimento)
+                    )
 
 
 def mercante_resumo(engine):
     logger.info('Iniciando resumo da base Mercante...')
-    migracoes = {t_conhecimentosEmbarque: Conhecimento}
-    {
+    migracoes = {t_conhecimentosEmbarque: Conhecimento,
                  t_manifestosCarga: Manifesto,
                  t_itensCarga: Item,
                  t_NCMItemCarga: NCMItem,
@@ -106,16 +105,16 @@ def mercante_resumo(engine):
               Manifesto: ['numero'],
               Item: ['numeroCEmercante', 'numeroSequencialItemCarga'],
               NCMItem: ['numeroCEMercante', 'codigoConteiner',
-                        'numeroSequencialItemCarga'],
+                        'numeroSequencialItemCarga', 'identificacaoNCM'],
               ConteinerVazio: ['manifesto', 'idConteinerVazio']
               }
 
     for origem, destino in migracoes.items():
         t0 = time.time()
-        cont = processa_resumo(engine, origem, destino, chaves[destino])
+        processa_resumo(engine, origem, destino, chaves[destino])
         t = time.time()
-        logger.info('%d registros processados em %0.2f s' %
-                    (cont, t - t0)
+        logger.info('Resumos processados em %0.2f s' %
+                    (t - t0)
                     )
 
 

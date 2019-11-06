@@ -77,7 +77,8 @@ def processa_classes(engine, lista_arquivos):
                 objetos.append(objeto._to_dict())
         df = pd.DataFrame(objetos)
         try:
-            df.to_sql(node.tag, engine, if_exists='append')
+            df.reset_index()
+            df.to_sql(node.tag, engine, if_exists='append', index=False)
         except Exception as err:
             logger.error('Erro ocorrido no arquivo %s. %s' % (arquivo, err))
             lista_erros.append(arquivo)
@@ -107,7 +108,8 @@ def processa_classes_em_lista(engine, lista_arquivos):
             df = pd.DataFrame(objetos)
             classname = objeto.__class__.__name__
             try:
-                df.to_sql(classname, engine, if_exists='append')
+                df.reset_index()
+                df.to_sql(classname, engine, if_exists='append', index=False)
             except Exception as err:
                 logger.error('Erro ocorrido no arquivo %s. %s' % (arquivo, err))
                 lista_erros.append(arquivo)

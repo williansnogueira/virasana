@@ -876,7 +876,6 @@ def recupera_user_filtros():
 
 def valida_form_files(form, filtro, db):
     """Lê formulário e adiciona campos ao filtro se necessário."""
-    """Lê formulário e adiciona campos ao filtro se necessário."""
     order = None
     pagina_atual = None
     if form.validate():  # configura filtro básico
@@ -898,7 +897,7 @@ def valida_form_files(form, filtro, db):
                 filtro.update(filtro_auditoria.get('filtro'))
                 order = filtro_auditoria.get('order')
         tag_escolhida = form.filtro_tags.data
-        tag_usuario = form.tag_usuario
+        tag_usuario = form.tag_usuario.data
         # print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
             filtro_tag = {'tag': tag_escolhida}
@@ -929,12 +928,13 @@ def valida_form_files(form, filtro, db):
     return filtro, pagina_atual, order
 
 
+
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files():
     """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
     db = app.config['mongodb']
-    PAGE_ROWS = 50
+    PAGE_ROWS = 2
     PAGES = 100
     lista_arquivos = []
     campos = campos_chave()

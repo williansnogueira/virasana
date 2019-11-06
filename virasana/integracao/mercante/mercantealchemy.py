@@ -8,8 +8,11 @@ from sqlalchemy.dialects.mysql import BIGINT, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 
 from ajna_commons.flask.conf import SQL_URI
+# from sqlalchemy.orm import relationship
+# from sqlachemy import ForeignKey
 
-metadata = MetaData()
+Base = declarative_base()
+metadata = Base.metadata
 
 # Tabelas auxiliares / log
 ArquivoBaixado = Table(
@@ -41,7 +44,7 @@ def grava_arquivo_baixado(engine, nome, data):
 # Tabelas de lista do XML
 t_ConteinerVazio = Table(
     'ConteinerVazio', metadata,
-    Column('index', BIGINT(20), index=True),
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('idConteinerVazio', Text),
     Column('isoConteinerVazio', Text),
     Column('manifesto', Text),
@@ -53,7 +56,7 @@ t_ConteinerVazio = Table(
 
 t_NCMItemCarga = Table(
     'NCMItemCarga', metadata,
-    Column('index', BIGINT(20), index=True),
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('codigoConteiner', Text),
     Column('codigoTipoEmbalagem', Text),
     Column('descritivo', Text),
@@ -98,7 +101,7 @@ t_conhecimentosEmbarque = Table(
 
 t_exclusoesEscala = Table(
     'exclusoesEscala', metadata,
-    Column('index', BIGINT(20), index=True),
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('dataExclusao', Text),
     Column('horaExclusao', Text),
     Column('numeroEscalaMercante', Text),
@@ -109,7 +112,7 @@ t_exclusoesEscala = Table(
 
 t_itensCarga = Table(
     'itensCarga', metadata,
-    Column('index', BIGINT(20), index=True),
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('NCM', Text),
     Column('codigoConteiner', Text),
     Column('codigoTipoEmbalagem', Text),
@@ -134,7 +137,7 @@ t_itensCarga = Table(
 
 t_manifestosCarga = Table(
     'manifestosCarga', metadata,
-    Column('index', BIGINT(20), index=True),
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('codAgenciaInformante', Text),
     Column('codigoEmpresaNavegacao', Text),
     Column('codigoTerminalCarregamento', Text),
@@ -155,15 +158,68 @@ t_manifestosCarga = Table(
            server_default=func.current_timestamp())
 )
 
+
 ### Tabelas resumo
 
-Base = declarative_base()
+
+class Escala(Base):
+    __tablename__ = 'escalasresumo'
+    ID = Column(BIGINT,
+                primary_key=True, autoincrement=True)
+    numero = Column(VARCHAR(20), unique=True)
+    # manifestos = relationship("ManifestoEscala", back_populates='escala',  cascade="delete, delete-orphan")
+
+
+class Manifesto(Base):
+    __tablename__ = 'manifestosresumo'
+    ID = Column(BIGINT,
+                primary_key=True, autoincrement=True)
+    numero = Column(VARCHAR(15), unique=True)
+    codAgenciaInformante = Column(VARCHAR(20))
+    codigoEmpresaNavegacao = Column(VARCHAR(20), index=True)
+    codigoTerminalCarregamento = Column(VARCHAR(20), index=True)
+    codigoTerminalDescarregamento = Column(VARCHAR(20), index=True)
+    dataAtualizacao = Column(VARCHAR(10))
+    dataEncerramento = Column(VARCHAR(10))
+    dataInicioOperacao = Column(VARCHAR(10))
+    horaAtualizacao = Column(VARCHAR(10))
+    numeroImoDPC = Column(VARCHAR(20))
+    numeroViagem = Column(VARCHAR(20))
+    portoCarregamento = Column(VARCHAR(20), index=True)
+    portoDescarregamento = Column(VARCHAR(20), index=True)
+    quantidadeConhecimento = Column(VARCHAR(5))
+    tipoTrafego = Column(VARCHAR(20))
+    create_date = Column(TIMESTAMP, index=True,
+                         server_default=func.current_timestamp())
+    last_modified = Column(DateTime, index=True,
+                           onupdate=func.current_timestamp())
+    # listavazios = relationship("ConteinerVazio", cascade="delete, delete-orphan")
+    # listaconhecimentos = relationship("Conhecimento", cascade="delete, delete-orphan")
+
+"""
+    escalas = relationship("ManifestoEscala",
+                           back_populates='manifesto',
+                           cascade="delete, delete-orphan")
+
+
+class ManifestoEscala(Base):
+    __tablename__ = 'manifestosescalasresumo'
+    escala_id = Column(BIGINT, ForeignKey('escalasresumo.ID'), primary_key=True)
+    manifesto_id = Column(BIGINT, ForeignKey('manifestosresumo.ID'), primary_key=True)
+    escala = relationship("Escala", back_populates='escalas',
+                           cascade="delete, delete-orphan")
+    manifesto = relationship("Manifesto", back_populates='manifestos',
+                           cascade="delete, delete-orphan")
+
+"""
 
 
 class Conhecimento(Base):
     __tablename__ = 'conhecimentosresumo'
     ID = Column(BIGINT,
                 primary_key=True, autoincrement=True)
+    numeroCEMaster = Column(VARCHAR(15), index=True)
+    numeroCEmercante = Column(VARCHAR(15), unique=True)
     codigoEmpresaNavegacao = Column(VARCHAR(20), index=True)
     codigoTerminalCarregamento = Column(VARCHAR(20), index=True)
     consignatario = Column(VARCHAR(200))
@@ -175,8 +231,6 @@ class Conhecimento(Base):
     horaAtualizacao = Column(VARCHAR(8))
     indicadorShipsConvenience = Column(VARCHAR(10))
     manifestoCE = Column(VARCHAR(15), index=True)
-    numeroCEMaster = Column(VARCHAR(15), index=True)
-    numeroCEmercante = Column(VARCHAR(15), unique=True)
     paisDestinoFinalMercante = Column(VARCHAR(10), index=True)
     portoDestFinal = Column(VARCHAR(10), index=True)
     portoOrigemCarga = Column(VARCHAR(10), index=True)
@@ -185,31 +239,8 @@ class Conhecimento(Base):
     create_date = Column(TIMESTAMP, index=True,
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, onupdate=func.current_timestamp())
-
-
-class Manifesto(Base):
-    __tablename__ = 'manifestosresumo'
-    ID = Column(BIGINT,
-                primary_key=True, autoincrement=True)
-    codAgenciaInformante = Column(VARCHAR(20))
-    codigoEmpresaNavegacao = Column(VARCHAR(20), index=True)
-    codigoTerminalCarregamento = Column(VARCHAR(20), index=True)
-    codigoTerminalDescarregamento = Column(VARCHAR(20), index=True)
-    dataAtualizacao = Column(VARCHAR(10))
-    dataEncerramento = Column(VARCHAR(10))
-    dataInicioOperacao = Column(VARCHAR(10))
-    horaAtualizacao = Column(VARCHAR(10))
-    numero = Column(VARCHAR(15), index=True)
-    numeroImoDPC = Column(VARCHAR(20))
-    numeroViagem = Column(VARCHAR(20))
-    portoCarregamento = Column(VARCHAR(20), index=True)
-    portoDescarregamento = Column(VARCHAR(20), index=True)
-    quantidadeConhecimento = Column(VARCHAR(5))
-    tipoTrafego = Column(VARCHAR(20))
-    create_date = Column(TIMESTAMP, index=True,
-                         server_default=func.current_timestamp())
-    last_modified = Column(DateTime, index=True,
-                           onupdate=func.current_timestamp())
+    # listaconteineres = relationship("Item", cascade="delete, delete-orphan")
+    # listancm = relationship("NCMItem", cascade="delete, delete-orphan")
 
 
 class Item(Base):  # Conteiner Cheio
@@ -217,9 +248,8 @@ class Item(Base):  # Conteiner Cheio
     ID = Column(BIGINT,
                 primary_key=True, autoincrement=True)
     # TODO: Confirmar que chave é esta
-    # A chave aqui é composta
-    # Provavelmente numeroCEmercante + numeroSequencialItemCarga
-    numeroCEmercante = Column(VARCHAR(15), index=True)
+    numeroCEmercante = Column(VARCHAR(15))
+        # ForeignKey('conhecimentosresumo.numeroCEmercante'))
     numeroSequencialItemCarga = Column(VARCHAR(10), index=True)
     codigoConteiner = Column(VARCHAR(11), index=True)
     NCM = Column(VARCHAR(10), index=True)
@@ -249,10 +279,8 @@ class NCMItem(Base):
     __tablename__ = 'ncmitemresumo'
     ID = Column(BIGINT,
                 primary_key=True, autoincrement=True)
-    # TODO: Confirmar que chave é esta
-    # A chave aqui é composta
-    # Provavelmente numeroCEmercante + numeroSequencialItemCarga
-    numeroCEMercante = Column(CHAR(15), index=True)
+    numeroCEMercante = Column(CHAR(15))
+    #                 ForeignKey('conhecimentosresumo.numeroCEmercante'))
     numeroSequencialItemCarga = Column(CHAR(5), index=True)
     codigoConteiner = Column(CHAR(11), index=True)
     identificacaoNCM = Column(VARCHAR(10), index=True)
@@ -269,14 +297,16 @@ class NCMItem(Base):
 
 
 Index('ix_ncmitem_chave', NCMItem.numeroCEMercante,
-      NCMItem.codigoConteiner, NCMItem.numeroSequencialItemCarga)
+      NCMItem.codigoConteiner, NCMItem.numeroSequencialItemCarga,
+      NCMItem.identificacaoNCM)
 
 
 class ConteinerVazio(Base):
     __tablename__ = 'conteinervazioresumo'
     ID = Column(BIGINT,
                 primary_key=True, autoincrement=True)
-    manifesto = Column(CHAR(15), index=True)
+    manifesto = Column(CHAR(15))
+    # ForeignKey('manifestosresumo.numero'))
     idConteinerVazio = Column(CHAR(11), index=True)
     isoConteinerVazio = Column(VARCHAR(10))
     taraConteinerVazio = Column(VARCHAR(10))

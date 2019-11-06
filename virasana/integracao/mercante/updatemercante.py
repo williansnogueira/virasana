@@ -12,11 +12,16 @@ def do():
     if len(sys.argv) > 1:
         lote = int(sys.argv[1])
         print('Lote de %s arquivos' % lote)
-    print('Baixando arquivos novos...')
     sql = create_engine(SQL_URI)
+    from virasana.integracao.mercante.mercantealchemy import Base
+    # Base.metadata.drop_all(sql)
+    # Base.metadata.create_all(sql)
+    print('Baixando arquivos novos...')
     # get_arquivos_novos(sql)
+    print('Processando XML...')
     xml_para_mercante(sql, lote)
-    # mercante_resumo(sql)
+    print('Fazendo resumo operações...')
+    mercante_resumo(sql)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ setup(
         'Flask-BootStrap',
         'Flask-Login',
         'Flask-cors',
+        'flask-jwt-extended',
         'Flask-nav',
         'Flask-session',
         'Flask-wtf',

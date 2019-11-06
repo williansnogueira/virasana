@@ -934,7 +934,7 @@ def valida_form_files(form, filtro, db):
 def files():
     """Recebe parâmetros, aplica no GridFS, retorna a lista de arquivos."""
     db = app.config['mongodb']
-    PAGE_ROWS = 2
+    PAGE_ROWS = 50
     PAGES = 100
     lista_arquivos = []
     campos = campos_chave()

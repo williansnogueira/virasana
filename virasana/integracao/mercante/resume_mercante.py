@@ -115,14 +115,13 @@ def exclui_orfaos(engine):
 
 def mercante_resumo(engine):
     logger.info('Iniciando resumo da base Mercante...')
-    migracoes = {t_ManifestoEscala: EscalaManifesto}
-    {
-        t_manifestosCarga: Manifesto,
-        t_conhecimentosEmbarque: Conhecimento,
-        t_itensCarga: Item,
-        t_NCMItemCarga: NCMItem,
-        t_ConteinerVazio: ConteinerVazio,
-    }
+    migracoes = {t_ManifestoEscala: EscalaManifesto,
+                 t_manifestosCarga: Manifesto,
+                 t_conhecimentosEmbarque: Conhecimento,
+                 t_itensCarga: Item,
+                 t_NCMItemCarga: NCMItem,
+                 t_ConteinerVazio: ConteinerVazio,
+                 }
 
     chaves = {EscalaManifesto: ['manifesto', 'escala'],
               Manifesto: ['numero'],

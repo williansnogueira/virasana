@@ -31,6 +31,7 @@ from virasana.integracao.carga2.carga2 import do_update_carga
 from virasana.integracao import atualiza_stats, \
     carga, get_service_password, info_ade02, xmli
 from virasana.integracao.mercante import processa_xml_mercante
+from virasana.integracao.mercante import resume_mercante
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
 from virasana.models import anomalia_lote
@@ -96,8 +97,9 @@ def periodic_updates(db, connection, lote=2000):
     # TODO: Testar e se funcionar colocar a nova integração do CARGA
     #  (linha comentadao abaixo) e tirar a antiga (próxima linha)
     # do_update_carga(db)
-    # processa_xml_mercante.get_arquivos_novos(connection)
-    # processa_xml_mercante.xml_para_mercante(connection)
+    processa_xml_mercante.get_arquivos_novos(connection)
+    processa_xml_mercante.xml_para_mercante(connection)
+    resume_mercante.
     carga.dados_carga_grava_fsfiles(db, lote * 10, dezdias)
     anomalia_lote.processa_zscores(db, cincodias, ontem)
     info_ade02.adquire_pesagens(db, cincodias, ontem)

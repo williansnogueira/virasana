@@ -13,9 +13,6 @@ def do():
         lote = int(sys.argv[1])
         print('Lote de %s arquivos' % lote)
     sql = create_engine(SQL_URI)
-    from virasana.integracao.mercante.mercantealchemy import Base
-    # Base.metadata.drop_all(sql)
-    # Base.metadata.create_all(sql)
     print('Baixando arquivos novos...')
     get_arquivos_novos(sql)
     print('Processando XML...')

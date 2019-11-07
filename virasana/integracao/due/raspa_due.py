@@ -10,7 +10,7 @@ SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="
 DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterDueComItensResumidos?due="
 
-VIRASANA_URL = "http://10.68.64.12/virasana/"
+VIRASANA_URL = "https://ajna.labin.rf08.srf/virasana/"
 
 
 def raspa_containers_sem_due(
@@ -28,7 +28,7 @@ def raspa_containers_sem_due(
                   {'metadata.numeroinformado': 1,
                    'metadata.dataescaneamento': 1}
               }
-    r = requests.post(virasana_url + "grid_data", json=params)
+    r = requests.post(virasana_url + "grid_data", json=params, verify=False)
     lista_containeres = list(r.json())
     conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
                        for linha in lista_containeres}
@@ -175,6 +175,7 @@ if __name__ == '__main__':
                     lista_dues.append({'numero': due, **pacote})
             if numeros_dues and len(numeros_dues) > 0:
                 pacote_carregamento[_id] = lista_dues
-        r = requests.post(VIRASANA_URL + "dues/update", json=pacote_carregamento)
+        r = requests.post(VIRASANA_URL + "dues/update",
+                          json=pacote_carregamento, verify=False)
         print(r.status_code)
         print(r.text)

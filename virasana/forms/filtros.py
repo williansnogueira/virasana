@@ -33,7 +33,7 @@ class FormFiltro(FlaskForm):
         key = 'filtros' + current_user.id
         self.filtro_personalizado = g.get(key)
 
-    def valida(self, filtro, db):
+    def valida(self):
         """Lê formulário e adiciona campos ao filtro se necessário."""
         if self.validate():  # configura filtro básico
             self.filtro = {}

@@ -80,7 +80,7 @@ def configure_app(mongodb):
     app.config['mongodb'] = mongodb
     try:
         img_search = None
-        # img_search = ImageSearch(mongodb)
+        img_search = ImageSearch(mongodb)
         app.config['img_search'] = img_search
     except (IOError, FileNotFoundError):
         pass

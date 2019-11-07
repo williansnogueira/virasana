@@ -38,6 +38,7 @@ from wtforms import (BooleanField, DateField, FloatField, IntegerField,
 from wtforms.validators import DataRequired, optional
 
 from virasana.forms.auditoria import FormAuditoria, SelectAuditoria
+from virasana.forms.filtros import FormFiltro
 from virasana.integracao.due import due_mongo
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
@@ -1036,10 +1037,10 @@ def lotes_anomalia():
     PAGE_ROWS = 50
     PAGES = 100
     conhecimentos = []
-    form = LotesForm(start=date.today() - timedelta(days=10),
+    form = FormFiltro(start=date.today() - timedelta(days=10),
                      end=date.today())
     if request.method == 'POST':
-        form = LotesForm(**request.form)
+        form = FormFiltro(**request.form)
         # print(form)
         if form.validate():
             numero = form.numero.data

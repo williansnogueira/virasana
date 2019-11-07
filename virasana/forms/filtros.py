@@ -37,7 +37,7 @@ class FormFiltro(FlaskForm):
         """Lê formulário e adiciona campos ao filtro se necessário."""
         if self.validate():  # configura filtro básico
             self.filtro = {}
-            pagina_atual = self.pagina_atual.data
+            pagina_atual = self.pagina_atual
             numero = self.numero.data
             start = self.start.data
             end = self.end.data

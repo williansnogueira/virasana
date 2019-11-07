@@ -46,7 +46,8 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  summary,
                                  TIPOS_GRIDFS)
 from virasana.integracao.padma import consulta_padma
-from virasana.models.anomalia_lote import get_conhecimentos_zscore, get_ids_score_conhecimento_zscore
+from virasana.models.anomalia_lote import get_conhecimentos_filtro, \
+    get_ids_score_conhecimento_zscore
 from virasana.models.auditoria import Auditoria
 from virasana.models.image_search import ImageSearch
 from virasana.models.models import Ocorrencias, Tags
@@ -78,9 +79,9 @@ def configure_app(mongodb):
     user_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
     try:
-        img_search = ImageSearch(mongodb)
+        img_search = None
+        # img_search = ImageSearch(mongodb)
         app.config['img_search'] = img_search
-        # pass
     except (IOError, FileNotFoundError):
         pass
     app.config['text_search'] = TextSearch(mongodb)
@@ -1042,18 +1043,8 @@ def lotes_anomalia():
     if request.method == 'POST':
         form = FormFiltro(**request.form)
         # print(form)
-        if form.validate():
-            numero = form.numero.data
-            if numero:
-                conhecimentos_anomalia = [numero]
-            else:
-                start = form.start.data
-                end = form.end.data
-                zscore = form.zscore.data
-                start = datetime.combine(start, datetime.min.time())
-                end = datetime.combine(end, datetime.max.time())
-                conhecimentos_anomalia = get_conhecimentos_zscore(
-                    db, start, end, min_zscore=zscore)
+        if form.valida():
+            conhecimentos_anomalia = get_conhecimentos_filtro(db, form.filtro)
             # print(start, end, zscore, conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)

@@ -53,3 +53,5 @@ class FormFiltro(FlaskForm):
                     {'$regex': '^' + mongo_sanitizar(self.numero), '$options': 'i'}
             if alerta:
                 self.filtro['metadata.xml.alerta'] = True
+            return True
+        return False

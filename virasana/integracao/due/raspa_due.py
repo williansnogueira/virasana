@@ -90,16 +90,19 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
 
 def monta_due_ajna(due):
     def get_dados_recinto(recinto_dict):
-        result = {}
-        result['codigo'] = recinto_dict.get('codigo')
-        depositario = recinto_dict.get('depositario')
-        if depositario:
-            result['depositario'] = depositario.get('depositario')
-            result['nome'] = depositario.get('nome')
-            result['descricao'] = depositario.get('descricao')
-            unidade = depositario.get('unidadeLocalRFB')
-            if unidade:
-                unidadeLocalRFB = depositario.get('codigo')
+        try:
+            result = {}
+            result['codigo'] = recinto_dict.get('codigo')
+            depositario = recinto_dict.get('depositario')
+            if depositario:
+                result['depositario'] = depositario.get('depositario')
+                result['nome'] = depositario.get('nome')
+                result['descricao'] = depositario.get('descricao')
+                unidade = depositario.get('unidadeLocalRFB')
+                if unidade:
+                    unidadeLocalRFB = depositario.get('codigo')
+        except AttributeError:
+            return None
 
         return result
 

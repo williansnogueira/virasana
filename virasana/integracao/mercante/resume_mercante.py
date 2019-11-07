@@ -66,8 +66,9 @@ def processa_resumo(engine, origem, destino, chaves):
             dict_campos = {key: row[key]
                            for key in campos_destino}
             if tipomovimento == 'I':
-                objeto = destino(**dict_campos)
-                session.add(objeto)
+                # objeto = destino(**dict_campos)
+                # session.add(objeto)
+                destino.__table__.insert().prefix_with('IGNORE').values(**dict_campos)
                 cont += 1
             else:  # A = Update / E = Delete
                 chaves_valores = [getattr(destino, chave) == row[chave] for chave in chaves]

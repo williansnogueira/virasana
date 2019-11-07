@@ -25,8 +25,7 @@ class FormFiltro(FlaskForm):
     end = DateField('End', validators=[optional()])
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     zscore = FloatField('Z-Score', validators=[optional()], default=3.)
-    order = None
-    pagina_atual = None
+    pagina_atual = IntegerField('Pagina', validators=[optional()], default=1)
 
     def recupera_filtro_personalizado(self):
         """Usa variável global para guardar filtros personalizados entre posts."""
@@ -37,7 +36,7 @@ class FormFiltro(FlaskForm):
         """Lê formulário e adiciona campos ao filtro se necessário."""
         if self.validate():  # configura filtro básico
             self.filtro = {}
-            pagina_atual = self.pagina_atual
+            pagina_atual = self.pagina_atual.data
             numero = self.numero.data
             start = self.start.data
             end = self.end.data

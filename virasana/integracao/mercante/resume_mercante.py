@@ -29,7 +29,7 @@ from virasana.integracao.mercante.mercantealchemy import Conhecimento, \
     t_ManifestoEscala, EscalaManifesto
 
 
-def get_pendentes(session, origem, tipomovimento, limit=1000):
+def get_pendentes(session, origem, tipomovimento, limit=20000):
     controle = ControleResumo.get_(session, str(origem), tipomovimento)
     maxid = controle.maxid
     logger.info('%s - inicio em ID %s - tipo %s' % (origem, maxid, tipomovimento))
@@ -68,6 +68,7 @@ def processa_resumo(engine, origem, destino, chaves):
             if tipomovimento == 'I':
                 objeto = destino(**dict_campos)
                 session.add(objeto)
+                # destino.__table__.insert().prefix_with('IGNORE').values(**dict_campos)
                 cont += 1
             else:  # A = Update / E = Delete
                 chaves_valores = [getattr(destino, chave) == row[chave] for chave in chaves]

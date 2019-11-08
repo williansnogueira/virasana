@@ -25,6 +25,7 @@ class FormFiltro(FlaskForm):
     end = DateField('End', validators=[optional()])
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     zscore = FloatField('Z-Score', validators=[optional()], default=3.)
+    pagina_atual = IntegerField('Pagina', validators=[optional()], default=1)
     pagina_atual = IntegerField('Pagina', default=1)
     order = None
 
@@ -53,5 +54,5 @@ class FormFiltro(FlaskForm):
                     {'$regex': '^' + mongo_sanitizar(self.numero), '$options': 'i'}
             if alerta:
                 self.filtro['metadata.xml.alerta'] = True
-
-
+            return True
+        return False

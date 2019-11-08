@@ -73,13 +73,9 @@ def get_conhecimentos_um_ncm(db, inicio: datetime, fim: datetime) -> set:
     return result
 
 
-def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) -> set:
-    """Consulta apenas contêineres(imagens) com um NCM e retorna seus conhecimentos."""
+def get_conhecimentos_filtro(db, query) -> set:
+    """Consulta imagens com o filtro passodo e retorna os conhecimentos."""
     result = set()
-    query = {'metadata.contentType': 'image/jpeg',
-             'metadata.zscore': {'$gte': min_zscore},
-             'metadata.dataescaneamento': {'$gte': inicio, '$lt': fim}
-             }
     projection = {'metadata.carga.conhecimento': 1}
     cursor = db['fs.files'].find(query, projection)
     for linha in cursor:
@@ -93,6 +89,18 @@ def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) 
                     conhecimento = conhecimento.get('conhecimento')
                     result.add(conhecimento)
     return result
+
+
+def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) -> set:
+    """Consulta apenas contêineres(imagens) com um NCM e retorna seus conhecimentos."""
+    result = set()
+    query = {'metadata.contentType': 'image/jpeg',
+             'metadata.zscore': {'$gte': min_zscore},
+             'metadata.dataescaneamento': {'$gte': inicio, '$lt': fim}
+             }
+    return get_conhecimentos_filtro(db, query)
+
+
 
 
 def get_indexes_and_ids_conhecimentos(db, conhecimentos: list):

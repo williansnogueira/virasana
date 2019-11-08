@@ -1023,25 +1023,25 @@ def lotes_anomalia():
     PAGE_ROWS = 50
     PAGES = 100
     conhecimentos = []
+    npaginas = 0
+    count = 0
     form = FormFiltro(start=date.today() - timedelta(days=10),
                       end=date.today())
+    form.initialize(db)
+    user_filtros = {}
     if request.method == 'POST':
-        form = LotesForm(**request.form)
-        # print(form)
+        form = FormFiltro(**request.form)
+        form.initialize(db)
         if form.valida():
-            numero = form.numero.data
-            if numero:
-                conhecimentos_anomalia = [numero]
-            else:
-                start = form.start.data
-                end = form.end.data
-                zscore = form.zscore.data
-                start = datetime.combine(start, datetime.min.time())
-                end = datetime.combine(end, datetime.max.time())
-                conhecimentos_anomalia = get_conhecimentos_zscore(
-                    db, start, end, min_zscore=zscore)
+            skip = (form.pagina_atual.data - 1) * PAGE_ROWS
+            print('skip *****************', skip)
+            conhecimentos_anomalia, query = get_conhecimentos_filtro(
+                db, form.filtro, PAGE_ROWS, skip)
+            count = db['fs.files'].count_documents(form.filtro, limit=PAGES * PAGE_ROWS)
+            print(conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)
+            npaginas = (count - 1) // PAGE_ROWS + 1
             # TODO: Refatorar para uma classe, modulo ou funções a lógica
             if conhecimentos_idszscore:
                 idsnormais = []
@@ -1071,8 +1071,9 @@ def lotes_anomalia():
     return render_template('search_lotes.html',
                            conhecimentos=conhecimentos,
                            oform=form,
-                           npaginas=1,
-                           nregistros=len(conhecimentos))
+                           npaginas=npaginas,
+                           nregistros=count,
+                           filtros=user_filtros)
 
 
 @app.route('/cemercante/<numero>')

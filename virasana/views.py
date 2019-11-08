@@ -929,7 +929,6 @@ def valida_form_files(form, filtro, db):
     return filtro, pagina_atual, order
 
 
-
 @app.route('/files', methods=['GET', 'POST'])
 @login_required
 def files():
@@ -1015,20 +1014,6 @@ def files():
                            nregistros=count)
 
 
-class LotesForm(FlaskForm):
-    """Valida pesquisa de arquivos.
-
-    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
-    search_lotes.html
-
-    """
-    numero = StringField(u'Número', validators=[optional()], default='')
-    start = DateField('Start', validators=[optional()])
-    end = DateField('End', validators=[optional()])
-    zscore = FloatField('Z-Score', validators=[optional()], default=3.)
-    pagina_atual = IntegerField('Pagina', validators=[optional()], default=1)
-
-
 @app.route('/lotes_anomalia', methods=['GET', 'POST'])
 @login_required
 def lotes_anomalia():
@@ -1038,11 +1023,11 @@ def lotes_anomalia():
     PAGES = 100
     conhecimentos = []
     form = FormFiltro(start=date.today() - timedelta(days=10),
-                     end=date.today())
+                      end=date.today())
     if request.method == 'POST':
         form = FormFiltro(**request.form)
         # print(form)
-        if form.validate():
+        if form.valida():
             numero = form.numero.data
             if numero:
                 conhecimentos_anomalia = [numero]

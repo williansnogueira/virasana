@@ -25,19 +25,19 @@ class FormFiltro(FlaskForm):
     end = DateField('End', validators=[optional()])
     alerta = BooleanField('Alerta', validators=[optional()], default=False)
     zscore = FloatField('Z-Score', validators=[optional()], default=3.)
+    pagina_atual = IntegerField('Pagina', default=1)
     order = None
-    pagina_atual = None
 
     def recupera_filtro_personalizado(self):
         """Usa variável global para guardar filtros personalizados entre posts."""
         key = 'filtros' + current_user.id
         self.filtro_personalizado = g.get(key)
 
-    def valida(self, filtro, db):
+    def valida(self, db=None):
         """Lê formulário e adiciona campos ao filtro se necessário."""
         if self.validate():  # configura filtro básico
             self.filtro = {}
-            pagina_atual = self.pagina_atual.data
+            self.pagina_atual = self.pagina_atual.data
             numero = self.numero.data
             start = self.start.data
             end = self.end.data
@@ -53,3 +53,5 @@ class FormFiltro(FlaskForm):
                     {'$regex': '^' + mongo_sanitizar(self.numero), '$options': 'i'}
             if alerta:
                 self.filtro['metadata.xml.alerta'] = True
+
+

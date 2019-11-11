@@ -31,33 +31,37 @@ class Auditoria:
               },
         '3': {'filtro': {'metadata.alertapeso': True},
               'order': [('metadata.diferencapeso', -1)],
-              'descricao': 'Contêineres com maiores divergências de peso'
+              'descricao': 'Contêineres com maiores divergências de peso (Imagem)'
               },
-        '4': {'filtro': {'metadata.contentType': 'image/jpeg',
+        '4': {'filtro': {'metadata.alertapeso2': True},
+              'order': [('metadata.diferencapeso2', -1)],
+              'descricao': 'Contêineres com maiores divergências de peso (Balança)'
+              },
+        '5': {'filtro': {'metadata.contentType': 'image/jpeg',
                          'metadata.predictions.bbox': {'$exists': False}},
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem contêiner detectado'
               },
-        '5': {'filtro': carga.FALTANTES,
+        '6': {'filtro': carga.FALTANTES,
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem informação do CARGA integrada'
               },
-        '6': {'filtro': xmli.FALTANTES,
+        '7': {'filtro': xmli.FALTANTES,
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem informação do XML integrada'
               },
-        '7': {'filtro': info_ade02.FALTANTES,
+        '8': {'filtro': info_ade02.FALTANTES,
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens sem pesagem integrada'
               },
-        '8': {'filtro': {'metadata.contentType': 'image/jpeg',
+        '9': {'filtro': {'metadata.contentType': 'image/jpeg',
                          'metadata.carga.ncm': {'$size': 1},
                          'metadata.carga.container.indicadorusoparcial': {'$ne': 's'}
                          },
               'order': [('metadata.dataescaneamento', 1)],
               'descricao': 'Imagens com NCM único'
               },
-        '9': {'filtro': {'metadata.contentType': 'image/jpeg',
+        '10': {'filtro': {'metadata.contentType': 'image/jpeg',
                          'metadata.carga.ncm': {'$size': 2},
                          'metadata.carga.container.indicadorusoparcial': {'$ne': 's'}
                          },

@@ -13,6 +13,27 @@ DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterD
 VIRASANA_URL = "https://ajna.labin.rf08.srf/virasana/"
 
 
+def raspa_containers_vazios(
+    datainicial: str, datafinal: str,
+    virasana_url: str = VIRASANA_URL) -> list:
+    print('Conectando virasana')
+    params = {'query':
+                  {'metadata.dataescaneamento': {'$gte': datainicial, '$lte': datafinal},
+                   'metadata.contentType': 'image/jpeg',
+                   'metadata.due': {'$exists': False},
+                   'metadata.carga.vazio': True
+                   },
+              'projection':
+                  {'metadata.numeroinformado': 1,
+                   'metadata.dataescaneamento': 1}
+              }
+    r = requests.post(virasana_url + "grid_data", json=params, verify=False)
+    lista_containeres = list(r.json())
+    conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
+                       for linha in lista_containeres}
+    print('%s Contêineres recuperados.' % len(lista_containeres))
+    return conteineres_ids
+
 def raspa_containers_sem_due(
         datainicial: str, datafinal: str,
         tipomanifesto: str = None,

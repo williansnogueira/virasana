@@ -1,0 +1,13 @@
+<div id="bottom_buttons" class="row">
+    <div class="col-sm-6">
+    </div>
+    <div class="col-sm-3">
+        Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
+    </div>
+    <div class="col-sm-3">
+        <button onclick="next_page(-1)" id="btn_page1b" type="button" class="btn btn-default btn-info"> < </button>
+        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2b" type="button" class="btn btn-default btn-info"> << </button>
+        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3b" type="button" class="btn btn-default btn-info"> >> </button>
+        <button onclick="next_page(1)" id="btn_page4b" type="button" class="btn btn-default btn-info"> > </button>
+    </div>
+</div>

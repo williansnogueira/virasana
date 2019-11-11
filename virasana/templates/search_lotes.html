@@ -2,11 +2,11 @@
 <div id="main" class="container-fluid">
     <div id="top" class="row">
         <div id="accordion">
-            <h2>Filtros</h2>
+            <h3>Filtros</h3>
             <div id="filtros">
                 {% include "formfiltro.html" %}
             </div>
-            <h2>Resultados</h2>
+            <h3>Resultados</h3>
             <div id="resultados" class="row">
                 {% include "buttons.html" %}
                 <div id="list" class="row">
@@ -101,9 +101,10 @@
     }
     $(document).ready(function () {
         $(function () {
-            $("#accordion").accordion({
-                heightStyle: "content",
-                active: 1
+            $( "#accordion > div" ).accordion({
+                header: "h3",
+                active: false,
+                collapsible: true
             });
         });
      });

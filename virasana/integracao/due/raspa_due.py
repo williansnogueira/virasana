@@ -1,4 +1,6 @@
 import json
+from json import JSONDecodeError
+
 import requests
 import time
 from datetime import datetime, time
@@ -13,7 +15,7 @@ DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterD
 VIRASANA_URL = "https://ajna.labin.rf08.srf/virasana/"
 
 
-def raspa_containers_vazios(
+def raspa_containers_vazios_sem_due(
     datainicial: str, datafinal: str,
     virasana_url: str = VIRASANA_URL) -> list:
     print('Conectando virasana')
@@ -28,10 +30,16 @@ def raspa_containers_vazios(
                    'metadata.dataescaneamento': 1}
               }
     r = requests.post(virasana_url + "grid_data", json=params, verify=False)
-    lista_containeres = list(r.json())
-    conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
+    try:
+        lista_containeres = list(r.json())
+        conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
                        for linha in lista_containeres}
-    print('%s Contêineres recuperados.' % len(lista_containeres))
+        print('%s Contêineres recuperados.' % len(lista_containeres))
+    except JSONDecodeError as err:
+        print(r.text)
+        # logger.error(err, exc_info=True)
+        # logger.error(r.text)
+        return [err, r.text]
     return conteineres_ids
 
 def raspa_containers_sem_due(

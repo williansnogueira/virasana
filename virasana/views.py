@@ -1029,16 +1029,19 @@ def lotes_anomalia():
     form = FormFiltro(start=date.today() - timedelta(days=10),
                       end=date.today())
     form.initialize(db)
-    user_filtros = {}
+    ## TODO: incluir lógica de user_filtros (filro personalizado) no form
+    filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
         form = FormFiltro(**request.form)
         form.initialize(db)
         if form.valida():
             skip = (form.pagina_atual.data - 1) * PAGE_ROWS
             print('skip *****************', skip)
+            # Merge user_filtros
+            filtro = {**form.filtro, **filtro}
             conhecimentos_anomalia, query = get_conhecimentos_filtro(
-                db, form.filtro, PAGE_ROWS, skip)
-            count = db['fs.files'].count_documents(form.filtro, limit=PAGES * PAGE_ROWS)
+                db, filtro, PAGE_ROWS, skip)
+            count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
             print(conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)

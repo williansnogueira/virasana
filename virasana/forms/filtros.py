@@ -41,6 +41,7 @@ class FormFiltro(FlaskForm):
                                    validators=[optional()], default='')
 
     def initialize(self, db):
+        self.db = db
         self.auditoria_object = Auditoria(db)
         self.tags_object = Tags(db)
         self.filtro_tags.choices = self.tags_object.tags_text

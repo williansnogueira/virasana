@@ -189,17 +189,6 @@
 {% endblock %} {% block scripts %} {{super()}}
 <script type="text/javascript">
 
-    function adicionar_campo() {
-        var campo = $("#campos").val();
-        var valor = $("#valor").val();
-        if ((campo != '') && (valor != '')) {
-            window.location.assign('files?campo=' + campo + '&valor=' + valor)
-        }
-    }
-
-    function exclui_campo(campo) {
-        window.location.assign('files?campo=' + campo)
-    }
     function next_page(increment) {
         var page = Number($('#pagina_atual').val());
         new_page = page + increment;

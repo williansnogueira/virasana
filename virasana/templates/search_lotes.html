@@ -2,11 +2,11 @@
 <div id="main" class="container-fluid">
     <div id="top" class="row">
         <div id="accordion">
-            <h3>Filtros</h3>
+            <h3 class="accordion-header">Filtros</h3>
             <div id="filtros">
                 {% include "formfiltro.html" %}
             </div>
-            <h3>Resultados</h3>
+            <h3 class="accordion-header">Resultados</h3>
             <div id="resultados" class="row">
                 {% include "buttons.html" %}
                 <div id="list" class="row">
@@ -32,15 +32,15 @@
                             </td>
                             <td>
                                 <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
-                                    <img src="image/{{ conhecimento['idnormal'] }}" alt="Sem imagem" width="auto" height="auto"
-                                         style="border: 1px solid #000; max-width:400px; max-height:240px;"
+                                    <img src="image/{{ conhecimento['idnormal'] }}?contrast={{ oform.contrast.data }}&color={{ oform.color.data }}" alt="Sem imagem" width="auto" height="auto"
+                                         style="border: 1px solid #000; max-width:480px; max-height:300px;"
                                     onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
                                     />
                                 </a>
                             </td>
                             <td>
                                 <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
-                                    <img src="image/{{ conhecimento['idanomalo'] }}" alt="Sem imagem" width="auto" height="auto"
+                                    <img src="image/{{ conhecimento['idanomalo'] }}?contrast={{ oform.contrast.data }}&color={{ oform.color.data }}" alt="Sem imagem" width="auto" height="auto"
                                          style="border: 1px solid #000; max-width:400px; max-height:240px;"
                                     onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
                                     />
@@ -99,14 +99,51 @@
     function clearMsg(img) {
         img.title = "";
     }
-    $(document).ready(function () {
-        $(function () {
-            $( "#accordion > div" ).accordion({
-                header: "h3",
-                active: false,
-                collapsible: true
-            });
+
+        function table_filtros(filtros){
+        $('#filtro_personalizado_table tbody tr').remove();
+        $.each(filtros, function(i, filtro) {
+            $('<tr>').append(
+            $('<td>').text(filtro.campo),
+            $('<td>').text(filtro.valor),
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo(\''+ filtro.campo + '\')" />')
+            ).appendTo('#filtro_personalizado_table');
         });
+
+    }
+
+    function exclui_campo(campo) {
+            $.getJSON('filtro_personalizado', {
+              campo: campo,
+            }, function(filtros) {
+              table_filtros(filtros);
+            });
+    }
+
+    $(function() {
+        var filtro_personalizado = function(e) {
+          $.getJSON('filtro_personalizado', {
+            campo: $('#campos').val(),
+            valor: $('#valor').val(),
+          }, function(filtros) {
+            table_filtros(filtros);
+            $('#campos').focus().select();
+          });
+          return false;
+        };
+        $('button#btnfiltropersonalizado').bind('click', filtro_personalizado);
+      });
+
+
+    $(document).ready(function () {
+        $('#accordion').accordion({ collapsible:true, active:false, heightStyle: "content"});
+        $('#accordion h3.ui-accordion-header').click(function(){
+            var _this = $(this);
+            _this.next().slideToggle();
+            return false;
+        });
+        var headers = $('#accordion h3.ui-accordion-header');
+        headers.next().slideDown();
      });
 
 </script> {% endblock %}

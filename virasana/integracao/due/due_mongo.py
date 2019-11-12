@@ -10,7 +10,7 @@ def update_due(db, dues):
         print('with %s ' % json.dumps(due)[:50])
         result = db.fs.files.update_one(
             {'_id': ObjectId(_id)},
-            {'$set': {'metadata.due': due}}
+            {'$set': {'metadata.due': due, 'metadata.carga.vazio': False}}
         )
         print(result)
 

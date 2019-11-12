@@ -102,14 +102,14 @@ def exclui_orfaos(engine):
     session = Session()
     sql_delete_itens = 'DELETE FROM itensresumo WHERE numeroCEMercante not in (SELECT numeroCEMercante from conhecimentosresumo);'
     sql_delete_ncmitem = 'DELETE FROM ncmitemresumo WHERE numeroCEMercante not in (SELECT numeroCEMercante from conhecimentosresumo);'
-    sql_delete_conhecimento = 'DELETE FROM conhecimentosresumo WHERE manifestoCE not in (SELECT numero from manifestosresumo);'
-    sql_delete_conteinervazio = 'DELETE FROM conteinervazioresumo WHERE manifesto not in (SELECT numero from manifestosresumo);'
-    sql_delete_escalamanifesto = 'DELETE FROM escalamanifestoresumo WHERE escala not in (SELECT escala from escalaeresumo);'
-    sql_delete_manifesto = 'DELETE FROM manifestosresumo WHERE numero not in (SELECT manifesto from escalamanifestoresumo);'
-    session.execute(sql_delete_escalamanifesto)
-    session.execute(sql_delete_manifesto)
-    session.execute(sql_delete_conteinervazio)
-    session.execute(sql_delete_conhecimento)
+    # sql_delete_conhecimento = 'DELETE FROM conhecimentosresumo WHERE manifestoCE not in (SELECT numero from manifestosresumo);'
+    # sql_delete_conteinervazio = 'DELETE FROM conteinervazioresumo WHERE manifesto not in (SELECT numero from manifestosresumo);'
+    # sql_delete_escalamanifesto = 'DELETE FROM escalamanifestoresumo WHERE escala not in (SELECT escala from escalaeresumo);'
+    # sql_delete_manifesto = 'DELETE FROM manifestosresumo WHERE numero not in (SELECT manifesto from escalamanifestoresumo);'
+    # session.execute(sql_delete_escalamanifesto)
+    # session.execute(sql_delete_manifesto)
+    # session.execute(sql_delete_conteinervazio)
+    # session.execute(sql_delete_conhecimento)
     session.execute(sql_delete_itens)
     session.execute(sql_delete_ncmitem)
 

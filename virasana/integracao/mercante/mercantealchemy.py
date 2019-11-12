@@ -200,7 +200,7 @@ class Manifesto(Base):
     portoCarregamento = Column(VARCHAR(20), index=True)
     portoDescarregamento = Column(VARCHAR(20), index=True)
     quantidadeConhecimento = Column(VARCHAR(5))
-    tipoTrafego = Column(VARCHAR(20))
+    tipoTrafego = Column(VARCHAR(20), index=True)
     create_date = Column(TIMESTAMP, index=True,
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, index=True,
@@ -247,7 +247,7 @@ class Conhecimento(Base):
     portoDestFinal = Column(VARCHAR(10), index=True)
     portoOrigemCarga = Column(VARCHAR(10), index=True)
     tipoBLConhecimento = Column(VARCHAR(10), index=True)
-    tipoTrafego = Column(VARCHAR(10))
+    tipoTrafego = Column(VARCHAR(10), index=True)
     create_date = Column(TIMESTAMP, index=True,
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, onupdate=func.current_timestamp())
@@ -277,7 +277,7 @@ class Item(Base):  # Conteiner Cheio
     pesoBruto = Column(VARCHAR(20))
     qtdeItens = Column(VARCHAR(10))
     tara = Column(VARCHAR(20))
-    tipoItemCarga = Column(VARCHAR(20))
+    tipoItemCarga = Column(VARCHAR(20), index=True)
     create_date = Column(TIMESTAMP, index=True,
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, index=True,

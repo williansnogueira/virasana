@@ -1025,6 +1025,7 @@ def lotes_anomalia():
     conhecimentos = []
     npaginas = 0
     count = 0
+    campos = campos_chave()
     form = FormFiltro(start=date.today() - timedelta(days=10),
                       end=date.today())
     form.initialize(db)
@@ -1073,7 +1074,8 @@ def lotes_anomalia():
                            oform=form,
                            npaginas=npaginas,
                            nregistros=count,
-                           filtros=user_filtros)
+                           filtros=user_filtros,
+                           campos=campos)
 
 
 @app.route('/cemercante/<numero>')

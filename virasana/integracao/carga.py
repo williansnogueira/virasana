@@ -764,9 +764,10 @@ def nlinhas_zip_dir(path):
 
 def get_peso_balanca(pesagens):
     peso = 0.
-    for pesagem in pesagens:
-        if pesagem.get('peso') > peso:
-            peso = pesagem.get('peso')
+    if pesagens is not None:
+        for pesagem in pesagens:
+            if pesagem.get('peso') > peso:
+                peso = pesagem.get('peso')
     return peso
 
 
@@ -778,7 +779,6 @@ def cria_campo_pesos_carga(db, batch_size=1):
     """
     filtro = {'metadata.contentType': 'image/jpeg',
               'metadata.carga.vazio': False,
-              'metadata.pesagens': {'$exists': True},
               'metadata.predictions.peso': {'$exists': True},
               'metadata.carga.pesototal': {'$exists': False}}
     file_cursor = db['fs.files'].find(filtro)
@@ -806,7 +806,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
             dict_update = {'metadata.carga.pesototal': pesototal,
                            'metadata.diferencapeso': peso_dif,
                            'metadata.alertapeso': alertapeso}
-            if pesobalanca:
+            if pesobalanca and pesobalanca > 0.:
                 peso_dif2 = abs(pesobalanca - pesototal)
                 peso_dif_relativo2 = peso_dif2 / (pesobalanca + pesototal) / 2
                 alertapeso2 = (peso_dif2 > 2000 and peso_dif_relativo2 > .15) \

@@ -205,6 +205,7 @@ class Manifesto(Base):
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, index=True,
                            onupdate=func.current_timestamp())
+    dataInicioOperacaoDate = Column(DateTime, index=True)
     # listavazios = relationship("ConteinerVazio", cascade="delete, delete-orphan")
     # listaconhecimentos = relationship("Conhecimento", cascade="delete, delete-orphan")
 

@@ -778,6 +778,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
     """
     filtro = {'metadata.contentType': 'image/jpeg',
               'metadata.carga.vazio': False,
+              'metadata.pesagens': {'$exists': True},
               'metadata.predictions.peso': {'$exists': True},
               'metadata.carga.pesototal': {'$exists': False}}
     file_cursor = db['fs.files'].find(filtro)

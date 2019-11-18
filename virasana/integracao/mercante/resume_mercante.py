@@ -42,8 +42,8 @@ def get_pendentes(session, origem, tipomovimento, limit=20000):
 
 def monta_campos(destino):
     keys = destino.__table__.columns.keys()
-    keys.remove('ID')
-    keys.remove('last_modified')
+    keys = [key for key in keys if key not in
+            ('ID', 'last_modified', 'dataInicioOperacaoDate')]
     return keys
 
 

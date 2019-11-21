@@ -17,10 +17,10 @@ from virasana.integracao.mercante.mercante_marshmallow import \
 UPDATE_DATAOPERACAO_SQL = \
     'UPDATE manifestosresumo' \
     ' SET dataInicioOperacaoDate = STR_TO_DATE(dataInicioOperacao,"%Y-%m-%d")' \
-    ' WHERE dataInicioOperacaoDate IS NULL;'
+    ' WHERE dataInicioOperacaoDate IS NULL AND dataInicioOperacao !=""; '
 
 
-def get_conteineres_semcarga_dia(diaapesquisar: datetime)-> dict:
+def get_conteineres_semcarga_dia(diaapesquisar: datetime) -> dict:
     """Retorna contêineres do dia com metadata.carga vazio.
 
     Pesquisa via API, não via banco diretamente

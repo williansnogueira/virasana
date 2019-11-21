@@ -15,6 +15,40 @@ Base = declarative_base()
 metadata = Base.metadata
 
 # Tabelas auxiliares / log
+
+class Enumerado(Base):
+    __tablename__ = 'Enumerado'
+    id = Column(CHAR(2), primary_key=True)
+    TipoManifesto = Column(VARCHAR(40))
+    TipoTrafego = Column(VARCHAR(40))
+
+
+    @classmethod
+    def getEnumerado(cls, session, id: str):
+        return session.query(Enumerado).filter(Enumerado.id == id).one_or_none()
+
+    @classmethod
+    def getTipo(cls, session, tipo:str, id: str):
+        enumerado = session.query(Enumerado).filter(Enumerado.id == id).one_or_none()
+        if enumerado:
+            return getattr(cls, tipo)
+        return None
+
+    @classmethod
+    def getTipoManifesto(cls, session, id: str):
+        enumerado = cls.getEnumerado(session, id)
+        if enumerado:
+            return enumerado.TipoManifesto
+        return None
+
+    @classmethod
+    def getTipoTrafego(cls, session, id: str):
+        enumerado = cls.getEnumerado(session, id)
+        if enumerado:
+            return enumerado.TipoTrafego
+        return None
+
+
 ArquivoBaixado = Table(
     'arquivosbaixados', metadata,
     Column('ID', Integer, primary_key=True, autoincrement=True),

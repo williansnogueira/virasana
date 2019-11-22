@@ -34,19 +34,19 @@ str_today = datetime.strftime(today, '%d/%m/%Y')
 
 @click.command()
 @click.option('--dias', default=10,
-              help='Quantidade de dias a processar para trás')
+              help='Quantidade de dias a processar para trás - padrão 10')
 @click.option('--fim', default=str_today,
               help='Dia de fim (dia/mês/ano) - padrão hoje')
 def update(dias, fim):
     """Script de linha de comando para integração do arquivo XML."""
-    start = datetime.strptime(fim, '%d/%m/%Y')
+    end = datetime.strptime(fim, '%d/%m/%Y')
     print('Começando a integração... Fim %s  Dias antes %s' % (fim, dias))
     connection = create_engine(SQL_URI)
     tempo = time.time()
     #processa_xml_mercante.get_arquivos_novos(connection)
     #processa_xml_mercante.xml_para_mercante(connection)
     #resume_mercante.mercante_resumo(connection)
-    mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, fim, dias)
+    mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, end, dias)
     tempototal = time.time() - tempo
     print('Tempo total: %s' % tempototal)
 

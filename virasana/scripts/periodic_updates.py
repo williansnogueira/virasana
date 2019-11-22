@@ -32,6 +32,7 @@ from virasana.integracao import atualiza_stats, \
     carga, get_service_password, info_ade02, xmli
 from virasana.integracao.mercante import processa_xml_mercante
 from virasana.integracao.mercante import resume_mercante
+from virasana.integracao.mercante import mercante_fsfiles
 from virasana.scripts.gera_indexes import gera_indexes
 from virasana.scripts.predictionsupdate import predictions_update2
 from virasana.models import anomalia_lote
@@ -100,6 +101,7 @@ def periodic_updates(db, connection, lote=2000):
     processa_xml_mercante.get_arquivos_novos(connection)
     processa_xml_mercante.xml_para_mercante(connection)
     resume_mercante.mercante_resumo(connection)
+    # mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, hoje, 10)
     carga.dados_carga_grava_fsfiles(db, lote * 10, dezdias)
     anomalia_lote.processa_zscores(db, cincodias, ontem)
     info_ade02.adquire_pesagens(db, cincodias, ontem)

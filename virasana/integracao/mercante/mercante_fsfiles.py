@@ -95,13 +95,15 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
     return manifestos, conhecimentos
 
 
-def update_mercante_fsfiles(diaapesquisar: datetime):
+def update_mercante_fsfiles(db, engine, diaapesquisar: datetime):
     dict_numerocc = get_conteineres_semcarga_dia(diaapesquisar)
     manifestos, conhecimentos = pesquisa_containers_no_mercante(
         engine,
         diaapesquisar,
         dict_numerocc.keys()
     )
+    Session = sessionmaker(bind=engine)
+    session = Session()
     for container, _id in dict_numerocc.items():
         if conhecimentos.get(container):  # Se encontrou conhecimento, priorizar!!!
             db['fs.files'].update_one(
@@ -117,15 +119,15 @@ def update_mercante_fsfiles(diaapesquisar: datetime):
             )
 
 
+def update_mercante_fsfiles_dias(db, engine, diainicio: datetime, diasantes=10):
+    for diasantes in range(11):
+        diaapesquisar = diainicio - timedelta(days=diasantes)
+        update_mercante_fsfiles(db, engine, diaapesquisar)
+
 if __name__ == '__main__':
     hoje = datetime.today()
     db = MongoClient(host=MONGODB_URI)[DATABASE]
     engine = sqlalchemy.create_engine(SQL_URI)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    grava_fs_files = {}
     logger.info('Inciando atualização do metadata.carga via tabelas do Mercante...')
     # Pesquisa ontem e os dez dias anteriores
-    for diasantes in range(11):
-        diaapesquisar = hoje - timedelta(days=diasantes)
-        update_mercante_fsfiles(diaapesquisar)
+    update_mercante_fsfiles_dias(db, engine, hoje, 10)

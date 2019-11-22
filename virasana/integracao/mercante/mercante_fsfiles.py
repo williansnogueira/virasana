@@ -80,16 +80,16 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
     manifestos = defaultdict(set)
     conhecimentos = defaultdict(set)
     with engine.connect() as conn:
-        conn.execute(sqlalchemy.sql.text(UPDATE_DATAOPERACAO_SQL))
+        cursor = conn.execute(sqlalchemy.sql.text(UPDATE_DATAOPERACAO_SQL))
         for parametros_pesquisa in pesquisas_manifesto:
-            conn.execute(sql_manifestos, parametros_pesquisa)
-            result = conn.fetchall()
+            cursor = conn.execute(sql_manifestos, parametros_pesquisa)
+            result = cursor.fetchall()
             logger.info('Manifestos encontrados %s para paramentros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:
                 manifestos[linha['idConteinerVazio']].add(linha['numero'])
-            conn.execute(sql_conhecimentos, parametros_pesquisa)
-            result = conn.fetchall()
+            cursor = conn.execute(sql_conhecimentos, parametros_pesquisa)
+            result = cursor.fetchall()
             logger.info('Conhecimentos encontrados %s para paramentros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:

@@ -46,7 +46,7 @@ def update(dias, fim):
     processa_xml_mercante.get_arquivos_novos(connection)
     processa_xml_mercante.xml_para_mercante(connection)
     resume_mercante.mercante_resumo(connection)
-    mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, fim, 10)
+    mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, fim, dias)
     tempototal = time.time() - tempo
     print('Tempo total: %s' % tempototal)
 

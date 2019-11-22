@@ -43,9 +43,9 @@ def update(dias, fim):
     print('Começando a integração... Fim %s  Dias antes %s' % (fim, dias))
     connection = create_engine(SQL_URI)
     tempo = time.time()
-    processa_xml_mercante.get_arquivos_novos(connection)
-    processa_xml_mercante.xml_para_mercante(connection)
-    resume_mercante.mercante_resumo(connection)
+    #processa_xml_mercante.get_arquivos_novos(connection)
+    #processa_xml_mercante.xml_para_mercante(connection)
+    #resume_mercante.mercante_resumo(connection)
     mercante_fsfiles.update_mercante_fsfiles_dias(db, connection, fim, dias)
     tempototal = time.time() - tempo
     print('Tempo total: %s' % tempototal)

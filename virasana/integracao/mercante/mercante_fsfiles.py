@@ -16,7 +16,7 @@ from virasana.integracao.mercante.mercante_marshmallow import \
 
 UPDATE_DATAOPERACAO_SQL = \
     'UPDATE manifestosresumo' \
-    ' SET dataInicioOperacaoDate = STR_TO_DATE(dataInicioOperacao,"%Y-%m-%d")' \
+    ' SET dataInicioOperacaoDate = STR_TO_DATE(dataInicioOperacao, "\%Y-\%m-\%d")' \
     ' WHERE dataInicioOperacaoDate IS NULL AND dataInicioOperacao !=""; '
 
 

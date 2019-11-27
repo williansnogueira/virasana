@@ -1,4 +1,6 @@
 import json
+from json import JSONDecodeError
+
 import requests
 import time
 from datetime import datetime, time
@@ -10,8 +12,35 @@ SUITE_URL = "https://www.suiterfb.receita.fazenda"
 POS_ACD_URL = "https://portalunico.suiterfb.receita.fazenda/cct/api/deposito-carga/consultar-estoque-pos-acd?numeroConteiner="
 DUE_ITEMS_URL = "https://portalunico.suiterfb.receita.fazenda/due/api/due/obterDueComItensResumidos?due="
 
-VIRASANA_URL = "http://10.68.64.12/virasana/"
+VIRASANA_URL = "https://ajna.labin.rf08.srf/virasana/"
 
+
+def raspa_containers_vazios_sem_due(
+    datainicial: str, datafinal: str,
+    virasana_url: str = VIRASANA_URL) -> list:
+    print('Conectando virasana')
+    params = {'query':
+                  {'metadata.dataescaneamento': {'$gte': datainicial, '$lte': datafinal},
+                   'metadata.contentType': 'image/jpeg',
+                   'metadata.due': {'$exists': False},
+                   'metadata.carga.vazio': True
+                   },
+              'projection':
+                  {'metadata.numeroinformado': 1,
+                   'metadata.dataescaneamento': 1}
+              }
+    r = requests.post(virasana_url + "grid_data", json=params, verify=False)
+    try:
+        lista_containeres = list(r.json())
+        conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
+                       for linha in lista_containeres}
+        print('%s Contêineres recuperados.' % len(lista_containeres))
+    except JSONDecodeError as err:
+        print(r.text)
+        # logger.error(err, exc_info=True)
+        # logger.error(r.text)
+        return [err, r.text]
+    return conteineres_ids
 
 def raspa_containers_sem_due(
         datainicial: str, datafinal: str,
@@ -21,13 +50,14 @@ def raspa_containers_sem_due(
     params = {'query':
                   {'metadata.dataescaneamento': {'$gte': datainicial, '$lte': datafinal},
                    'metadata.contentType': 'image/jpeg',
+                   'metadata.due': {'$exists': False},
                    'metadata.carga.manifesto.tipomanifesto': tipomanifesto
                    },
               'projection':
                   {'metadata.numeroinformado': 1,
                    'metadata.dataescaneamento': 1}
               }
-    r = requests.post(virasana_url + "grid_data", json=params)
+    r = requests.post(virasana_url + "grid_data", json=params, verify=False)
     lista_containeres = list(r.json())
     conteineres_ids = {linha['metadata']['numeroinformado']: linha['_id']
                        for linha in lista_containeres}
@@ -89,16 +119,19 @@ def detalha_dues(driver, conteineres_listadue, due_items_url=DUE_ITEMS_URL):
 
 def monta_due_ajna(due):
     def get_dados_recinto(recinto_dict):
-        result = {}
-        result['codigo'] = recinto_dict.get('codigo')
-        depositario = recinto_dict.get('depositario')
-        if depositario:
-            result['depositario'] = depositario.get('depositario')
-            result['nome'] = depositario.get('nome')
-            result['descricao'] = depositario.get('descricao')
-            unidade = depositario.get('unidadeLocalRFB')
-            if unidade:
-                unidadeLocalRFB = depositario.get('codigo')
+        try:
+            result = {}
+            result['codigo'] = recinto_dict.get('codigo')
+            depositario = recinto_dict.get('depositario')
+            if depositario:
+                result['depositario'] = depositario.get('depositario')
+                result['nome'] = depositario.get('nome')
+                result['descricao'] = depositario.get('descricao')
+                unidade = depositario.get('unidadeLocalRFB')
+                if unidade:
+                    unidadeLocalRFB = depositario.get('codigo')
+        except AttributeError:
+            return None
 
         return result
 
@@ -171,6 +204,7 @@ if __name__ == '__main__':
                     lista_dues.append({'numero': due, **pacote})
             if numeros_dues and len(numeros_dues) > 0:
                 pacote_carregamento[_id] = lista_dues
-        r = requests.post(VIRASANA_URL + "dues/update", json=pacote_carregamento)
+        r = requests.post(VIRASANA_URL + "dues/update",
+                          json=pacote_carregamento, verify=False)
         print(r.status_code)
         print(r.text)

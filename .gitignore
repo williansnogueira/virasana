@@ -159,3 +159,5 @@ dte.info
 /virasana/notebooks/dues.txt
 /virasana/integracao/empresas_risco.csv
 /virasana/notebooks/lista_pesagens.pkl
+alembic*
+mercante/*

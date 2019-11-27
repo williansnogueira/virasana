@@ -77,13 +77,12 @@ def get_tipo_manifesto(grid_data):
     return tipo, tipos.get(tipo, '')
 
 
-def monta_float(campo: str)-> float:
+def monta_float(campo: str) -> float:
     try:
         return float(campo.replace(',', '.'))
     except Exception as err:
         logger.error(err)
         return 0.
-
 
 
 def get_conhecimento(grid_data):
@@ -121,7 +120,6 @@ def get_dados_conteiner(grid_data):
     except Exception as err:
         logger.error(err)
         return ''
-
 
 
 def get_peso_conteiner(grid_data):
@@ -764,8 +762,21 @@ def nlinhas_zip_dir(path):
     return OrderedDict(sorted(contador.items()))
 
 
+def get_peso_balanca(pesagens):
+    peso = 0.
+    if pesagens is not None:
+        for pesagem in pesagens:
+            if pesagem.get('peso') > peso:
+                peso = pesagem.get('peso')
+    return peso
+
+
 def cria_campo_pesos_carga(db, batch_size=1):
-    """Cria campo com peso total informado para contêiner no CARGA."""
+    """Cria campo com peso total informado para contêiner no CARGA.
+
+        Grava alerta se diferença entre peso declarado e peso previsto pela
+        análise de imagem for significativo.
+    """
     filtro = {'metadata.contentType': 'image/jpeg',
               'metadata.carga.vazio': False,
               'metadata.predictions.peso': {'$exists': True},
@@ -778,6 +789,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
     for linha in file_cursor.limit(batch_size):
         total += 1
         pesopred = linha.get('metadata').get('predictions')[0].get('peso')
+        pesobalanca = get_peso_balanca(linha.get('metadata').get('pesagens'))
         carga = linha.get('metadata').get('carga')
         _id = linha['_id']
         container = carga.get('container')
@@ -791,6 +803,17 @@ def cria_campo_pesos_carga(db, batch_size=1):
             peso_dif_relativo = peso_dif / (pesopred + pesototal) / 2
             alertapeso = (peso_dif > 2000 and peso_dif_relativo > .15) \
                          or peso_dif_relativo > .4
+            dict_update = {'metadata.carga.pesototal': pesototal,
+                           'metadata.diferencapeso': peso_dif,
+                           'metadata.alertapeso': alertapeso}
+            if pesobalanca and pesobalanca > 0.:
+                peso_dif2 = abs(pesobalanca - pesototal)
+                peso_dif_relativo2 = peso_dif2 / (pesobalanca + pesototal) / 2
+                alertapeso2 = (peso_dif2 > 2000 and peso_dif_relativo2 > .15) \
+                              or peso_dif_relativo2 > .4
+                dict_update.update({'metadata.diferencapeso2': peso_dif2,
+                                    'metadata.alertapeso2': alertapeso2})
+
             db['fs.files'].update_one(
                 {'_id': _id},
                 {'$set': {'metadata.carga.pesototal': pesototal,
@@ -813,15 +836,23 @@ def cria_campo_pesos_carga(db, batch_size=1):
 
 
 class Conhecimento:
-
     table = 'CARGA.Conhecimento'
     chave = 'conhecimento'
+
     @classmethod
     def from_db(cls, db, numero):
         query = {cls.chave: numero}
         return db[cls.table].find_one(query)
 
 
+class ListaContainerConhecimento:
+    table = 'CARGA.Container'
+    chave = 'conhecimento'
+
+    @classmethod
+    def from_db(cls, db, numero):
+        query = {cls.chave: numero}
+        return list(db[cls.table].find(query, {'container': 1}))
 
 
 if __name__ == '__main__':  # pragma: no cover

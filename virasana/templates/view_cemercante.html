@@ -1,14 +1,29 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
 <div id="main" class="container-fluid">
     <div id="top" class="row">
-    <div class="col-sm-12">
-        Conhecimento: {{ conhecimento['conhecimento'] }}<br>
-        Embarcador: {{ conhecimento['identificacaoembarcador'] }}<br>
-        Consignatário: {{ conhecimento['nomeconsignatario'] }}<br>
-        Notificado: {{ conhecimento['identificacaonotificado'] }} <br>
-        Consignatário Estrangeiro: {{ conhecimento['nomeconsignatarioestrangeiro'] }}<br>
-        Descrição Mercadoria:{{ conhecimento['descricaomercadoria'] }}<br>
-    </div>
+        <div class="col-sm-8">
+            Conhecimento: {{ conhecimento['conhecimento'] }}<br>
+            Embarcador: {{ conhecimento['identificacaoembarcador'] }}<br>
+            Consignatário: {{ conhecimento['nomeconsignatario'] }}<br>
+            Notificado: {{ conhecimento['identificacaonotificado'] }} <br>
+            Consignatário Estrangeiro: {{ conhecimento['nomeconsignatarioestrangeiro'] }}<br>
+            Descrição Mercadoria:{{ conhecimento['descricaomercadoria'] }}<br>
+        </div>
+        <div class="col-sm-4">
+            <form method="POST" id="imgform" action="/virasana/cemercante">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="numero" value="{{ conhecimento['conhecimento'] }}"/>
+                    <input type="checkbox" id="contrast" name="contrast" {% if contrast %} checked {% endif %}
+                           onchange="this.form.submit()"/>
+                    &nbsp;Expandir contraste<br>
+                    <input type="checkbox" id="color" name="color" {% if color %} checked {% endif %}
+                           onchange="this.form.submit()"/>
+                    &nbsp;Equalizar e colorir<br>
+            </form>
+            <br>&nbsp;
+            <h4>{{ containers|length }} contêineres declarados no CE</h4>
+            <h4>{{ imagens|length }} imagens na lista</h4>
+        </div>
     </div>
     <div id="list" class="row">
     <div class="col-sm-1">
@@ -29,8 +44,8 @@
                 </td>
                 <td>
                     <a href="/virasana/file?_id={{ imagem['_id'] }}" target="_BLANK">
-                        <img src="/virasana/image/{{ imagem['_id'] }}" alt="Sem imagem" width="auto" height="auto"
-                             style="border: 1px solid #000; max-width:600px; max-height:240px;"
+                        <img src="/virasana/image/{{ imagem['_id'] }}?contrast={{ contrast }}&color={{ color }}" alt="Sem imagem" width="auto" height="auto"
+                             style="border: 1px solid #000; max-width:800px; max-height:320px;"
                         onmouseover="showMsg(this, '{{ imagem['_id'] }}')" onmouseout="clearMsg(this)"
                         />
                     </a>
@@ -69,5 +84,6 @@
     function clearMsg(img) {
         img.title = "";
     }
+
 
 </script> {% endblock %}

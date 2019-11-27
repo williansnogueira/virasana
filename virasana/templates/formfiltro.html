@@ -1,0 +1,115 @@
+<form method="POST" id="formfiltro" action="lotes_anomalia">
+    <div class="col-sm-12">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h4>Filtrar por número e datas</h4>
+        </div>
+        <div class="col-sm-3">
+            <label for="numero">Número do conhecimento</label>
+        </div>
+        <div class="col-sm-4">
+            <label for="date">Período de escaneamento da imagem</label>
+        </div>
+        <div class="col-sm-1">
+            <label for="spin">Score</label>
+        </div>
+        <div class="col-sm-2">
+            <label for="alerta">Alerta?</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="row">
+            <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
+            <div class="col-sm-3">
+                <input class="form-control" type="text" name="numero" value="{{oform.numero.data}}" />
+            </div>
+            <div class="col-sm-2">
+                <input class="form-control" type="date" name="start" value="{{oform.start.data}}" />
+            </div>
+            <div class="col-sm-2">
+                <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
+            </div>
+            <div class="col-sm-1">
+                <input class="form-control" type="number" MIN="0" MAX="4" STEP="0.5" name="zscore" value="{{oform.zscore.data}}" />
+            </div>
+            <div class="col-sm-1">
+                <input class="form-control" type="checkbox" name="alerta" {% if oform.alerta.data %} checked {% endif %} />
+            </div>
+            <div class="col-sm-1">
+                <input type="checkbox" id="contrast" name="contrast" {% if oform.contrast.data %} checked {% endif %} />
+            &nbsp;  + contraste<br>
+                <input type="checkbox" id="color" name="color" {% if oform.color.data %} checked {% endif %} />
+            &nbsp;  colorir<br>
+            </div>
+            <div class="col-sm-2">
+                <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info"> &nbsp; &nbsp; Filtrar lotes &nbsp; &nbsp; </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <h4>Utilizar filtro especial de auditoria</h4>
+                {{ oform.filtro_auditoria(class='form-control') }}
+            </div>
+            <div class="col-sm-3">
+                <h4>Com a tag</h4>
+                <div class="col-sm-2">
+                    <input type="checkbox" name="tag_usuario" {% if oform.tag_usuario.data %} checked {% endif %} />do usuário
+                </div>
+                <div class="col-sm-10">
+                {{ oform.filtro_tags(class='form-control') }}
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <h4>Pesquisar ocorrências</h4>
+                {{ oform.texto_ocorrencia(class='form-control') }}
+            </div>
+        </div>
+        <div class="row">
+            <h4>Definir filtro personalizado</h4>
+            <div id="filtrospersonalizados" class="row col-sm-6">
+                <form id="frmfiltros" class="form-group">
+                    <div class="form-group col-sm-4">
+                        <select class="form-control" name="campos" id="campos">
+                            <option value="0">Selecione...</option>
+                            {% for campo in campos %}
+                            <option value="{{ campo }}">{{ campo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <input id="valor" class="form-control" type="text" placeholder="Valor do parâmetro">
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <button id="btnfiltropersonalizado" type="button" class="btn btn-default btn-info">Adicionar</button>
+                    </div>
+                </form>
+            </div>
+            <div id="filtrospersonalizadoslist" class="row col-sm-6">
+                <div class="table">
+                    <table class="inlineTable table table-bordered table-hover table-responsive" id="filtro_personalizado_table">
+                        <thead>
+                            <tr>
+                                <th>Campo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for campo, valor in filtros.items() %}
+                        <tr>
+                            <td>{{campo}}</td>
+                            <td>{{valor}}</td>
+                            <td align="center">
+                                <input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo('{{campo}}')" />
+                            </td>
+                        </tr>
+                        </tbody>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

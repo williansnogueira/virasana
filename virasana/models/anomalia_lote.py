@@ -73,15 +73,15 @@ def get_conhecimentos_um_ncm(db, inicio: datetime, fim: datetime) -> set:
     return result
 
 
-def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) -> set:
-    """Consulta apenas contêineres(imagens) com um NCM e retorna seus conhecimentos."""
+def get_conhecimentos_filtro(db, query, limit=50, skip=0) -> set:
+    """Consulta imagens com o filtro passodo e retorna os conhecimentos."""
+    print('limit skip *****************', limit, skip)
     result = set()
-    query = {'metadata.contentType': 'image/jpeg',
-             'metadata.zscore': {'$gte': min_zscore},
-             'metadata.dataescaneamento': {'$gte': inicio, '$lt': fim}
-             }
+    query['metadata.contentType'] = 'image/jpeg'
+    query['metadata.carga.conhecimento'] = {'$ne': None}
+    print(query)
     projection = {'metadata.carga.conhecimento': 1}
-    cursor = db['fs.files'].find(query, projection)
+    cursor = db['fs.files'].find(query, projection).limit(limit).skip(skip)
     for linha in cursor:
         conhecimentos = linha.get('metadata').get('carga').get('conhecimento')
         if conhecimentos:
@@ -92,7 +92,20 @@ def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) 
                 if tipo != 'mbl':
                     conhecimento = conhecimento.get('conhecimento')
                     result.add(conhecimento)
-    return result
+                    break
+    return result, query
+
+
+def get_conhecimentos_zscore(db, inicio: datetime, fim: datetime, min_zscore=3) -> set:
+    """Consulta apenas contêineres(imagens) com um NCM e retorna seus conhecimentos."""
+    result = set()
+    query = {'metadata.contentType': 'image/jpeg',
+             'metadata.zscore': {'$gte': min_zscore},
+             'metadata.dataescaneamento': {'$gte': inicio, '$lt': fim}
+             }
+    return get_conhecimentos_filtro(db, query)
+
+
 
 
 def get_indexes_and_ids_conhecimentos(db, conhecimentos: list):
@@ -144,7 +157,7 @@ def get_ids_score_conhecimento_zscore(db, conhecimentos: list):
             if not zscore or not isinstance(zscore, float):
                 zscore = 0.
             container = linha['metadata'].get('carga').get('container')
-            print(container)
+            # print(container)
             if isinstance(container, list):
                 container = container[0]
             numero = container.get('container')

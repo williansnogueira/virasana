@@ -18,7 +18,7 @@ from ajna_commons.flask.conf import (BSON_REDIS, DATABASE, logo, MONGODB_URI,
                                      PADMA_URL, SECRET, redisdb)
 from ajna_commons.flask.log import logger
 from ajna_commons.utils import ImgEnhance
-from ajna_commons.utils.images import mongo_image, PIL_tobytes, recorta_imagem
+from ajna_commons.utils.images import bytes_toPIL, mongo_image, PIL_tobytes, recorta_imagem
 from ajna_commons.utils.sanitiza import mongo_sanitizar
 from bson import json_util
 from bson.objectid import ObjectId
@@ -38,6 +38,7 @@ from wtforms import (BooleanField, DateField, FloatField, IntegerField,
 from wtforms.validators import DataRequired, optional
 
 from virasana.forms.auditoria import FormAuditoria, SelectAuditoria
+from virasana.forms.filtros import FormFiltro
 from virasana.integracao.due import due_mongo
 from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  dict_to_text, info_ade02, plot_bar_plotly,
@@ -45,7 +46,8 @@ from virasana.integracao import (CHAVES_GRIDFS, carga, dict_to_html,
                                  summary,
                                  TIPOS_GRIDFS)
 from virasana.integracao.padma import consulta_padma
-from virasana.models.anomalia_lote import get_conhecimentos_zscore, get_ids_score_conhecimento_zscore
+from virasana.models.anomalia_lote import get_conhecimentos_filtro, \
+    get_ids_score_conhecimento_zscore, get_conhecimentos_zscore
 from virasana.models.auditoria import Auditoria
 from virasana.models.image_search import ImageSearch
 from virasana.models.models import Ocorrencias, Tags
@@ -77,9 +79,9 @@ def configure_app(mongodb):
     user_ajna.DBUser.dbsession = mongodb
     app.config['mongodb'] = mongodb
     try:
+        img_search = None
         img_search = ImageSearch(mongodb)
         app.config['img_search'] = img_search
-        # pass
     except (IOError, FileNotFoundError):
         pass
     app.config['text_search'] = TextSearch(mongodb)
@@ -611,6 +613,12 @@ def image():
     return ''
 
 
+def get_contrast_and_color_(request):
+    contrast = request.values.get('contrast', 'False').lower() in ('on', 'true')
+    color = request.values.get('color', 'False').lower() in ('on', 'true')
+    return contrast, color
+
+
 @app.route('/image/<_id>')
 def image_id(_id):
     """Recupera a imagem do banco e serializa para stream HTTP.
@@ -623,6 +631,14 @@ def image_id(_id):
     bboxes = request.args.get('bboxes', 'True').lower() == 'true'
     image = mongo_image(db, _id, bboxes=bboxes)
     if image:
+        contrast, color = get_contrast_and_color_(request)
+        if contrast or color:
+            PILimage = bytes_toPIL(image)
+            if contrast:
+                PILimage = ImgEnhance.enhancedcontrast_cv2(PILimage)
+            if color:
+                PILimage = ImgEnhance.expand_tocolor(PILimage)
+            image = PIL_tobytes(PILimage)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem Imagem'
 
@@ -667,10 +683,13 @@ def mini2(_id):
 
 
 class ImgForm(FlaskForm):
-    cutoff = IntegerField(u'Cut Off', default=15)
-    alpha = FloatField(u'Alpha', default=12)
-    beta = FloatField(u'Beta', default=10)
+    cutoff = IntegerField(u'Cut Off', default=10)
     equalize = BooleanField(u'Equalize')
+    colorize = BooleanField(u'Colorize')
+    alpha = FloatField(u'Alpha', default=10)
+    beta = FloatField(u'Beta', default=10)
+    equalize2 = BooleanField(u'Equalize')
+    cv2 = BooleanField('cv2')
 
 
 @app.route('/view_image/<_id>')
@@ -689,14 +708,19 @@ def view_image(_id=None):
 
 
 @app.route('/contrast')
-def contrast():
+def img_contrast():
     _id = request.args.get('_id')
     n = request.args.get('n', 0)
     cutoff = request.args.get('cutoff', '10')
+    equalize = request.args.get('equalize', False) == 'True'
+    colorize = request.args.get('colorize', False) == 'True'
+    cv2 = request.args.get('cv2', False) == 'True'
     image = get_image(_id, n, pil=True)
     if image:
         cutoff = int(cutoff)
-        image = ImgEnhance.autocontrast(image, cutoff=cutoff)
+        image = ImgEnhance.autocontrast(image, cutoff=cutoff,
+                                        colorize=colorize, equalize=equalize,
+                                        cv2=cv2)
         image = PIL_tobytes(image)
         return Response(response=image, mimetype='image/jpeg')
     return 'Sem imagem'
@@ -833,6 +857,8 @@ class FilesForm(FlaskForm):
                               default=[0])
     texto_ocorrencia = StringField(u'Texto Ocorrência',
                                    validators=[optional()], default='')
+    contrast = BooleanField()
+    color = BooleanField()
 
 
 def recupera_user_filtros():
@@ -851,7 +877,6 @@ def recupera_user_filtros():
 
 
 def valida_form_files(form, filtro, db):
-    """Lê formulário e adiciona campos ao filtro se necessário."""
     """Lê formulário e adiciona campos ao filtro se necessário."""
     order = None
     pagina_atual = None
@@ -874,7 +899,7 @@ def valida_form_files(form, filtro, db):
                 filtro.update(filtro_auditoria.get('filtro'))
                 order = filtro_auditoria.get('order')
         tag_escolhida = form.filtro_tags.data
-        tag_usuario = form.tag_usuario
+        tag_usuario = form.tag_usuario.data
         # print('****************************', tag_escolhida)
         if tag_escolhida and tag_escolhida != '0':
             filtro_tag = {'tag': tag_escolhida}
@@ -990,20 +1015,6 @@ def files():
                            nregistros=count)
 
 
-class LotesForm(FlaskForm):
-    """Valida pesquisa de arquivos.
-
-    Usa wtforms para facilitar a validação dos campos de pesquisa da tela
-    search_lotes.html
-
-    """
-    numero = StringField(u'Número', validators=[optional()], default='')
-    start = DateField('Start', validators=[optional()])
-    end = DateField('End', validators=[optional()])
-    zscore = FloatField('Z-Score', validators=[optional()], default=3.)
-    pagina_atual = IntegerField('Pagina', validators=[optional()], default=1)
-
-
 @app.route('/lotes_anomalia', methods=['GET', 'POST'])
 @login_required
 def lotes_anomalia():
@@ -1012,26 +1023,29 @@ def lotes_anomalia():
     PAGE_ROWS = 50
     PAGES = 100
     conhecimentos = []
-    form = LotesForm(start=date.today() - timedelta(days=10),
-                     end=date.today())
+    npaginas = 0
+    count = 0
+    campos = campos_chave()
+    form = FormFiltro(start=date.today() - timedelta(days=10),
+                      end=date.today())
+    form.initialize(db)
+    ## TODO: incluir lógica de user_filtros (filro personalizado) no form
+    filtro, user_filtros = recupera_user_filtros()
     if request.method == 'POST':
-        form = LotesForm(**request.form)
-        # print(form)
-        if form.validate():
-            numero = form.numero.data
-            if numero:
-                conhecimentos_anomalia = [numero]
-            else:
-                start = form.start.data
-                end = form.end.data
-                zscore = form.zscore.data
-                start = datetime.combine(start, datetime.min.time())
-                end = datetime.combine(end, datetime.max.time())
-                conhecimentos_anomalia = get_conhecimentos_zscore(
-                    db, start, end, min_zscore=zscore)
-            # print(start, end, zscore, conhecimentos_anomalia)
+        form = FormFiltro(**request.form)
+        form.initialize(db)
+        if form.valida():
+            skip = (form.pagina_atual.data - 1) * PAGE_ROWS
+            print('skip *****************', skip)
+            # Merge user_filtros
+            filtro = {**form.filtro, **filtro}
+            conhecimentos_anomalia, query = get_conhecimentos_filtro(
+                db, filtro, PAGE_ROWS, skip)
+            count = db['fs.files'].count_documents(filtro, limit=PAGES * PAGE_ROWS)
+            print(conhecimentos_anomalia)
             conhecimentos_idszscore = get_ids_score_conhecimento_zscore(
                 db, conhecimentos_anomalia)
+            npaginas = (count - 1) // PAGE_ROWS + 1
             # TODO: Refatorar para uma classe, modulo ou funções a lógica
             if conhecimentos_idszscore:
                 idsnormais = []
@@ -1061,13 +1075,16 @@ def lotes_anomalia():
     return render_template('search_lotes.html',
                            conhecimentos=conhecimentos,
                            oform=form,
-                           npaginas=1,
-                           nregistros=len(conhecimentos))
+                           npaginas=npaginas,
+                           nregistros=count,
+                           filtros=user_filtros,
+                           campos=campos)
 
 
 @app.route('/cemercante/<numero>')
+@app.route('/cemercante', methods=['POST', 'GET'])
 @login_required
-def cemercante(numero):
+def cemercante(numero=None):
     """Tela para exibição de um CE Mercante do GridFS.
 
     Exibe o CE Mercante e os arquivos associados a ele.
@@ -1075,10 +1092,16 @@ def cemercante(numero):
     db = app.config['mongodb']
     conhecimento = None
     imagens = []
+    if request.method == 'POST':
+        numero = request.form.get('numero')
+        print(request.values)
+        contrast, color = get_contrast_and_color_(request)
+        print('################', contrast, color)
     if numero:
         conhecimento = carga.Conhecimento.from_db(db, numero)
+        containers = carga.ListaContainerConhecimento.from_db(db, numero)
         idszscore = get_ids_score_conhecimento_zscore(db, [numero])[numero]
-        print(idszscore)
+        # print(idszscore)
         imagens = [{'_id': str(item['_id']),
                     'container': item['container'],
                     'zscore': '{:0.1f}'.format(item['zscore'])}
@@ -1086,9 +1109,13 @@ def cemercante(numero):
                                       key=lambda item: item['zscore'],
                                       reverse=True)
                    ]
+        contrast, color = get_contrast_and_color_(request)
     return render_template('view_cemercante.html',
                            conhecimento=conhecimento,
-                           imagens=imagens)
+                           containers=containers,
+                           imagens=imagens,
+                           color=color,
+                           contrast=contrast)
 
 
 class StatsForm(FlaskForm):

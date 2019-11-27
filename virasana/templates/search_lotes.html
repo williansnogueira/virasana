@@ -1,116 +1,62 @@
 {% extends "layout.html" %} {% block content %}{{super()}}
 <div id="main" class="container-fluid">
     <div id="top" class="row">
-        <form method="POST" id="formfiltro" action="lotes_anomalia">
-            <div class="col-sm-12">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div id="accordion">
+            <h3 class="accordion-header">Filtros</h3>
+            <div id="filtros">
+                {% include "formfiltro.html" %}
             </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <h4>Filtrar por número e datas</h4>
+            <h3 class="accordion-header">Resultados</h3>
+            <div id="resultados" class="row">
+                {% include "buttons.html" %}
+                <div id="list" class="row">
+                <div class="col-sm-1">
                 </div>
-                <div class="col-sm-3">
-                    <label for="numero">Número do conhecimento</label>
+                <div class="table table-responsive col-sm-10">
+                    <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <td width="300" style="text-align:left">Conhecimentos</td>
+                                <td>Imagem normal</td>
+                                <td>Imagem diferente</td>
+                            </tr>
+                        </thead>
+                        {% for conhecimento in conhecimentos %}
+                        <tr>
+                            <td width="300" style="text-align:left">
+                                <div title="Visualizar lote (CE Mercante) em nova tela">
+                                    <a href="cemercante/{{ conhecimento['numero'] }}" target="_BLANK">
+                                    Conhecimento nº {{ conhecimento['numero'] }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
+                                    <img src="image/{{ conhecimento['idnormal'] }}?contrast={{ oform.contrast.data }}&color={{ oform.color.data }}" alt="Sem imagem" width="auto" height="auto"
+                                         style="border: 1px solid #000; max-width:480px; max-height:300px;"
+                                    onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
+                                    />
+                                </a>
+                            </td>
+                            <td>
+                                <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
+                                    <img src="image/{{ conhecimento['idanomalo'] }}?contrast={{ oform.contrast.data }}&color={{ oform.color.data }}" alt="Sem imagem" width="auto" height="auto"
+                                         style="border: 1px solid #000; max-width:400px; max-height:240px;"
+                                    onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
+                                    />
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
                 </div>
-                <div class="col-sm-4">
-                    <label for="date">Período de escaneamento da imagem</label>
+                <div class="col-sm-1">
+                    &nbsp;
                 </div>
-                <div class="col-sm-3">
-                    <label for="spin">Score</label>
                 </div>
-                <div class="col-sm-2">
-                    Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
-                </div>
+                {% include "buttons.html" %}
             </div>
-            <div class="row">
-                <div class="form-group">
-                    <div class="col-sm-3">
-                        <input class="form-control" type="text" name="numero" value="{{oform.numero.data}}" />
-                    </div>
-                    <div class="col-sm-2">
-                        <input class="form-control" type="date" name="start" value="{{oform.start.data}}" />
-                    </div>
-                    <div class="col-sm-2">
-                        <input class="form-control" type="date" name="end" value="{{oform.end.data}}" />
-                    </div>
-                    <div class="col-sm-1">
-                        <input class="form-control" type="number" MIN="0.5" MAX="4" STEP="0.5" name="zscore" value="{{oform.zscore.data}}" />
-                    </div>
-                    <div class="col-sm-2">
-                        <button onclick="zeraeposta()" id="btn_filtrar" type="button" class="btn btn-default btn-info">   &nbsp;  Filtrar lotes   &nbsp;  </button>
-                    </div>
-                    <div class="col-sm-2">
-                        <input class="form-control" type="hidden" id="pagina_atual" name="pagina_atual" value="{{oform.pagina_atual.data}}" />
-                        <button onclick="next_page(-1)" id="btn_page1" type="button" class="btn btn-default btn-info"> < </button>
-                        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2" type="button" class="btn btn-default btn-info"> << </button>
-                        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3" type="button" class="btn btn-default btn-info"> >> </button>
-                        <button onclick="next_page(1)" id="btn_page4" type="button" class="btn btn-default btn-info"> > </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div id="list" class="row">
-        &nbsp;
-    </div>
-    <div id="list" class="row">
-        <div class="col-sm-1">
         </div>
-        <div class="table table-responsive col-sm-10">
-            <table class="inlineTable table table-striped table-bordered table-hover table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <td width="300" style="text-align:left">Conhecimentos</td>
-                        <td>Imagem normal</td>
-                        <td>Imagem diferente</td>
-                    </tr>
-                </thead>
-                {% for conhecimento in conhecimentos %}
-                <tr>
-                    <td width="300" style="text-align:left">
-                        <div title="Visualizar lote (CE Mercante) em nova tela">
-                            <a href="cemercante/{{ conhecimento['numero'] }}" target="_BLANK">
-                            Conhecimento nº {{ conhecimento['numero'] }}
-                            </a>
-                        </div>
-                    </td>
-                    <td>
-                        <a href="file?_id={{ conhecimento['idnormal'] }}" target="_BLANK">
-                            <img src="image/{{ conhecimento['idnormal'] }}" alt="Sem imagem" width="auto" height="auto"
-                                 style="border: 1px solid #000; max-width:600px; max-height:240px;"
-                            onmouseover="showMsg(this, '{{ conhecimento['idnormal'] }}')" onmouseout="clearMsg(this)"
-                            />
-                        </a>
-                    </td>
-                    <td>
-                        <a href="file?_id={{ conhecimento['idanomalo'] }}" target="_BLANK">
-                            <img src="image/{{ conhecimento['idanomalo'] }}" alt="Sem imagem" width="auto" height="auto"
-                                 style="border: 1px solid #000; max-width:600px; max-height:240px;"
-                            onmouseover="showMsg(this, '{{ conhecimento['idanomalo'] }}')" onmouseout="clearMsg(this)"
-                            />
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-        <div class="col-sm-1">
-            &nbsp;
-        </div>
-    </div>
-</div>
-<div id="bottom_buttons" class="row">
-    <div class="col-sm-6">
-        &nbsp;
-    </div>
-    <div class="col-sm-3">
-        Página {{oform.pagina_atual.data}} de {{ npaginas }}. &nbsp;&nbsp; {{nregistros}} resultados.
-    </div>
-    <div class="col-sm-3">
-        <button onclick="next_page(-1)" id="btn_page1b" type="button" class="btn btn-default btn-info"> < </button>
-        <button onclick="next_page(-{{npaginas // 10 + 1}})" id="btn_pagem2b" type="button" class="btn btn-default btn-info"> << </button>
-        <button onclick="next_page({{npaginas // 10 + 1}})" id="btn_page3b" type="button" class="btn btn-default btn-info"> >> </button>
-        <button onclick="next_page(1)" id="btn_page4b" type="button" class="btn btn-default btn-info"> > </button>
     </div>
 </div>
 <div id="bottom" class="row">
@@ -119,6 +65,7 @@
 </div>
 <!-- /#main -->
 {% endblock %} {% block scripts %} {{super()}}
+<script src="/static/js/jquery-ui.min.js"></script>
 <script type="text/javascript">
 
     function next_page(increment) {
@@ -152,5 +99,51 @@
     function clearMsg(img) {
         img.title = "";
     }
+
+        function table_filtros(filtros){
+        $('#filtro_personalizado_table tbody tr').remove();
+        $.each(filtros, function(i, filtro) {
+            $('<tr>').append(
+            $('<td>').text(filtro.campo),
+            $('<td>').text(filtro.valor),
+            $('<td>').html('<input type="button" class="btn  btn-danger" value="x" onclick="exclui_campo(\''+ filtro.campo + '\')" />')
+            ).appendTo('#filtro_personalizado_table');
+        });
+
+    }
+
+    function exclui_campo(campo) {
+            $.getJSON('filtro_personalizado', {
+              campo: campo,
+            }, function(filtros) {
+              table_filtros(filtros);
+            });
+    }
+
+    $(function() {
+        var filtro_personalizado = function(e) {
+          $.getJSON('filtro_personalizado', {
+            campo: $('#campos').val(),
+            valor: $('#valor').val(),
+          }, function(filtros) {
+            table_filtros(filtros);
+            $('#campos').focus().select();
+          });
+          return false;
+        };
+        $('button#btnfiltropersonalizado').bind('click', filtro_personalizado);
+      });
+
+
+    $(document).ready(function () {
+        $('#accordion').accordion({ collapsible:true, active:false, heightStyle: "content"});
+        $('#accordion h3.ui-accordion-header').click(function(){
+            var _this = $(this);
+            _this.next().slideToggle();
+            return false;
+        });
+        var headers = $('#accordion h3.ui-accordion-header');
+        headers.next().slideDown();
+     });
 
 </script> {% endblock %}

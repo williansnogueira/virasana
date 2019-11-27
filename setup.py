@@ -16,6 +16,7 @@ setup(
         'Flask-BootStrap',
         'Flask-Login',
         'Flask-cors',
+        'flask-jwt-extended',
         'Flask-nav',
         'Flask-session',
         'Flask-wtf',
@@ -26,11 +27,12 @@ setup(
         'pandas',
         'pillow',
         'pymongo',
+        'pymysql',
         'raven',
         'redis',
         'requests',
         'scipy',
-        'sklearn',
+        'sklearn', 'sqlalchemy'
     ],
     dependency_links=[
         'git+https://github.com/IvanBrasilico/ajna_commons.git#egg=ajna_commons-0.0.1'

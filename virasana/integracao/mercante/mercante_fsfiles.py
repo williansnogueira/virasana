@@ -71,10 +71,10 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
         ' m.tipoTrafego = %s AND' \
         ' dataInicioOperacaoDate >= %s AND dataInicioOperacaoDate <= %s AND ' \
         ' i.codigoConteiner IN ' + lista
-    before = dia - timedelta(days=5)
+    before = dia - timedelta(days=6)
     before = datetime.strftime(before, '%Y-%m-%d')
     today = datetime.strftime(dia, '%Y-%m-%d')
-    after = dia + timedelta(days=5)
+    after = dia + timedelta(days=10)
     after = datetime.strftime(after, '%Y-%m-%d')
     pesquisas_manifesto = [(5, before, today), (7, today, after)]
     manifestos = defaultdict(set)

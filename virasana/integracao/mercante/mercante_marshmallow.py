@@ -95,14 +95,15 @@ class ConhecimentoSchema(BaseSchema):
     class Meta:
         model = Conhecimento
 
-
     def dump(self, conhecimento, session):
         result = super().dump(conhecimento)
         result['tipo'] = \
-            Enumerado.getTipoBLConhecimento(session, conhecimento.tipoBLConhecimento)
+            Enumerado.getTipoBLConhecimentoMercante(session,
+                                                    conhecimento.tipoBLConhecimento)
         result['trafego'] = \
             Enumerado.getTipoTrafegoConhecimento(session, conhecimento.tipoTrafego)
         return result
+
 
 manifesto_schema = ManifestoSchema()
 conteinervazio_schema = ConteinerVazioSchema()
@@ -111,7 +112,7 @@ ncmitem_schema = NCMItemSchema()
 conhecimento_schema = ConhecimentoSchema()
 
 
-def manifesto_carga(session, manifestos: list, numeroconteiner:str = None):
+def manifesto_carga(session, manifestos: list, numeroconteiner: str = None):
     dict_carga = {'vazio': True}
     dict_carga['manifesto'] = []
     dict_carga['container'] = []
@@ -126,7 +127,8 @@ def manifesto_carga(session, manifestos: list, numeroconteiner:str = None):
                 dict_carga['container'].append(conteinervazio_schema.dump(conteiner))
     return dict_carga
 
-def conhecimento_carga(session, conhecimentos:list, numeroconteiner:str = None):
+
+def conhecimento_carga(session, conhecimentos: list, numeroconteiner: str = None):
     dict_carga = {'vazio': False}
     dict_carga['conhecimento'] = []
     dict_carga['ncm'] = []

@@ -19,8 +19,11 @@ metadata = Base.metadata
 class Enumerado(Base):
     __tablename__ = 'Enumerado'
     id = Column(CHAR(2), primary_key=True)
-    TipoManifesto = Column(VARCHAR(40))
-    TipoTrafego = Column(VARCHAR(40))
+    tipoTrafegoManifesto = Column(VARCHAR(40))
+    tipoTrafegoConhecimento = Column(VARCHAR(40))
+    tipoBLConhecimentoMercante = Column(VARCHAR(40))
+    tipoItemCarga = Column(VARCHAR(40))
+
 
 
     @classmethod
@@ -35,17 +38,17 @@ class Enumerado(Base):
         return None
 
     @classmethod
-    def getTipoManifesto(cls, session, id: str):
+    def getTipoTrafegoManifesto(cls, session, id: str):
         enumerado = cls.getEnumerado(session, id)
         if enumerado:
-            return enumerado.TipoManifesto
+            return enumerado.tipoTrafegoManifesto
         return None
 
     @classmethod
-    def getTipoTrafego(cls, session, id: str):
+    def getTipoTrafegoConhecimento(cls, session, id: str):
         enumerado = cls.getEnumerado(session, id)
         if enumerado:
-            return enumerado.TipoTrafego
+            return enumerado.tipoTrafegoConhecimento
         return None
 
 

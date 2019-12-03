@@ -31,7 +31,8 @@ class ManifestoSchema(BaseSchema):
 
     def dump(self, manifesto, session):
         result = super().dump(manifesto)
-        result['tipomanifesto'] = Enumerado.getTipoManifesto(session, manifesto.tipoTrafego)
+        result['tipomanifesto'] = \
+            Enumerado.getTipoTrafegoManifesto(session, manifesto.tipoTrafego)
         return result
 
 

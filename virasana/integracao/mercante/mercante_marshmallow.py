@@ -1,5 +1,6 @@
 from marshmallow_sqlalchemy import ModelSchema
 
+from ajna_commons.utils.sanitiza import sanitizar
 from virasana.integracao.mercante.mercantealchemy import Manifesto, ConteinerVazio, \
     Conhecimento, Item, NCMItem, Enumerado
 
@@ -12,7 +13,7 @@ class BaseSchema(ModelSchema):
         original = super().dump(objeto)
         result = {}
         for k, v in self.carga_fields.items():
-            result[k] = original.get(v)
+            result[k] = sanitizar(original.get(v))
         return result
 
 

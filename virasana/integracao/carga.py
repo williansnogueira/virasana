@@ -177,15 +177,15 @@ def summary(grid_data=None, registro=None):
         if not meta:
             raise TypeError('Não foi encontrado registro do CARGA' +
                             ' na função integracao.carga.summary')
-        manifesto = meta.get('manifesto')
-        if isinstance(manifesto, list):
-            manifesto = manifesto[0]
-        tipo = manifesto.get('tipomanifesto')
         tipos = {'lci': 'Importação',
                  'bce': 'Baldeação',
                  'lce': 'Exportação'}
-        result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
         if meta.get('vazio'):
+            manifesto = meta.get('manifesto')
+            if isinstance(manifesto, list):
+                manifesto = manifesto[0]
+            tipo = manifesto.get('tipomanifesto')
+            result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
             result['CONTÊINER VAZIO'] = ''
             result['Manifesto - Escala'] = \
                 '%s - %s' % \
@@ -210,12 +210,13 @@ def summary(grid_data=None, registro=None):
             atracacao = meta.get('atracacao')
             if isinstance(atracacao, list):
                 atracacao = atracacao[0]
+            escala = ''
             if atracacao:
                 escala = atracacao.get('escala')
-            result['Conhecimento - Manifesto - Escala'] = \
+            result['Conhecimento - Manifesto'] = \
                 'CE %s - %s - %s' % \
                 (conhecimento.get('conhecimento'),
-                 manifesto.get('manifesto'),
+                 conhecimento.get('manifesto'),
                  escala)
             result['Descrição'] = \
                 conhecimento.get('descricaomercadoria')

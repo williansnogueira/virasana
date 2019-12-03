@@ -133,7 +133,7 @@ def conhecimento_carga(session, conhecimentos:list, numeroconteiner:str = None):
     dict_carga['container'] = []
     for numeroconhecimento in conhecimentos:
         conhecimento = session.query(Conhecimento).filter(Conhecimento.numeroCEmercante == numeroconhecimento).one()
-        dict_carga['conhecimento'].append(conhecimento_schema.dump(conhecimento))
+        dict_carga['conhecimento'].append(conhecimento_schema.dump(conhecimento, session))
         itens = session.query(Item).filter(Item.numeroCEmercante == numeroconhecimento).all()
         for item in itens:
             if item.codigoConteiner == numeroconteiner:

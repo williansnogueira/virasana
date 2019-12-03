@@ -187,9 +187,7 @@ def summary(grid_data=None, registro=None):
             tipo = manifesto.get('tipomanifesto')
             result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
             result['CONTÊINER VAZIO'] = ''
-            result['Manifesto'] = \
-                '%s - %s' % \
-                (manifesto.get('manifesto'))
+            result['Manifesto'] = manifesto.get('manifesto')
             conteiner_pesos = []
             conteineres = meta.get('container')
             if not isinstance(conteineres, list):

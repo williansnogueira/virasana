@@ -94,7 +94,7 @@ def periodic_updates(db, connection, lote=2000):
     cincodias = hoje - timedelta(days=5)
     dezdias = hoje - timedelta(days=10)
     ontem = hoje - timedelta(days=1)
-    xmli.dados_xml_grava_fsfiles(db, lote * 2, doisdias)
+    xmli.dados_xml_grava_fsfiles(db, lote * 5, cincodias)
     # TODO: Testar e se funcionar colocar a nova integração do CARGA
     #  (linha comentadao abaixo) e tirar a antiga (próxima linha)
     # do_update_carga(db)

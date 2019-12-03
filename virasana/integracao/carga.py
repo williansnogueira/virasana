@@ -816,9 +816,7 @@ def cria_campo_pesos_carga(db, batch_size=1):
 
             db['fs.files'].update_one(
                 {'_id': _id},
-                {'$set': {'metadata.carga.pesototal': pesototal,
-                          'metadata.diferencapeso': peso_dif,
-                          'metadata.alertapeso': alertapeso}}
+                {'$set': dict_update}
             )
             if alertapeso:
                 divergentes += 1

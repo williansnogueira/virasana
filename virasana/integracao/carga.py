@@ -185,7 +185,7 @@ def summary(grid_data=None, registro=None):
             if isinstance(manifesto, list):
                 manifesto = manifesto[0]
             tipo = manifesto.get('tipomanifesto')
-            result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
+            result['Operação'] = tipos.get(tipo, '')
             result['CONTÊINER VAZIO'] = ''
             result['Manifesto'] = manifesto.get('manifesto')
             conteiner_pesos = []
@@ -211,7 +211,7 @@ def summary(grid_data=None, registro=None):
             if atracacao:
                 escala = atracacao.get('escala')
             tipo = conhecimento.get('trafego')
-            result['Operação'] = tipo + ' - ' + tipos.get(tipo, '')
+            result['Operação'] = tipos.get(tipo, '')
             result['Conhecimento - Manifesto - Escala'] = \
                 'CE %s - %s - %s' % \
                 (conhecimento.get('conhecimento'),

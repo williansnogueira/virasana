@@ -117,7 +117,7 @@ def update_mercante_fsfiles(db, engine, diaapesquisar: datetime):
             db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$set': {'metadata.carga':
-                              manifesto_carga(session, conhecimentos[container])}}
+                              manifesto_carga(session, manifestos[container])}}
             )
 
 

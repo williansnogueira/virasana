@@ -8,11 +8,13 @@ from sqlalchemy.dialects.mysql import BIGINT, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 
 from ajna_commons.flask.conf import SQL_URI
+
 # from sqlalchemy.orm import relationship
 # from sqlachemy import ForeignKey
 
 Base = declarative_base()
 metadata = Base.metadata
+
 
 # Tabelas auxiliares / log
 
@@ -24,14 +26,12 @@ class Enumerado(Base):
     tipoBLConhecimentoMercante = Column(VARCHAR(40))
     tipoItemCarga = Column(VARCHAR(40))
 
-
-
     @classmethod
     def getEnumerado(cls, session, id: str):
         return session.query(Enumerado).filter(Enumerado.id == id).one_or_none()
 
     @classmethod
-    def getTipo(cls, session, tipo:str, id: str):
+    def getTipo(cls, session, tipo: str, id: str):
         enumerado = session.query(Enumerado).filter(Enumerado.id == id).one_or_none()
         if enumerado:
             return getattr(cls, tipo)
@@ -49,6 +49,13 @@ class Enumerado(Base):
         enumerado = cls.getEnumerado(session, id)
         if enumerado:
             return enumerado.tipoTrafegoConhecimento
+        return None
+
+    @classmethod
+    def getTipoBLConhecimentoMercante(cls, session, id: str):
+        enumerado = cls.getEnumerado(session, id)
+        if enumerado:
+            return enumerado.tipoBLConhecimentoMercante
         return None
 
 
@@ -89,7 +96,6 @@ t_ManifestoEscala = Table(
     Column('create_date', TIMESTAMP, index=True,
            server_default=func.current_timestamp())
 )
-
 
 t_ConteinerVazio = Table(
     'ConteinerVazio', metadata,
@@ -246,6 +252,7 @@ class Manifesto(Base):
     # listavazios = relationship("ConteinerVazio", cascade="delete, delete-orphan")
     # listaconhecimentos = relationship("Conhecimento", cascade="delete, delete-orphan")
 
+
 """
     escalas = relationship("ManifestoEscala",
                            back_populates='manifesto',
@@ -299,7 +306,7 @@ class Item(Base):  # Conteiner Cheio
                 primary_key=True, autoincrement=True)
     # TODO: Confirmar que chave é esta
     numeroCEmercante = Column(VARCHAR(15))
-        # ForeignKey('conhecimentosresumo.numeroCEmercante'))
+    # ForeignKey('conhecimentosresumo.numeroCEmercante'))
     numeroSequencialItemCarga = Column(VARCHAR(10), index=True)
     codigoConteiner = Column(VARCHAR(11), index=True)
     NCM = Column(VARCHAR(10), index=True)
@@ -364,6 +371,7 @@ class ConteinerVazio(Base):
                          server_default=func.current_timestamp())
     last_modified = Column(DateTime, index=True,
                            onupdate=func.current_timestamp())
+
 
 class EscalaManifesto(Base):
     __tablename__ = 'escalamanifestoresumo'

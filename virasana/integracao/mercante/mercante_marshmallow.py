@@ -89,12 +89,20 @@ class ConhecimentoSchema(BaseSchema):
          'manifesto': 'manifestoCE',
          'paisdestino': 'paisDestinoFinalMercante',
          'codigoportodestino': 'portoDestFinal',
-         'codigoportoorigem': 'portoOrigemCarga',
-         'tipo': 'tipoBLConhecimento'}
+         'codigoportoorigem': 'portoOrigemCarga'
+         }
 
     class Meta:
         model = Conhecimento
 
+
+    def dump(self, conhecimento, session):
+        result = super().dump(conhecimento)
+        result['tipo'] = \
+            Enumerado.getTipoBLConhecimento(session, conhecimento.tipoBLConhecimento)
+        result['trafego'] = \
+            Enumerado.getTipoTrafegoConhecimento(session, conhecimento.tipoTrafego)
+        return result
 
 manifesto_schema = ManifestoSchema()
 conteinervazio_schema = ConteinerVazioSchema()

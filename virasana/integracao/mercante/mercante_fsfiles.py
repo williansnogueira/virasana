@@ -84,13 +84,13 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
         for parametros_pesquisa in pesquisas_manifesto:
             cursor = conn.execute(sql_manifestos, parametros_pesquisa)
             result = cursor.fetchall()
-            logger.info('%s Manifestos encontrados para paramentros %s' %
+            logger.info('%s Manifestos encontrados para parâmetros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:
                 manifestos[linha['idConteinerVazio']].add(linha['numero'])
             cursor = conn.execute(sql_conhecimentos, parametros_pesquisa)
             result = cursor.fetchall()
-            logger.info('%s Conhecimentos encontrados para paramentros %s' %
+            logger.info('%s Conhecimentos encontrados para parâmetros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:
                 conhecimentos[linha['codigoConteiner']].add(linha['numeroCEmercante'])
@@ -112,14 +112,14 @@ def update_mercante_fsfiles(db, engine, diaapesquisar: datetime):
             db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$set': {'metadata.carga':
-                              conhecimento_carga(session, conhecimentos[container])}}
+                              conhecimento_carga(session, conhecimentos[container], container)}}
             )
         elif manifestos.get(container):
             logger.info('Update manifesto no _id %s Container %s' % (_id, container))
             db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$set': {'metadata.carga':
-                              manifesto_carga(session, manifestos[container])}}
+                              manifesto_carga(session, manifestos[container], container)}}
             )
 
 

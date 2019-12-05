@@ -71,10 +71,10 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
         ' m.tipoTrafego = %s AND' \
         ' dataInicioOperacaoDate >= %s AND dataInicioOperacaoDate <= %s AND ' \
         ' i.codigoConteiner IN ' + lista
-    before = dia - timedelta(days=5)
+    before = dia - timedelta(days=6)
     before = datetime.strftime(before, '%Y-%m-%d')
     today = datetime.strftime(dia, '%Y-%m-%d')
-    after = dia + timedelta(days=5)
+    after = dia + timedelta(days=10)
     after = datetime.strftime(after, '%Y-%m-%d')
     pesquisas_manifesto = [(5, before, today), (7, today, after)]
     manifestos = defaultdict(set)
@@ -84,13 +84,13 @@ def pesquisa_containers_no_mercante(engine, dia: datetime, listanumerocc: list):
         for parametros_pesquisa in pesquisas_manifesto:
             cursor = conn.execute(sql_manifestos, parametros_pesquisa)
             result = cursor.fetchall()
-            logger.info('Manifestos encontrados %s para paramentros %s' %
+            logger.info('%s Manifestos encontrados para parâmetros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:
                 manifestos[linha['idConteinerVazio']].add(linha['numero'])
             cursor = conn.execute(sql_conhecimentos, parametros_pesquisa)
             result = cursor.fetchall()
-            logger.info('Conhecimentos encontrados %s para paramentros %s' %
+            logger.info('%s Conhecimentos encontrados para parâmetros %s' %
                         (len(result), parametros_pesquisa))
             for linha in result:
                 conhecimentos[linha['codigoConteiner']].add(linha['numeroCEmercante'])
@@ -108,22 +108,24 @@ def update_mercante_fsfiles(db, engine, diaapesquisar: datetime):
     session = Session()
     for container, _id in dict_numerocc.items():
         if conhecimentos.get(container):  # Se encontrou conhecimento, priorizar!!!
+            logger.info('Update Conhecimento no _id %s Container %s' % (_id, container))
             db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$set': {'metadata.carga':
-                              conhecimento_carga(session, conhecimentos[container])}}
+                              conhecimento_carga(session, conhecimentos[container], container)}}
             )
         elif manifestos.get(container):
+            logger.info('Update manifesto no _id %s Container %s' % (_id, container))
             db['fs.files'].update_one(
                 {'_id': ObjectId(_id)},
                 {'$set': {'metadata.carga':
-                              manifesto_carga(session, conhecimentos[container])}}
+                              manifesto_carga(session, manifestos[container], container)}}
             )
 
 
 def update_mercante_fsfiles_dias(db, engine, diainicio: datetime, diasantes=10):
-    for diasantes in range(11):
-        diaapesquisar = diainicio - timedelta(days=diasantes)
+    for dias in range(diasantes):
+        diaapesquisar = diainicio - timedelta(days=dias)
         update_mercante_fsfiles(db, engine, diaapesquisar)
 
 if __name__ == '__main__':
